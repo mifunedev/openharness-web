@@ -1,0 +1,10 @@
+# Docusaurus build output
+.docusaurus/
+build/
+
+# Dependencies
+node_modules/
+node_modules/
+build/
+*.tsbuildinfo
+.DS_Store
