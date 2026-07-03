@@ -73,16 +73,14 @@ pnpm docs:build
 
 The automatic docs build/deploy gate runs only from `.github/workflows/docs.yml` on pushes to `main` or `master` that touch docs-site paths.
 
-### Installing a harness pack
+### Multi-agent messaging (Slack)
 
-Multi-agent setups (e.g. Pi+Mom Slack bot) ship as harness packs. Install one by cloning it into the workspace and following its README:
-
-```bash
-git clone <pack-repo> workspace/<pack>
-# then follow workspace/<pack>/README.md
-```
-
-The canonical example is [`@ryaneggz/mifune`](https://github.com/ryaneggz/mifune), which defines the pack contract.
+Slack (and other messengers) bridge to a Pi agent via the
+[`pi-messenger-bridge`](https://github.com/tintinweb/pi-messenger-bridge) npm package. The
+harness installs it into a gitignored `.pi/bridge/` directory and loads it via `--extension`
+only in the dedicated `client-slack-pi` tmux session (managed by `.oh/scripts/gateway.sh`) —
+you don't run `pi install` yourself. Full setup (tokens, trust, the sibling Hermes gateway)
+lives in [Slack integration](./integrations/slack.md).
 
 ## Branch Naming
 
