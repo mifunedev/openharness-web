@@ -8,19 +8,20 @@ const GITHUB_REPO = "mifunedev/openharness";
 const GITHUB_URL = `https://github.com/${GITHUB_REPO}`;
 const FALLBACK_STARS = 18;
 
-const QUICKSTART = `# install (only host dep: Docker)
+const QUICKSTART = `# 1 · install  (host: Docker + git, make recommended)
 curl -fsSL https://oh.mifune.dev/install.sh | bash
 
-# review-first install, no extra dependency
-curl -fsSL -o openharness-install.sh https://oh.mifune.dev/install.sh
-# Review openharness-install.sh in your editor or pager, then:
-bash openharness-install.sh
+# 2 · attach — VS Code command palette (Ctrl+Shift+P):
+#     "Dev Containers: Attach to Running Container" · select openharness
+cd ~/.openharness && make shell   # terminal fallback
 
-# enter the isolated sandbox
-cd ~/.openharness && make shell
+# 3 · run your agent inside the sandbox
+claude          # or codex · opencode · pi · deepagents · hermes · grok
 
-# inside the sandbox, pick your agent
-claude        # or codex, opencode, pi, deepagents, hermes, grok`;
+# 4 · optional — Hermes + Slack messaging (in order)
+hermes setup            # 1. model/provider auth
+hermes gateway setup    # 2. configure the Slack gateway
+gateway hermes          # 3. start the Slack session`;
 
 const AGENTS: Array<{
   name: string;
@@ -150,7 +151,7 @@ export default function Home(): React.ReactElement {
                 <span aria-hidden="true">·</span>
                 <span>Self-hosted</span>
                 <span aria-hidden="true">·</span>
-                <span>Only Docker on your host</span>
+                <span>No host toolchains</span>
               </div>
             </div>
             <aside className={styles.heroTerminal} aria-label="Quickstart commands">
