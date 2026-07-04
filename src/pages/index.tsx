@@ -8,24 +8,26 @@ const GITHUB_REPO = "mifunedev/openharness";
 const GITHUB_URL = `https://github.com/${GITHUB_REPO}`;
 const FALLBACK_STARS = 18;
 
-const QUICKSTART = `# install (only host dep: Docker)
+const QUICKSTART = `# 1 · install  (host: Docker + git, make recommended)
 curl -fsSL https://oh.mifune.dev/install.sh | bash
 
-# review-first install, no extra dependency
-curl -fsSL -o openharness-install.sh https://oh.mifune.dev/install.sh
-# Review openharness-install.sh in your editor or pager, then:
-bash openharness-install.sh
+# 2 · attach — VS Code command palette (Ctrl+Shift+P):
+#     "Dev Containers: Attach to Running Container" · select openharness
+cd ~/.openharness && make shell   # terminal fallback
 
-# enter the isolated sandbox
-cd ~/.openharness && make shell
+# 3 · run your agent inside the sandbox
+claude          # or codex · pi · hermes · openclaw (coming soon) · opencode
 
-# inside the sandbox, pick your agent
-claude        # or codex, opencode, pi, deepagents, hermes, grok`;
+# 4 · optional — Hermes + Slack messaging (in order)
+hermes setup            # 1. model/provider auth
+hermes gateway setup    # 2. configure the Slack gateway
+gateway hermes          # 3. start the Slack session`;
 
 const AGENTS: Array<{
   name: string;
   description: string;
-  href: string;
+  href?: string;
+  comingSoon?: boolean;
   icon: React.ReactElement;
 }> = [
   {
@@ -90,6 +92,12 @@ const AGENTS: Array<{
       />
     ),
   },
+  {
+    name: "OpenClaw",
+    description: "Coming soon.",
+    comingSoon: true,
+    icon: <OpenClawIcon />,
+  },
 ];
 
 const WHY: Array<{ title: string; body: string }> = [
@@ -150,7 +158,7 @@ export default function Home(): React.ReactElement {
                 <span aria-hidden="true">·</span>
                 <span>Self-hosted</span>
                 <span aria-hidden="true">·</span>
-                <span>Only Docker on your host</span>
+                <span>No host toolchains</span>
               </div>
             </div>
             <aside className={styles.heroTerminal} aria-label="Quickstart commands">
@@ -161,6 +169,14 @@ export default function Home(): React.ReactElement {
                 <span className={styles.terminalLabel}>~/open-harness — zsh</span>
               </div>
               <CodeBlock language="bash" children={QUICKSTART} />
+              <div className={styles.terminalFooter}>
+                <Link
+                  className={styles.terminalFooterLink}
+                  to="/docs/quickstart#end-to-end-setup-walkthrough"
+                >
+                  Full end-to-end walkthrough →
+                </Link>
+              </div>
             </aside>
           </div>
         </section>
@@ -199,17 +215,40 @@ export default function Home(): React.ReactElement {
               Claude Code, Codex, and Pi ship preinstalled. OpenCode, DeepAgents, Hermes, and Grok Build are opt-in image installs. Switch between them inside the sandbox — or add your own by editing the Dockerfile.
             </p>
             <div className={styles.agentGrid}>
-              {AGENTS.map((agent) => (
-                <Link key={agent.name} className={styles.agentCard} to={agent.href}>
-                  <span className={styles.agentIcon} aria-hidden="true">
-                    {agent.icon}
-                  </span>
-                  <span className={styles.agentText}>
-                    <h3 className={styles.agentName}>{agent.name}</h3>
-                    <p className={styles.agentDescription}>{agent.description}</p>
-                  </span>
-                </Link>
-              ))}
+              {AGENTS.map((agent) => {
+                const body = (
+                  <>
+                    <span className={styles.agentIcon} aria-hidden="true">
+                      {agent.icon}
+                    </span>
+                    <span className={styles.agentText}>
+                      <h3 className={styles.agentName}>{agent.name}</h3>
+                      <p className={styles.agentDescription}>{agent.description}</p>
+                    </span>
+                  </>
+                );
+
+                if (agent.href && !agent.comingSoon) {
+                  return (
+                    <Link key={agent.name} className={styles.agentCard} to={agent.href}>
+                      {body}
+                    </Link>
+                  );
+                }
+
+                // Coming-soon agents have no docs page yet — render a
+                // non-navigating, visually de-emphasized card.
+                return (
+                  <div
+                    key={agent.name}
+                    className={styles.agentCard}
+                    aria-disabled="true"
+                    style={{ opacity: 0.6, cursor: "default" }}
+                  >
+                    {body}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -343,6 +382,20 @@ function OpenCodeIcon(): React.ReactElement {
         fill="currentColor"
         d="M8 14c0-3.6 2.5-6.2 6-6.2s6 2.6 6 6.2-2.5 6.2-6 6.2-6-2.6-6-6.2Zm3.1 0c0 2 1.1 3.4 2.9 3.4s2.9-1.4 2.9-3.4-1.1-3.4-2.9-3.4-2.9 1.4-2.9 3.4Z"
       />
+    </svg>
+  );
+}
+
+function OpenClawIcon(): React.ReactElement {
+  return (
+    <svg viewBox="0 0 28 28" width="28" height="28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="3" y="3" width="22" height="22" rx="5" fill="currentColor" opacity="0.14" />
+      <g fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9.5 8.2c1.4 1.6 1.9 3.6 1.5 6.1" />
+        <path d="M14 7.6c1.5 1.8 2 4 1.6 6.8" />
+        <path d="M18.5 8.2c1.4 1.6 1.9 3.6 1.5 6.1" />
+        <path d="M9 18.4c1.7 1.6 3.2 2.4 5 2.4s3.3-.8 5-2.4" />
+      </g>
     </svg>
   );
 }
