@@ -16,7 +16,7 @@ curl -fsSL https://oh.mifune.dev/install.sh | bash
 cd ~/.openharness && make shell   # terminal fallback
 
 # 3 · run your agent inside the sandbox
-claude          # or codex · opencode · pi · deepagents · hermes · grok
+claude          # or codex · pi · hermes · openclaw (coming soon) · opencode
 
 # 4 · optional — Hermes + Slack messaging (in order)
 hermes setup            # 1. model/provider auth
