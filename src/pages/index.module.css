@@ -239,6 +239,26 @@
   letter-spacing: 0.04em;
 }
 
+.terminalFooter {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.6rem 1rem;
+  background: var(--ifm-background-surface-color);
+  border-top: 1px solid var(--ifm-toc-border-color);
+}
+
+.terminalFooterLink {
+  color: var(--ifm-color-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.terminalFooterLink:hover {
+  color: var(--ifm-color-primary);
+  text-decoration: underline;
+}
+
 /* ---------- Sections ---------- */
 
 .section,

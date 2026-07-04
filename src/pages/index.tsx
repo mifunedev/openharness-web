@@ -162,6 +162,14 @@ export default function Home(): React.ReactElement {
                 <span className={styles.terminalLabel}>~/open-harness — zsh</span>
               </div>
               <CodeBlock language="bash" children={QUICKSTART} />
+              <div className={styles.terminalFooter}>
+                <Link
+                  className={styles.terminalFooterLink}
+                  to="/docs/quickstart#end-to-end-setup-walkthrough"
+                >
+                  Full end-to-end walkthrough →
+                </Link>
+              </div>
             </aside>
           </div>
         </section>
