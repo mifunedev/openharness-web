@@ -189,22 +189,41 @@ Every path above clones the harness repo itself and keeps the host toolchain-fre
 
 | Dependency | Required for |
 |---|---|
-| Node.js ≥ 18 (20+ recommended) | Building and running the `oh` binary (`dist/oh.js`) |
-| git | The shallow clone behind `--from-remote` |
+| Node.js ≥ 20 (22 recommended) | Running the `oh` binary (`get-oh.sh` offers to install nvm + Node 22 if missing) |
+| git | The on-demand scaffold-payload fetch for `oh init` / `oh update` |
 | Docker (with Compose plugin) | `oh sandbox` / `oh shell` |
 
-`make` is **not** needed here — the verbs wrap the vendored `.oh/scripts/` directly. The CLI is not published to npm: build it once from any OpenHarness checkout (`cd .oh/cli && npm install && npm run build`) and put `dist/oh.js` on your PATH as `oh`.
+`make` is **not** needed here — the verbs wrap the vendored `.oh/scripts/` directly.
+
+**Get the `oh` command from npm (recommended if you have Node):** the CLI is published as [`@mifune/openharness`](https://www.npmjs.com/package/@mifune/openharness). If Node.js ≥ 20 is already on your host, install it globally or run it zero-install:
+
+```bash
+npm install -g @mifune/openharness   # puts `oh` on your PATH
+# ...or, without a global install:
+npx @mifune/openharness init
+```
+
+The published package is the same single self-contained bundle — `oh init`/`oh update` fetch their scaffold payload on demand (no repo clone). npm does **not** install Node; Node ≥ 20 must already be on your PATH (that is exactly what `get-oh.sh` bootstraps below).
+
+**No npm, or no Node yet?** Bootstrap with `get-oh.sh` instead. It installs the single self-contained `oh` binary to `~/.local/bin/oh` — **no repo clone**, and it does not touch an existing `~/.openharness` sandbox. It prefers a prebuilt bundle (`oh.mifune.dev/oh.js`) and offers to install nvm + Node 22 if Node ≥ 20 is missing (sourcing it so `oh` works in the same shell):
+
+```bash
+curl -fsSL https://oh.mifune.dev/get-oh.sh | bash
+# ...or put `oh` on the current shell's PATH immediately:
+source <(curl -fsSL https://oh.mifune.dev/get-oh.sh)
+```
+
+Then equip any project:
 
 ```bash
 cd <your-project>
-oh init --from-remote   # equip the repo — shallow-clones the public repo for the
-                        # payload; pin a version with --ref <tag|branch>
-oh sandbox              # provision + start the sandbox (docker compose up -d --build)
-oh shell                # zsh in the running container (or: oh shell <container>)
-oh gateway status       # manage messaging client sessions (pi|hermes)
+oh init            # equip the repo (fetches scaffold payload on demand — no repo clone)
+oh sandbox         # provision + start the sandbox (docker compose up -d --build)
+oh shell           # zsh in the running container (or: oh shell <container>)
+oh gateway status  # manage messaging client sessions (pi|hermes)
 ```
 
-`--from-remote` fetches over public HTTPS only — private or credential-prompting remotes fail fast (`GIT_TERMINAL_PROMPT=0`); offline, use `oh init --from <local-checkout>` instead. Repos equipped this way mount your project at `/home/sandbox/project` inside the sandbox (the clone paths above use `/home/sandbox/harness`). Upgrade the vendored `.oh/` later with `oh update --from-remote [--ref <ref>]`.
+Repos equipped this way mount your project at `/home/sandbox/project` inside the sandbox (the clone paths above use `/home/sandbox/harness`). Upgrade the vendored `.oh/` later with `oh update` (offline: `oh init --from <local-checkout>`).
 
 ## Next step
 
@@ -248,7 +267,7 @@ Default CLIs are always present. Optional CLIs are excluded from the default ima
 
 | Tool | Purpose |
 |------|---------|
-| Docker CLI + Compose | Container management from inside the sandbox (host docker socket bind-mounted by the base compose) |
+| Docker CLI + Compose | Container management from inside the sandbox (host docker socket is opt-in, off by default — enable via `sandbox.docker_socket: true`) |
 | GitHub CLI (`gh`) | PRs, issues, releases from the terminal |
 | tmux | Detachable terminal sessions for long-running agents |
 | croner | Markdown-frontmatter cron scheduler for autonomous agent tasks |

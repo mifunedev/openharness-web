@@ -104,7 +104,7 @@ const config: Config = {
           path: "docs",
           sidebarPath: "./sidebars.ts",
           editUrl: ({ docPath }) =>
-            `https://github.com/mifunedev/openharness-web-web/edit/main/docs/${docPath}`,
+            `https://github.com/mifunedev/openharness-web/edit/main/docs/${docPath}`,
           routeBasePath: "docs",
           showLastUpdateTime: true,
         },
@@ -116,7 +116,7 @@ const config: Config = {
           postsPerPage: 10,
           feedOptions: { type: ["rss", "atom"], title: "Open Harness Blog" },
           editUrl: ({ blogPath }) =>
-            `https://github.com/mifunedev/openharness-web-web/edit/main/blog/${blogPath}`,
+            `https://github.com/mifunedev/openharness-web/edit/main/blog/${blogPath}`,
           routeBasePath: "blog",
         },
         theme: {
