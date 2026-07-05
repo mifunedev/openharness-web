@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "docusaurus start",
-    "prebuild": "node scripts/sync-external-scripts.mjs",
+    "prebuild": "node scripts/sync-external-scripts.mjs && node scripts/build-oh-cli.mjs",
     "build": "docusaurus build",
     "serve": "docusaurus serve",
     "clear": "docusaurus clear",
