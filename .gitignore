@@ -2,8 +2,9 @@
 .docusaurus/
 build/
 
-# Build-time synced scripts (fetched from the openharness repo by scripts/sync-external-scripts.mjs)
+# Build-time synced/built artifacts from the openharness repo (scripts/sync-external-scripts.mjs, scripts/build-oh-cli.mjs)
 static/get-oh.sh
+static/oh.js
 
 # Dependencies
 node_modules/
