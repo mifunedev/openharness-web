@@ -165,9 +165,9 @@ Two environment overrides apply:
 
 > **`--shell-allow-list all` warning.** Choosing `--shell-allow-list all`
 > via `RALPH_DEEPAGENTS_FLAGS` grants unrestricted non-interactive shell
-> execution. Combined with the mounted Docker socket (enabled by default
-> in the base compose file), this can affect sibling containers or the
-> host Docker daemon. Only use `all` for trusted tasks where
+> execution. If the optional host Docker socket is enabled (off by
+> default — `sandbox.docker_socket: true`), this can additionally affect
+> sibling containers or the host Docker daemon. Only use `all` for trusted tasks where
 > you have accepted that risk explicitly.
 
 ## Tips

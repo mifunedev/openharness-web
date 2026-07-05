@@ -10,6 +10,7 @@ const FALLBACK_STARS = 18;
 
 const QUICKSTART = `# 1 · install  (host: Docker + git, make recommended)
 curl -fsSL https://oh.mifune.dev/install.sh | bash
+# ...or, with Node >= 20, just the 'oh' CLI:  npm install -g @mifune/openharness && oh init
 
 # 2 · attach — VS Code command palette (Ctrl+Shift+P):
 #     "Dev Containers: Attach to Running Container" · select openharness
