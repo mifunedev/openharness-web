@@ -123,6 +123,29 @@ If you want a truly clean slate — including the seeded workspaces — drop the
 docker volume rm oh_ws_a oh_ws_b oh_ws_c
 ```
 
+## Scenario: a whole team on one daily pull
+
+The single-host demo scales sideways into a team pattern. Say a company standardizes its agent tooling on the Open Harness image. Every developer runs the same `ghcr.io/mifunedev/openharness:<tag>` — so everyone has the identical Node, `gh`, agent CLIs, and baseline down to the layer hash. No "works on my machine" drift in the toolchain.
+
+To stay in lockstep, each dev pulls the current image every morning and recreates their sandbox on it:
+
+```bash
+docker pull ghcr.io/mifunedev/openharness:latest
+docker rm -f oh-a && boot a          # recreate on the fresh image; the workspace volume survives
+```
+
+Or make it automatic — set `pull_policy: always` so every start re-pulls latest:
+
+```yaml
+sandbox:
+  image: ghcr.io/mifunedev/openharness:latest
+  pull_policy: always
+```
+
+A daily pull is safe precisely because of one property: **the image version is a toolchain concern, not a correctness one.** The image supplies tools; your work lives elsewhere — in your own workspace volume (image-only, above) or your bind-mounted, git-versioned repo (the default path). Pulling a newer image swaps the toolchain under you without touching your workspace, which is why `latest` is a safe default. Want a reproducible floor? Pin a `<CalVer>` tag and bump it on your team's own cadence instead.
+
+Pair the shared image with a **shared harness repo** and the team is genuinely on the same harness: the image gives everyone identical tooling, the git-tracked `.oh/` control plane gives everyone the same skills, crons, and conventions, and each dev's actual project work stays their own. One company harness, N developers, one daily `docker pull`.
+
 ## Why this matters
 
 The unit of Open Harness is one sandbox per repo — but nothing stops you from running a fleet of them on one host, and the cache makes the fleet nearly free. Fetch the image once; fan out as many isolated agents as the box has memory for. That's the shape of a lights-out software factory on a single VM: a row of named containers, each an agent on its own branch, all sharing one prebuilt image and nothing else.
