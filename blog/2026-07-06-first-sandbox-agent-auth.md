@@ -13,30 +13,23 @@ Open Harness is one sandbox per repo — an isolated Docker container with the w
 
 ## 1. Boot your first sandbox
 
-We'll use the image-only path — pull the published image, no checkout, no local build. Each sandbox gets its **own workspace volume** (its `.oh/` control plane and repo) and mounts a set of **shared, home-scoped auth volumes** so your logins persist and can be reused. A tiny helper keeps this to one line per sandbox:
+We'll use the image-only path — pull the published image, no checkout, no local build. The sandbox gets its **own workspace volume** (its `.oh/` control plane and repo) and mounts a set of **shared, home-scoped auth volumes** so your logins persist and can be reused:
 
 ```bash
-IMAGE=ghcr.io/mifunedev/openharness:latest
-
-boot () {              # boot <letter>
-  local id="$1"
-  docker run -d --name "oh-$id" --restart unless-stopped --init \
-    -e OH_IMAGE_ONLY=1 \
-    -e OH_PROJECT_ROOT=/home/sandbox/harness \
-    -e GIT_USER_NAME="gituser" \
-    -e GIT_USER_EMAIL="gituser@example.com" \
-    -v "oh_ws_${id}:/home/sandbox/harness" \
-    -v claude-auth:/home/sandbox/.claude \
-    -v codex-auth:/home/sandbox/.codex \
-    -v pi-auth:/home/sandbox/.pi \
-    -v gh-config:/home/sandbox/.config/gh \
-    "$IMAGE" sleep infinity
-}
-
-boot a                 # your first sandbox: oh-a
+docker run -d --name oh-a --init \
+  -e OH_IMAGE_ONLY=1 \
+  -e OH_PROJECT_ROOT=/home/sandbox/harness \
+  -e GIT_USER_NAME="gituser" \
+  -e GIT_USER_EMAIL="gituser@example.com" \
+  -v oh_ws_a:/home/sandbox/harness \
+  -v claude-auth:/home/sandbox/.claude \
+  -v codex-auth:/home/sandbox/.codex \
+  -v pi-auth:/home/sandbox/.pi \
+  -v gh-config:/home/sandbox/.config/gh \
+  ghcr.io/mifunedev/openharness:latest sleep infinity
 ```
 
-The first `boot` on a fresh host pulls the image once (public — no `docker login` needed). Confirm it's up:
+The workspace volume (`oh_ws_a`) holds your work; the four `*-auth` / `gh-config` volumes hold your logins — that split is what makes the second sandbox below free. The first run on a fresh host pulls the image once (public — no `docker login` needed). Confirm it's up:
 
 ```bash
 docker ps --filter name=oh-a --format 'table {{.Names}}\t{{.Status}}'
@@ -95,10 +88,20 @@ That's it — `oh-a` is a fully signed-in sandbox. Start any agent (`claude`, `c
 
 ## 4. Optional follow-up: a second sandbox on the same host
 
-Here's the part worth trying once your first one works. Run the exact same command with a new letter:
+Here's the part worth trying once your first one works. Run the same command again — only `oh-a` → `oh-b` and `oh_ws_a` → `oh_ws_b` change; the auth volumes are identical:
 
 ```bash
-boot b                 # a second sandbox, same host
+docker run -d --name oh-b --init \
+  -e OH_IMAGE_ONLY=1 \
+  -e OH_PROJECT_ROOT=/home/sandbox/harness \
+  -e GIT_USER_NAME="gituser" \
+  -e GIT_USER_EMAIL="gituser@example.com" \
+  -v oh_ws_b:/home/sandbox/harness \
+  -v claude-auth:/home/sandbox/.claude \
+  -v codex-auth:/home/sandbox/.codex \
+  -v pi-auth:/home/sandbox/.pi \
+  -v gh-config:/home/sandbox/.config/gh \
+  ghcr.io/mifunedev/openharness:latest sleep infinity
 ```
 
 Two things happen, both good:
@@ -129,7 +132,8 @@ This is the shape of a shared company harness. Everyone runs the same `ghcr.io/m
 
 ```bash
 docker pull ghcr.io/mifunedev/openharness:latest
-docker rm -f oh-a && boot a          # recreate on the fresh image; the workspace volume survives
+docker rm -f oh-a
+# …then re-run the step-1 command: oh_ws_a (your work) and the auth volumes survive the recreate
 ```
 
 A daily pull is safe because **the image version is a toolchain concern, not a correctness one** — your work lives in the workspace volume (and your logins in the auth volumes), not in the image. A newer image swaps the tools under you without touching either. Want a reproducible floor? Pin a `<CalVer>` tag and bump it on your own cadence. One company image, N developers, one daily `docker pull` — and everyone signs in once.
