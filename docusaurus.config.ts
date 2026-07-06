@@ -167,6 +167,11 @@ const config: Config = {
       },
       items: [
         {
+          to: "/docs",
+          label: "Start Here",
+          position: "left",
+        },
+        {
           type: "docSidebar",
           sidebarId: "docs",
           position: "left",
