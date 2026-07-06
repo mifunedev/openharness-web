@@ -26,10 +26,11 @@ docker run -d --name oh-a --init \
   -v codex-auth:/home/sandbox/.codex \
   -v pi-auth:/home/sandbox/.pi \
   -v gh-config:/home/sandbox/.config/gh \
+  -v oh_ssh:/home/sandbox/.ssh \
   ghcr.io/mifunedev/openharness:latest sleep infinity
 ```
 
-The workspace volume (`oh_ws_a`) holds your work; the four `*-auth` / `gh-config` volumes hold your logins — that split is what makes the second sandbox below free. The first run on a fresh host pulls the image once (public — no `docker login` needed). Confirm it's up:
+The workspace volume (`oh_ws_a`) holds your work; the auth/config volumes (Claude, Codex, Pi, `gh`, and your SSH key) hold your logins — that split is what makes the second sandbox below free. The first run on a fresh host pulls the image once (public — no `docker login` needed). Confirm it's up:
 
 ```bash
 docker ps --filter name=oh-a --format 'table {{.Names}}\t{{.Status}}'
@@ -37,9 +38,13 @@ docker ps --filter name=oh-a --format 'table {{.Names}}\t{{.Status}}'
 
 ## 2. Attach — use VS Code
 
-You can drop straight in with `docker exec -it -u sandbox oh-a zsh`, but for the logins below, **attach with VS Code** instead. The Dev Containers extension → **Attach to Running Container** → `oh-a` opens a window *and forwards the container's ports to your laptop* for the session. That port forwarding matters: Pi's login needs it (below). Details: [Connecting → Option B](/docs/connecting#option-b--vscode-attach-to-running-container-local-host).
+Attaching with **VS Code** is the nicest way in — Dev Containers extension → **Attach to Running Container** → `oh-a` opens a full editor *and* auto-forwards any app UIs you launch to your laptop ([Connecting → Option B](/docs/connecting#option-b--vscode-attach-to-running-container-local-host)). But every login below works headless — device codes, token paste, and OAuth URLs — so on a remote host a plain shell is enough:
 
-Open a terminal inside that VS Code window and you're the `sandbox` user, ready to sign in.
+```bash
+docker exec -it -u sandbox oh-a zsh
+```
+
+Either way you land as the `sandbox` user, ready to sign in.
 
 ## 3. Sign in each agent
 
@@ -48,11 +53,10 @@ Open a terminal inside that VS Code window and you're the `sandbox` user, ready 
 The one you'll want first — it's how the agent pushes branches and opens PRs:
 
 ```bash
-gh auth login          # pick GitHub.com → HTTPS → login with a browser
-gh auth setup-git      # let git use gh's credentials
+gh auth login          # GitHub.com → SSH → generate/upload a key → paste a token
 ```
 
-Credentials land in `~/.config/gh`, mounted from the `gh-config` volume — so they survive container recreation and are shared with any other sandbox that mounts it.
+Walk the prompts: **GitHub.com**, **SSH** as the git protocol (let `gh` generate and upload a key), and **Paste an authentication token** as the login method — create a [personal access token](https://github.com/settings/tokens) with `repo`, `read:org`, and `admin:public_key` scopes and paste it. The token lands in `~/.config/gh` (the `gh-config` volume) and the SSH key in `~/.ssh` (the `oh_ssh` volume) — both persist across recreation and are shared with any sandbox that mounts them.
 
 ### Claude Code
 
@@ -65,13 +69,17 @@ Launching a bare `claude` when unauthenticated starts the same flow, but `claude
 
 ### Pi
 
-Pi signs in with a subscription OAuth flow that spins up a **local callback server on `http://localhost:1455`** — which is exactly why you attached with VS Code. Just start Pi and follow the prompt:
+On a remote host Pi uses a **device login** by default — start Pi, then run `/login` inside it:
 
 ```bash
-pi                     # first run walks you through subscription login
+pi
+# then, inside Pi:
+/login                 # device-code flow: open the URL, enter the code, done
 ```
 
-Your browser completes the redirect to `localhost:1455` — VS Code (Attach, or Remote-SSH) forwards that loopback port automatically, so the callback lands with no extra step. Pi's config and auth live in `~/.pi`, mounted from the `pi-auth` volume. (Codex is here too if you use it: `codex login --device-auth` takes a headless device-code path and needs no port forwarding — its creds persist in the `codex-auth` volume.)
+The device flow shows a URL and a code you complete in any browser, so no port forwarding is needed — ideal for a VM. (On a *local* machine Pi can instead use a subscription OAuth callback on `localhost:1455`, which VS Code forwards for you.) Pi's config and auth live in `~/.pi`, mounted from the `pi-auth` volume.
+
+Two more things Pi does out of the box: it can run on **OpenAI Codex** (your ChatGPT subscription) through its built-in `openai-codex` provider — `/codex-status` shows your Codex usage without leaving Pi — and it bridges to **Slack**. Set `PI_SLACK_APP_TOKEN` / `PI_SLACK_BOT_TOKEN` in `.devcontainer/.env`, start the bridge with `gateway pi`, and grant trust from inside it with `/msg-bridge` ([Slack integration](/docs/integrations/slack)).
 
 ### Hermes (opt-in)
 
@@ -79,8 +87,11 @@ Hermes — Nous Research's self-improving agent CLI — is an **opt-in** harness
 
 ```bash
 hermes setup           # interactive wizard (or: hermes setup --portal for Nous Portal OAuth)
+hermes model           # pick the LLM provider — including OpenAI Codex
 hermes doctor          # health check
 ```
+
+Like Pi, Hermes can run on **OpenAI Codex** (choose it in `hermes model`) and has its own **Slack** gateway: `hermes gateway setup` configures the app and trust, then `gateway hermes` runs it in a `client-slack-hermes` session — `gateway status` shows both Pi's and Hermes' gateways side by side.
 
 One thing to know for later: unlike the others, Hermes writes its auth to `~/harness/.hermes/auth.json` — **inside the workspace volume**, not a shared home volume. So Hermes is configured **per sandbox**, while `gh`, Claude, Pi, and Codex are shared across sandboxes. (If your published image doesn't include Hermes, enable the flag and rebuild via the default `make sandbox` / Flavor A path.)
 
@@ -101,13 +112,14 @@ docker run -d --name oh-b --init \
   -v codex-auth:/home/sandbox/.codex \
   -v pi-auth:/home/sandbox/.pi \
   -v gh-config:/home/sandbox/.config/gh \
+  -v oh_ssh:/home/sandbox/.ssh \
   ghcr.io/mifunedev/openharness:latest sleep infinity
 ```
 
 Two things happen, both good:
 
 - **It's instant.** No pull, no build — `oh-b` reuses the image `oh-a` already fetched. The expensive part happened once; every sandbox after the first is a cache hit (seconds, not minutes).
-- **It's already logged in.** Because the `gh`, Claude, Pi, and Codex auth volumes are home-scoped and *shared*, `oh-b` inherits every credential you just set up in `oh-a`. Attach to `oh-b`, run `gh auth status` or `claude auth status`, and you're signed in with zero extra steps. (Hermes is the one exception — its auth lives in the per-sandbox workspace, so run `hermes setup` again in `oh-b`.)
+- **It's already logged in.** Because the `gh` config + SSH key, Claude, Pi, and Codex auth volumes are home-scoped and *shared*, `oh-b` inherits every credential you just set up in `oh-a`. Attach to `oh-b`, run `gh auth status` or `claude auth status`, and you're signed in with zero extra steps. (Hermes is the one exception — its auth lives in the per-sandbox workspace, so run `hermes setup` again in `oh-b`.)
 
 The workspaces stay independent — prove it:
 
