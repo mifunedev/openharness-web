@@ -15,7 +15,7 @@ clone-and-own, where `make sandbox` boots one long-lived container and the codin
 of your choice (Claude Code, Codex, Pi, Hermes, and more) works on its own branch and
 identity, running identically on your laptop or an unattended, lights-out remote VM.
 
-### Attach in 3 lines (VS Code)
+### Attach in 3 steps (VS Code)
 
 1. `make sandbox` — build the image and boot the container.
 2. VS Code → Command Palette (Ctrl/Cmd+Shift+P) → "Dev Containers: Attach to Running
