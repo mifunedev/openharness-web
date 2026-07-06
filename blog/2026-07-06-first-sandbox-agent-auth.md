@@ -36,6 +36,8 @@ The workspace volume (`oh_ws_a`) holds your work; the auth/config volumes (Claud
 docker ps --filter name=oh-a --format 'table {{.Names}}\t{{.Status}}'
 ```
 
+> **Driving raw Docker?** Settings you'd put in `harness.yaml` under the `oh` CLI map to Docker flags here: **runtime** knobs are `-e` env vars on `docker run` (Slack tokens, `OH_PULL_POLICY`, …), while **build-time** opt-ins like Hermes are `--build-arg`s on `docker build`. The examples below use both.
+
 ## 2. Attach — use VS Code
 
 Attaching with **VS Code** is the nicest way in — Dev Containers extension → **Attach to Running Container** → `oh-a` opens a full editor *and* auto-forwards any app UIs you launch to your laptop ([Connecting → Option B](/docs/connecting#option-b--vscode-attach-to-running-container-local-host)). But every login below works headless — device codes, token paste, and OAuth URLs — so on a remote host a plain shell is enough:
@@ -79,11 +81,18 @@ pi
 
 The device flow shows a URL and a code you complete in any browser, so no port forwarding is needed — ideal for a VM. (On a *local* machine Pi can instead use a subscription OAuth callback on `localhost:1455`, which VS Code forwards for you.) Pi's config and auth live in `~/.pi`, mounted from the `pi-auth` volume.
 
-Two more things Pi does out of the box: it can run on **OpenAI Codex** (your ChatGPT subscription) through its built-in `openai-codex` provider — `/codex-status` shows your Codex usage without leaving Pi — and it bridges to **Slack**. Set `PI_SLACK_APP_TOKEN` / `PI_SLACK_BOT_TOKEN` in `.devcontainer/.env`, start the bridge with `gateway pi`, and grant trust from inside it with `/msg-bridge` ([Slack integration](/docs/integrations/slack)).
+Two more things Pi does out of the box: it can run on **OpenAI Codex** (your ChatGPT subscription) through its built-in `openai-codex` provider — `/codex-status` shows your Codex usage without leaving Pi — and it bridges to **Slack**. On the raw-Docker path you preconfigure the bridge by passing its tokens straight to `docker run`:
+
+```bash
+  -e PI_SLACK_APP_TOKEN=xapp-…       # add these to the run command
+  -e PI_SLACK_BOT_TOKEN=xoxb-…
+```
+
+Then `gateway pi` starts the bridge with the tokens already in place, and you grant trust from inside it with `/msg-bridge` ([Slack integration](/docs/integrations/slack)). (Under the `oh` CLI these same tokens live in `.devcontainer/.env`.)
 
 ### Hermes (opt-in)
 
-Hermes — Nous Research's self-improving agent CLI — is an **opt-in** harness. It's on `PATH` only if your image was built with `install.hermes: true` in `harness.yaml`. When it is, set it up from inside the sandbox:
+Hermes — Nous Research's self-improving agent CLI — is an **opt-in** harness, and the opt-in is a **build-time** choice: `hermes` is on `PATH` only if the image was built with it. Building your own image? That's `--build-arg INSTALL_HERMES=true` on `docker build` (the `harness.yaml` `install.hermes: true` key is just the `oh` CLI's front-end for the same arg). Because it's baked into the image, a runtime `-e INSTALL_HERMES=true` **won't** add Hermes to the stock published image — build once with the arg, or pull an image that already ships it. When `hermes` is present, set it up from inside the sandbox:
 
 ```bash
 hermes setup           # interactive wizard (or: hermes setup --portal for Nous Portal OAuth)
@@ -93,7 +102,7 @@ hermes doctor          # health check
 
 Like Pi, Hermes can run on **OpenAI Codex** (choose it in `hermes model`) and has its own **Slack** gateway: `hermes gateway setup` configures the app and trust, then `gateway hermes` runs it in a `client-slack-hermes` session — `gateway status` shows both Pi's and Hermes' gateways side by side.
 
-One thing to know for later: unlike the others, Hermes writes its auth to `~/harness/.hermes/auth.json` — **inside the workspace volume**, not a shared home volume. So Hermes is configured **per sandbox**, while `gh`, Claude, Pi, and Codex are shared across sandboxes. (If your published image doesn't include Hermes, enable the flag and rebuild via the default `make sandbox` / Flavor A path.)
+One thing to know for later: unlike the others, Hermes writes its auth to `~/harness/.hermes/auth.json` — **inside the workspace volume**, not a shared home volume. So Hermes is configured **per sandbox**, while `gh`, Claude, Pi, and Codex are shared across sandboxes.
 
 That's it — `oh-a` is a fully signed-in sandbox. Start any agent (`claude`, `codex`, `pi`, `hermes`) and go.
 
