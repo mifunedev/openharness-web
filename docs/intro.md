@@ -8,6 +8,31 @@ title: "Introduction"
 
 Open Harness is your **portable harness** — one repo per sandbox — that wraps your project in an isolated Docker container and versions its state. The repo tracks the agent's identity, skills, crons, and memory in git; the sandbox keeps the agent (Claude Code, Codex, Pi, or another of your choice) off your host machine. The agent owns its workspace, runs against your code, and wakes itself on a schedule via a tiny croner runtime.
 
+## Start Here
+
+Open Harness provides the sandbox; you choose the harness — a Docker workspace you
+clone-and-own, where `make sandbox` boots one long-lived container and the coding agent
+of your choice (Claude Code, Codex, Pi, Hermes, and more) works on its own branch and
+identity, running identically on your laptop or an unattended, lights-out remote VM.
+
+### Attach in 3 steps (VS Code)
+
+1. `make sandbox` — build the image and boot the container.
+2. VS Code → Command Palette (Ctrl/Cmd+Shift+P) → "Dev Containers: Attach to Running
+   Container" → select `openharness`. Ports auto-forward while attached.
+3. Open a terminal inside the container and run `claude` (or `codex` · `pi` · `hermes`).
+
+Full terminal / Remote-SSH options: see [Connecting → Option B](/docs/connecting#option-b--vscode-attach-to-running-container-local-host).
+
+### Prefer Hermes?
+
+[Hermes](/docs/harnesses/hermes) — Nous Research's self-improving agent CLI — is an opt-in harness: set
+`install.hermes: true` in harness.yaml, rebuild, then run `hermes setup`.
+
+:::tip You're reading it
+This IS the rendered docs site (oh.mifune.dev) — use the search bar (top-right) to jump anywhere.
+:::
+
 ## What is Open Harness?
 
 Open Harness is a single repo that *is* your harness: it boots one Docker container — the sandbox — and wraps your project inside it. You bring the sandbox up with `docker compose`, attach to it from your terminal or VS Code, and let your chosen agent work the project over time. Because the harness is a git repo, its whole setup is tracked and versioned — reproducible and portable. There is no per-agent fan-out and no host CLI; everything happens through standard `docker compose` commands and the croner runtime that ships in the image.
