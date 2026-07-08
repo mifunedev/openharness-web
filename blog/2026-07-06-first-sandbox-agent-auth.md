@@ -92,7 +92,14 @@ Then `gateway pi` starts the bridge with the tokens already in place, and you gr
 
 ### Hermes (opt-in)
 
-Hermes — Nous Research's self-improving agent CLI — is an **opt-in** harness, and the opt-in is a **build-time** choice: `hermes` is on `PATH` only if the image was built with it. Building your own image? That's `--build-arg INSTALL_HERMES=true` on `docker build` (the `harness.yaml` `install.hermes: true` key is just the `oh` CLI's front-end for the same arg). Because it's baked into the image, a runtime `-e INSTALL_HERMES=true` **won't** add Hermes to the stock published image — build once with the arg, or pull an image that already ships it. When `hermes` is present, set it up from inside the sandbox:
+Hermes — Nous Research's self-improving agent CLI — is an **opt-in** harness, and the opt-in is a **build-time** choice: `hermes` is on `PATH` only if the image was built with it. The default image this post uses — `ghcr.io/mifunedev/openharness:latest` — is built **without** it, and because the binary is baked at build time, a runtime `-e INSTALL_HERMES=true` won't add it. To get Hermes you build your own image once:
+
+```bash
+docker build --build-arg INSTALL_HERMES=true \
+  -f .devcontainer/Dockerfile -t openharness:hermes .
+```
+
+(The `harness.yaml` `install.hermes: true` key is just the `oh` CLI's front-end for that same build arg.) Run the `docker run` from step 1 against your `openharness:hermes` tag instead of `:latest`, and `hermes` is on `PATH`. Then set it up from inside the sandbox:
 
 ```bash
 hermes setup           # interactive wizard (or: hermes setup --portal for Nous Portal OAuth)
