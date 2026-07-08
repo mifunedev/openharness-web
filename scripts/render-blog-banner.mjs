@@ -22,17 +22,17 @@ if (recipe.version !== 1) {
 const width = recipe.dimensions?.width ?? 1200;
 const height = recipe.dimensions?.height ?? 675;
 const theme = {
-  bg0: recipe.theme?.bg0 ?? "#07111f",
-  bg1: recipe.theme?.bg1 ?? "#0b1728",
-  bg2: recipe.theme?.bg2 ?? "#102a2b",
-  accent: recipe.theme?.accent ?? "#5eead4",
-  accent2: recipe.theme?.accent2 ?? "#22c55e",
-  accentSoft: recipe.theme?.accentSoft ?? "#d6fff6",
-  success: recipe.theme?.success ?? "#4ade80",
-  text: recipe.theme?.text ?? "#f8fafc",
-  muted: recipe.theme?.muted ?? "#cbd5e1",
-  paper: recipe.theme?.paper ?? "#f7f3ea",
-  ink: recipe.theme?.ink ?? "#111827",
+  bg0: recipe.theme?.bg0 ?? "#000000",
+  bg1: recipe.theme?.bg1 ?? "#0a0a0a",
+  surface: recipe.theme?.surface ?? "#0a0a0a",
+  border: recipe.theme?.border ?? "#1f1f1f",
+  accent: recipe.theme?.accent ?? "#4ade80",
+  accent2: recipe.theme?.accent2 ?? "#86efac",
+  amber: recipe.theme?.amber ?? "#d97706",
+  red: recipe.theme?.red ?? "#dc2626",
+  text: recipe.theme?.text ?? "#ffffff",
+  muted: recipe.theme?.muted ?? "#888888",
+  code: recipe.theme?.code ?? "#e5e5e5",
 };
 
 const safe = (value = "") => String(value)
@@ -46,6 +46,7 @@ const tspans = (textLines, x, firstDy, dy) => textLines
   .join("\n");
 
 async function loadImageData(media, fallbackSlot) {
+  if (!media?.source) return null;
   const sourceImage = path.resolve(path.dirname(recipePath), media.source);
   const slot = media.slot ?? fallbackSlot;
   const imageBuffer = await sharp(sourceImage)
@@ -71,95 +72,90 @@ async function renderProofPathCard() {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="${theme.bg0}"/><stop offset="0.55" stop-color="${theme.bg1}"/><stop offset="1" stop-color="${theme.bg2}"/></linearGradient>
-    <radialGradient id="glow" cx="0.7" cy="0.2" r="0.75"><stop offset="0" stop-color="${theme.accent}" stop-opacity="0.26"/><stop offset="1" stop-color="${theme.accent}" stop-opacity="0"/></radialGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="20" stdDeviation="22" flood-color="#000" flood-opacity="0.38"/></filter>
-    <clipPath id="mediaClip"><rect x="${image.slot.left}" y="${image.slot.top}" width="${image.slot.width}" height="${image.slot.height}" rx="${image.slot.radius ?? 18}"/></clipPath>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="${theme.bg0}"/><stop offset="1" stop-color="${theme.bg1}"/></linearGradient>
+    <radialGradient id="glow" cx="0.55" cy="0" r="0.8"><stop offset="0" stop-color="${theme.accent}" stop-opacity="0.15"/><stop offset="1" stop-color="${theme.accent}" stop-opacity="0"/></radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="20" stdDeviation="22" flood-color="#000" flood-opacity="0.5"/></filter>
+    ${image ? `<clipPath id="mediaClip"><rect x="${image.slot.left}" y="${image.slot.top}" width="${image.slot.width}" height="${image.slot.height}" rx="${image.slot.radius ?? 18}"/></clipPath>` : ""}
   </defs>
   <rect width="${width}" height="${height}" fill="url(#bg)"/><rect width="${width}" height="${height}" fill="url(#glow)"/>
-  <g opacity="0.18" stroke="${theme.accent}" stroke-width="1">${gridLines}</g>
-  <circle cx="1035" cy="95" r="135" fill="${theme.accent}" opacity="0.09"/><circle cx="1110" cy="565" r="95" fill="${theme.accentSoft}" opacity="0.08"/>
+  <g opacity="0.13" stroke="${theme.border}" stroke-width="1">${gridLines}</g>
   <g transform="translate(70 68)">
-    <rect x="0" y="0" rx="18" width="${recipe.layout?.eyebrowWidth ?? 240}" height="38" fill="${theme.accentSoft}" fill-opacity="0.10" stroke="${theme.accent}" stroke-opacity="0.36"/>
-    <text x="18" y="25" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="${theme.accentSoft}" letter-spacing="2.5">${safe(content.eyebrow ?? "BLOG GUIDE")}</text>
+    <text x="0" y="0" font-family="Consolas, Menlo, monospace" font-size="15" font-weight="700" fill="${theme.accent}" letter-spacing="2.4">${safe(content.eyebrow ?? "OPEN HARNESS GUIDE")}</text>
     <text x="0" y="112" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="800" fill="${theme.text}">${tspans(headline, 0, 0, 74)}</text>
     <text x="0" y="360" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="500" fill="${theme.muted}">${tspans(proof, 0, 0, 36)}</text>
-    <rect x="0" y="445" rx="18" width="455" height="72" fill="#0f241f" stroke="${theme.success}" stroke-opacity="0.35"/>
-    <text x="24" y="474" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#bbf7d0">${safe(content.ctaTitle ?? "")}</text>
-    <text x="24" y="503" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#d1fae5">${safe(content.ctaBody ?? "")}</text>
-    <text x="0" y="560" font-family="Consolas, Menlo, monospace" font-size="19" fill="#99f6e4">${safe(content.footerUrl ?? "")}</text>
+    <rect x="0" y="445" rx="14" width="455" height="72" fill="${theme.surface}" stroke="${theme.border}"/>
+    <text x="24" y="474" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="${theme.accent2}">${safe(content.ctaTitle ?? "")}</text>
+    <text x="24" y="503" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="${theme.code}">${safe(content.ctaBody ?? "")}</text>
+    <text x="0" y="560" font-family="Consolas, Menlo, monospace" font-size="19" fill="${theme.accent}">${safe(content.footerUrl ?? "")}</text>
   </g>
-  <g filter="url(#shadow)"><rect x="${image.slot.left - 22}" y="${image.slot.top - 22}" width="${image.slot.width + 44}" height="${image.slot.height + 44}" rx="26" fill="#0f172a" stroke="#e2e8f0" stroke-opacity="0.16"/></g>
-  <image x="${image.slot.left}" y="${image.slot.top}" width="${image.slot.width}" height="${image.slot.height}" href="${image.data}" clip-path="url(#mediaClip)"/>
-  <text x="${image.slot.left}" y="558" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="${theme.text}">${safe(content.mediaTitle ?? "")}</text>
-  <text x="${image.slot.left}" y="590" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="${theme.muted}">${safe(content.mediaBody ?? "")}</text>
+  ${image ? `<g filter="url(#shadow)"><rect x="${image.slot.left - 22}" y="${image.slot.top - 22}" width="${image.slot.width + 44}" height="${image.slot.height + 44}" rx="26" fill="${theme.surface}" stroke="${theme.border}"/></g><image x="${image.slot.left}" y="${image.slot.top}" width="${image.slot.width}" height="${image.slot.height}" href="${image.data}" clip-path="url(#mediaClip)"/>` : ""}
 </svg>`;
 }
 
-async function renderChecklistCard() {
-  const media = await loadImageData(recipe.media, { left: 70, top: 390, width: 510, height: 205, radius: 22 });
+async function renderSiteHeroCard() {
   const content = recipe.content ?? {};
-  const headline = content.headlineLines ?? [content.headline ?? ""];
-  const subtitle = content.subtitleLines ?? [];
-  const checklist = content.checklist ?? [];
-  const grid = Array.from({ length: 14 }, (_, i) => `<line x1="0" y1="${80 + i * 38}" x2="1200" y2="${80 + i * 38}"/>`).join("\n");
-  const layout = recipe.layout ?? {};
-  const subtitleY = layout.subtitleY ?? 285;
-  const subtitleSize = layout.subtitleSize ?? 25;
-  const ctaY = layout.ctaY ?? 526;
-  const ctaWidth = layout.ctaWidth ?? 500;
-  const ctaTextSize = layout.ctaTextSize ?? 20;
-  const footerY = layout.footerY ?? 612;
-  const cards = checklist.map((item, index) => {
-    const y = 132 + index * 76;
-    return `<g transform="translate(705 ${y})">
-      <rect x="0" y="0" width="392" height="58" rx="17" fill="#ffffff" stroke="#d8d0c5"/>
-      <circle cx="31" cy="29" r="15" fill="${theme.accent2}" opacity="0.15"/>
-      <text x="24" y="35" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="800" fill="${theme.accent2}">✓</text>
-      <text x="58" y="24" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="800" fill="#6b7280" letter-spacing="1.5">${safe(item.kicker ?? String(index + 1).padStart(2, "0"))}</text>
-      <text x="58" y="45" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="800" fill="${theme.ink}">${safe(item.text ?? item)}</text>
+  const terminalLines = content.terminalLines ?? [];
+  const steps = content.steps ?? [];
+  const meta = content.meta ?? [];
+  const terminalRows = terminalLines.map((line, index) => {
+    const y = 194 + index * 28;
+    const prompt = line.prompt ? `<tspan fill="${theme.accent}">${safe(line.prompt)}</tspan>` : "";
+    const text = `<tspan fill="${line.muted ? theme.muted : theme.code}">${safe(line.text ?? line)}</tspan>`;
+    return `<text x="662" y="${y}" font-family="Consolas, Menlo, monospace" font-size="17">${prompt}${text}</text>`;
+  }).join("\n");
+  const stepRows = steps.map((step, index) => {
+    const x = 92 + index * 252;
+    return `<g transform="translate(${x} 532)">
+      <circle cx="0" cy="0" r="18" fill="${theme.accent}" fill-opacity="0.13" stroke="${theme.accent}" stroke-opacity="0.42"/>
+      <text x="0" y="7" font-family="Consolas, Menlo, monospace" font-size="18" font-weight="800" fill="${theme.accent}" text-anchor="middle">${index + 1}</text>
+      <text x="0" y="48" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" fill="${theme.text}" text-anchor="middle">${safe(step)}</text>
     </g>`;
   }).join("\n");
+  const metaText = meta.map(safe).join("   ·   ");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="paper" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="${theme.paper}"/><stop offset="1" stop-color="#efe8dc"/></linearGradient>
-    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#0f172a" flood-opacity="0.18"/></filter>
-    <clipPath id="mediaClip"><rect x="${media.slot.left}" y="${media.slot.top}" width="${media.slot.width}" height="${media.slot.height}" rx="${media.slot.radius ?? 22}"/></clipPath>
+    <radialGradient id="heroGlow" cx="50%" cy="0%" r="74%"><stop offset="0" stop-color="${theme.accent}" stop-opacity="0.12"/><stop offset="0.62" stop-color="${theme.accent}" stop-opacity="0.03"/><stop offset="1" stop-color="${theme.accent}" stop-opacity="0"/></radialGradient>
+    <filter id="terminalShadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="22" stdDeviation="26" flood-color="#000" flood-opacity="0.55"/></filter>
   </defs>
-  <rect width="${width}" height="${height}" fill="url(#paper)"/>
-  <g opacity="0.24" stroke="#d6cec2" stroke-width="1">${grid}</g>
-  <circle cx="1020" cy="130" r="170" fill="${theme.accent}" opacity="0.13"/>
-  <circle cx="160" cy="610" r="130" fill="${theme.accent2}" opacity="0.10"/>
-  <rect x="36" y="36" width="1128" height="603" rx="36" fill="#fffaf2" stroke="#ded6c9"/>
+  <rect width="1200" height="675" fill="#000"/>
+  <rect width="1200" height="675" fill="url(#heroGlow)"/>
+  <line x1="0" y1="56" x2="1200" y2="56" stroke="${theme.border}"/>
+  <text x="70" y="36" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="800" fill="${theme.text}">Open Harness</text>
+  <text x="1048" y="36" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="600" fill="${theme.muted}">Blog guide</text>
 
-  <g transform="translate(70 72)">
-    <rect x="0" y="0" rx="16" width="248" height="38" fill="#ecfdf5" stroke="#99f6e4"/>
-    <text x="18" y="25" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="800" fill="#0f766e" letter-spacing="2.2">${safe(content.eyebrow ?? "OPEN HARNESS")}</text>
-    <text x="0" y="110" font-family="Arial, Helvetica, sans-serif" font-size="70" font-weight="900" fill="${theme.ink}">${tspans(headline, 0, 0, 76)}</text>
-    <text x="0" y="${subtitleY}" font-family="Arial, Helvetica, sans-serif" font-size="${subtitleSize}" font-weight="500" fill="#475569">${tspans(subtitle, 0, 0, 31)}</text>
-    <rect x="0" y="${ctaY}" rx="18" width="${ctaWidth}" height="58" fill="#102a2b"/>
-    <text x="22" y="${ctaY + 36}" font-family="Arial, Helvetica, sans-serif" font-size="${ctaTextSize}" font-weight="800" fill="#d1fae5">${safe(content.cta ?? "")}</text>
-    <text x="0" y="${footerY}" font-family="Consolas, Menlo, monospace" font-size="18" fill="#0f766e">${safe(content.footerUrl ?? "")}</text>
+  <g transform="translate(70 106)">
+    <text x="0" y="0" font-family="Consolas, Menlo, monospace" font-size="14" font-weight="700" fill="${theme.accent}" letter-spacing="2.5">${safe(content.eyebrow ?? "PORTABLE AGENT HARNESS")}</text>
+    <text x="0" y="78" font-family="Arial, Helvetica, sans-serif" font-size="67" font-weight="900" fill="${theme.text}" letter-spacing="-1.7">${tspans(content.headlineLines ?? [], 0, 0, 74)}</text>
+    <text x="0" y="250" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="${theme.muted}" letter-spacing="-0.2">${tspans(content.subtitleLines ?? [], 0, 0, 34)}</text>
+    <rect x="0" y="330" width="520" height="62" rx="10" fill="${theme.text}"/>
+    <text x="25" y="370" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="800" fill="#000">${safe(content.cta ?? "")}</text>
   </g>
 
-  <g filter="url(#softShadow)">
-    <rect x="${media.slot.left - 10}" y="${media.slot.top - 10}" width="${media.slot.width + 20}" height="${media.slot.height + 20}" rx="28" fill="#111827" opacity="0.16"/>
+  <g filter="url(#terminalShadow)">
+    <rect x="622" y="126" width="520" height="326" rx="12" fill="${theme.surface}" stroke="${theme.border}"/>
+    <rect x="622" y="126" width="520" height="44" rx="12" fill="#000" stroke="${theme.border}"/>
+    <circle cx="650" cy="148" r="7" fill="${theme.red}"/>
+    <circle cx="674" cy="148" r="7" fill="${theme.amber}"/>
+    <circle cx="698" cy="148" r="7" fill="${theme.accent}"/>
+    <text x="732" y="154" font-family="Consolas, Menlo, monospace" font-size="13" fill="${theme.muted}">~/openharness — zsh</text>
+    ${terminalRows}
+    <rect x="654" y="384" width="452" height="42" rx="8" fill="#000" stroke="${theme.border}"/>
+    <text x="674" y="411" font-family="Consolas, Menlo, monospace" font-size="16" fill="${theme.accent}">.oh/worktrees/&lt;task&gt; → issue → branch → PR</text>
   </g>
-  <image x="${media.slot.left}" y="${media.slot.top}" width="${media.slot.width}" height="${media.slot.height}" href="${media.data}" clip-path="url(#mediaClip)"/>
 
-  <text x="705" y="88" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="900" fill="${theme.ink}">${safe(content.checklistTitle ?? "Setup path")}</text>
-  <text x="705" y="116" font-family="Arial, Helvetica, sans-serif" font-size="17" fill="#64748b">${safe(content.checklistSubtitle ?? "Concrete checkpoints from the post")}</text>
-  ${cards}
+  <line x1="70" y1="498" x2="1130" y2="498" stroke="${theme.border}"/>
+  ${stepRows}
+  <text x="70" y="642" font-family="Consolas, Menlo, monospace" font-size="15" fill="${theme.muted}">${safe(content.footerUrl ?? "")}${metaText ? "   ·   " : ""}${metaText}</text>
 </svg>`;
 }
 
 let svg;
 if (recipe.template === "proof-path-card-v1") {
   svg = await renderProofPathCard();
-} else if (recipe.template === "checklist-card-v1") {
-  svg = await renderChecklistCard();
+} else if (recipe.template === "site-hero-card-v1") {
+  svg = await renderSiteHeroCard();
 } else {
   throw new Error(`Unsupported banner template: ${recipe.template}`);
 }

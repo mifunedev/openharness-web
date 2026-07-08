@@ -14,7 +14,7 @@
 
 ## Suggested asset
 
-Use the deterministic promo card first; it pulls the blog's headline, proof path, and setup screenshot into a feed-native image.
+Use the deterministic dark promo card first; it matches the Open Harness site theme: black background, near-black terminal surface, green terminal accents, muted gray support text, and no generic AI imagery.
 
 - Source recipe: `promos/banner-recipes/2026-07-07-open-harness-demo-guide.json`
 - Render command: `pnpm run render:blog-banner -- promos/banner-recipes/2026-07-07-open-harness-demo-guide.json`
@@ -146,16 +146,19 @@ Use sparingly; prefer 2-4 per platform.
 
 ## Post Bridge drafts
 
-- X / JohnEggz draft: `30214ff7-7b37-4b9c-878b-5e5b26df7fb9`
-- LinkedIn page draft: `8eff3f37-3d41-454f-b084-b63018324647`
-- Original X / JohnEggz draft: `30214ff7-7b37-4b9c-878b-5e5b26df7fb9`
-- Original LinkedIn page draft: `8eff3f37-3d41-454f-b084-b63018324647`
-- Original attached media ID: `a4d2ec71-5853-4fa9-8e58-a1e84ee4fcff`
-- New draft set media ID: `79aa8dea-c4bd-49ad-938a-ff71a5886155`
-- New cross-platform variant 1: `7a4f81a9-6a37-4d46-89c1-be8c054a9747` — checklist/setup path angle
-- New cross-platform variant 2: `c7b08db4-1714-4b95-be02-921e35d52ce0` — worktree/guardrails angle
-- New cross-platform variant 3: `d6ba458c-c665-4b8b-95b4-4fdc4c62c702` — fresh machine/first PR angle
-- Status: saved in Post Bridge as drafts (`is_draft: true`); not published or scheduled live.
+Preferred dark site-theme drafts:
+
+- Dark media ID: `9a615b9f-433d-440d-8551-b4baefc18af1`
+- Variant 1: `3fa6c77b-5cd8-4931-83da-71fecb9cbcbc` — checklist/setup path angle
+- Variant 2: `f5e267ca-8afb-4c18-8f0f-4a2c5c31da4d` — worktree/guardrails angle
+- Variant 3: `269aad21-e16a-43a7-9bba-b61a3dbbfed4` — fresh machine/first PR angle
+
+Superseded draft sets kept only for audit/history:
+
+- Original separate drafts: `30214ff7-7b37-4b9c-878b-5e5b26df7fb9`, `8eff3f37-3d41-454f-b084-b63018324647`
+- Light checklist variants: `7a4f81a9-6a37-4d46-89c1-be8c054a9747`, `c7b08db4-1714-4b95-be02-921e35d52ce0`, `d6ba458c-c665-4b8b-95b4-4fdc4c62c702`
+
+Status: saved in Post Bridge as drafts (`is_draft: true`); not published or scheduled live.
 
 ## Posting checklist
 

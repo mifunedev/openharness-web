@@ -1,75 +1,74 @@
 {
   "version": 1,
-  "template": "checklist-card-v1",
+  "template": "site-hero-card-v1",
   "dimensions": {
     "width": 1200,
     "height": 675
   },
   "theme": {
-    "paper": "#f7f3ea",
-    "ink": "#111827",
-    "accent": "#5eead4",
-    "accent2": "#22c55e",
-    "text": "#f8fafc",
-    "muted": "#475569"
-  },
-  "layout": {
-    "subtitleY": 292,
-    "subtitleSize": 24,
-    "ctaY": 336,
-    "ctaWidth": 500,
-    "ctaTextSize": 18,
-    "footerY": 560
+    "bg0": "#000000",
+    "bg1": "#0a0a0a",
+    "surface": "#0a0a0a",
+    "border": "#1f1f1f",
+    "accent": "#4ade80",
+    "accent2": "#86efac",
+    "amber": "#d97706",
+    "red": "#dc2626",
+    "text": "#ffffff",
+    "muted": "#888888",
+    "code": "#e5e5e5"
   },
   "content": {
-    "eyebrow": "OPEN HARNESS GUIDE",
+    "eyebrow": "PORTABLE AGENT HARNESS",
     "headlineLines": [
       "Fresh sandbox",
-      "→ first PR"
+      "to first PR"
     ],
     "subtitleLines": [
-      "A repeatable setup checklist for coding agents",
-      "working inside an isolated Docker workspace."
+      "A repeatable setup flow for coding agents",
+      "inside an isolated Docker workspace."
     ],
-    "cta": "Feedback wanted: setup gaps + guardrails",
+    "cta": "Feedback welcome: setup gaps + guardrails",
     "footerUrl": "oh.mifune.dev/blog/open-harness-demo-guide",
-    "checklistTitle": "What the post walks through",
-    "checklistSubtitle": "Pulled directly from the demo guide",
-    "checklist": [
+    "terminalLines": [
       {
-        "kicker": "01",
-        "text": "Install the sandbox"
+        "prompt": "$ ",
+        "text": "curl -fsSL oh.mifune.dev/install.sh | bash"
       },
       {
-        "kicker": "02",
-        "text": "Attach VS Code"
+        "prompt": "$ ",
+        "text": "make shell"
       },
       {
-        "kicker": "03",
-        "text": "Authenticate GitHub"
+        "prompt": "$ ",
+        "text": "gh auth login && gh auth setup-git"
       },
       {
-        "kicker": "04",
-        "text": "Isolate worktrees"
+        "prompt": "$ ",
+        "text": "claude   # or codex · pi"
       },
       {
-        "kicker": "05",
-        "text": "Open the first PR"
+        "text": "# safe default: Docker socket off",
+        "muted": true
+      },
+      {
+        "text": "# isolate agent work in .oh/worktrees/",
+        "muted": true
       }
+    ],
+    "steps": [
+      "Install",
+      "Attach",
+      "Auth",
+      "Isolate",
+      "PR"
+    ],
+    "meta": [
+      "Docker sandbox",
+      "shared .oh context",
+      "worktree isolation",
+      "normal GitHub PRs"
     ]
-  },
-  "media": {
-    "source": "../../static/img/blog/2026-07-07-open-harness-demo-guide/post-install-lifecycle.jpg",
-    "fit": "cover",
-    "position": "left top",
-    "slot": {
-      "left": 70,
-      "top": 480,
-      "width": 510,
-      "height": 105,
-      "radius": 22
-    },
-    "alt": "Open Harness demo guide banner with a five-step setup checklist: install the sandbox, attach VS Code, authenticate GitHub, isolate worktrees, and open the first PR."
   },
   "outputs": {
     "svg": "../../static/img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.svg",
@@ -77,9 +76,9 @@
     "jpgQuality": 92
   },
   "reviewChecklist": [
+    "Dark palette matches the Open Harness site: black background, near-black surfaces, green terminal accent, muted gray copy.",
     "Headline is grounded in the post and avoids inflated claims.",
-    "Checklist items match the blog body and are useful to the target reader.",
-    "Screenshot is from the post assets and contains no secrets, tokens, or unwanted UI.",
+    "Terminal lines and steps are pulled from the blog body.",
     "CTA asks for feedback from the intended audience.",
     "Rendered JPG is 1200×675 and suitable for LinkedIn/X link-adjacent posts."
   ]
