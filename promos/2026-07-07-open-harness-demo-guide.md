@@ -55,9 +55,9 @@ The walkthrough is now a written setup runbook:
 4. isolate worktrees
 5. open a normal PR
 
-Guide: oh.mifune.dev/blog/open-harness-demo-guide (setup runbook)
+Guide: https://oh.mifune.dev/blog/open-harness-demo-guide
 
-⭐ Repo: github.com/mifunedev/openharness — star if this setup is useful.
+⭐ Repo: https://github.com/mifunedev/openharness — star if this setup is useful.
 
 The useful part is not magic. It is a repeatable workspace with clear boundaries for coding agents.
 
@@ -69,14 +69,15 @@ The useful part is not magic. It is a repeatable workspace with clear boundaries
 
 Install sandbox → attach VS Code → GitHub auth → isolated worktrees → normal PR.
 
-Guide: oh.mifune.dev/blog/open-harness-demo-guide (setup runbook)
-⭐ Repo: github.com/mifunedev/openharness — star if useful
+Links are on the card/site. Search: Open Harness demo guide.
+
+⭐ Star Open Harness on GitHub if useful.
 
 Checks:
 
-- X length: 255 chars.
-- Final X token: `useful`, not a URL.
-- Both URLs have visible non-URL text after them.
+- X length: 234 chars.
+- Contains no URL-like tokens (`http`, `oh.mifune.dev`, or `github.com`).
+- Uses a visible/searchable CTA instead of relying on X to render links.
 
 ## Hashtags / keywords
 
@@ -95,31 +96,34 @@ Use sparingly; prefer 2-4 per platform.
 
 ## Post Bridge publication
 
-### Protocol-less separate platform-specific review drafts
+### No-link X review draft plus link-bearing LinkedIn draft
 
-Created fresh separate X-only and LinkedIn-only drafts on 2026-07-08 after learning that protocol-less domains tend to render better in this social flow.
+Created fresh separate X-only and LinkedIn-only drafts on 2026-07-08 after repeated observation that links disappear from X posts after posting/checking.
 
-- Protocol-less media ID: `aeb1ed6c-92fc-4a82-9e01-9c26970e1e89`
-- X / JohnEggz draft: `94f87ae9-185d-4e7c-b79e-16935f7a4efd`
+- No-link media ID: `fb9b7be4-3caf-4dbc-8d08-2da5941f7d5f`
+- X / JohnEggz draft: `98c67ed5-5a5e-489b-b051-acc6aad79e93`
   - Account: `41738`
   - Status: saved as draft only (`is_draft: true`, `scheduled_at: null`); not published or scheduled live.
-  - X check: 255 chars; final token is `useful`, not a URL.
-  - Link check: uses `oh.mifune.dev/...` and `github.com/...`, no `https://` in post text.
-- LinkedIn / Ruska AI draft: `bae96c7b-f8ec-46ef-bdd2-f3c7689b673d`
+  - X check: 234 chars and contains no URL-like tokens (`http`, `oh.mifune.dev`, or `github.com`).
+  - CTA strategy: rely on the card/site/search text instead of X caption links.
+- LinkedIn / Ruska AI draft: `3c0f224a-2f03-4b99-9520-eac889376c8c`
   - Account: `41732`
   - Status: saved as draft only (`is_draft: true`, `scheduled_at: null`); not published or scheduled live.
   - Formatting check: no markdown `**bold**`; uses Unicode emphasis in the first line for review.
-  - Link check: uses `oh.mifune.dev/...` and `github.com/...`, no `https://` in post text.
+  - Link strategy: normal `https://` links are retained for LinkedIn.
 - Cadence: exactly one replacement draft per target account.
 
 ### Superseded replacement drafts
 
+- Protocol-less X draft: `94f87ae9-185d-4e7c-b79e-16935f7a4efd`
+- Protocol-less LinkedIn draft: `bae96c7b-f8ec-46ef-bdd2-f3c7689b673d`
+- Protocol-less media ID: `aeb1ed6c-92fc-4a82-9e01-9c26970e1e89`
 - Separate X draft: `a6548d67-a3a5-415a-8bcd-d1faa94d8d93`
 - Separate LinkedIn draft: `c17709bf-323c-4182-854a-04a687c42b03`
 - Separate draft media ID: `1082bc74-74dd-4960-a98b-95496b14d222`
 - Combined multi-account draft: `74655ecc-3aba-493d-bb87-0111a0ce42c8`
 - Prior combined media ID: `1e400998-adb7-4edb-aaba-ff9e02840cbd`
-- Superseded because the links still used full `https://` URLs or account-specific formatting needed separate review.
+- Superseded because X links disappeared even after moving away from final position and removing `https://`, or account-specific formatting needed separate review.
 
 ### Superseded publication
 
@@ -152,8 +156,8 @@ Before publishing the replacement drafts:
 - [x] If attaching an image, use the rerendered `social-promo-card.jpg` and the alt text above.
 - [x] Confirm no screenshot exposes tokens, OAuth codes, private account details, or unwanted personal UI.
 - [x] Keep LinkedIn copy as a post, not an article; link back to the blog.
-- [x] Keep URLs away from the final X token/line.
-- [x] Use protocol-less domains in post text (`oh.mifune.dev/...`, `github.com/...`) instead of `https://...`.
+- [x] Keep X caption link-free because X links disappear after posting/checking in this flow.
+- [x] Put the destination cue in the card/search CTA for X; keep direct links only in LinkedIn.
 - [x] Limit replacement to one post per account for the day.
 - [x] Keep X and LinkedIn as separate account-specific drafts because formatting differs by platform.
 - [ ] Publish only after a fresh explicit `/post-bridge` confirmation gate.
