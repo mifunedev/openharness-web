@@ -64,7 +64,9 @@ New Open Harness guide: fresh sandbox → VS Code attach → GitHub auth → iso
 
 If you are testing Claude Code, Codex, Pi, or other coding agents, the useful pattern is putting them in a repeatable Docker sandbox with shared context and isolated task workspaces.
 
-https://oh.mifune.dev/blog/open-harness-demo-guide
+I’d value feedback from agent builders and operators: what setup steps, safety defaults, or workflow guardrails would make this more useful?
+
+Guide: https://oh.mifune.dev/blog/open-harness-demo-guide
 
 #AIAgents #Docker #DeveloperTools
 
@@ -78,9 +80,9 @@ If you try it, the setup detail I would not skip is VS Code Dev Containers attac
 
 ### X — single post
 
-I wrote up the Open Harness demo: fresh machine → Docker sandbox → VS Code attach → GitHub auth → isolated `.oh/worktrees/` → first agent-created PR.
+I wrote up the Open Harness demo: fresh machine → Docker sandbox → VS Code attach → GitHub auth → isolated `.oh/worktrees/` → first PR.
 
-A repeatable place for coding agents to work.
+If you run coding agents, I’d value feedback on the setup path and guardrails.
 
 https://oh.mifune.dev/blog/open-harness-demo-guide
 
@@ -141,6 +143,13 @@ Use sparingly; prefer 2-4 per platform.
 - agentic development
 - remote development
 - VS Code Dev Containers
+
+## Post Bridge drafts
+
+- X / JohnEggz draft: `30214ff7-7b37-4b9c-878b-5e5b26df7fb9`
+- LinkedIn page draft: `8eff3f37-3d41-454f-b084-b63018324647`
+- Attached media ID: `a4d2ec71-5853-4fa9-8e58-a1e84ee4fcff`
+- Status: saved in Post Bridge as drafts (`is_draft: true`); not published or scheduled live.
 
 ## Posting checklist
 
