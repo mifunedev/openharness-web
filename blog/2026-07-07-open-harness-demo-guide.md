@@ -11,6 +11,31 @@ The fastest way to understand Open Harness is to watch a clean machine become an
 
 That is what the [full Loom walkthrough](https://www.loom.com/share/875737ef981f4b378a005be62d1e435b) shows. This post turns the demo into a written runbook, with the important corrections called out: safe defaults, when *not* to mount Docker, what lives in `.oh/`, and how worktrees keep agent work isolated.
 
+<div style={{ position: "relative", paddingBottom: "56.25%", height: 0, margin: "2rem 0", overflow: "hidden", borderRadius: "12px" }}>
+  <iframe
+    src="https://www.loom.com/embed/875737ef981f4b378a005be62d1e435b"
+    title="From Fresh Sandbox to First PR: An Open Harness Demo Guide"
+    frameBorder="0"
+    webkitallowfullscreen="true"
+    mozallowfullscreen="true"
+    allowFullScreen
+    style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+  />
+</div>
+
+<div style={{ margin: "0 0 2rem" }}>
+  <a href="https://www.loom.com/share/875737ef981f4b378a005be62d1e435b">
+    <strong>From Fresh Sandbox to First PR: An Open Harness Demo Guide — Watch Video</strong>
+  </a>
+  <a href="https://www.loom.com/share/875737ef981f4b378a005be62d1e435b" style={{ display: "block", marginTop: "0.75rem" }}>
+    <img
+      alt="From Fresh Sandbox to First PR: An Open Harness Demo Guide - Watch Video"
+      style={{ maxWidth: "300px", borderRadius: "8px" }}
+      src="https://cdn.loom.com/sessions/thumbnails/875737ef981f4b378a005be62d1e435b-0f20cd0f63332118-full-play.gif#t=0.1"
+    />
+  </a>
+</div>
+
 <!-- truncate -->
 
 ## What the demo proves
