@@ -18,7 +18,8 @@ Use the deterministic dark promo card first; it matches the Open Harness site th
 
 - Source recipe: `promos/banner-recipes/2026-07-07-open-harness-demo-guide.json`
 - Render command: `pnpm run render:blog-banner -- promos/banner-recipes/2026-07-07-open-harness-demo-guide.json`
-- Editable SVG output: `static/img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.svg`
+- Renderer: browserless HTML/CSS-like layout via Satori + Sharp; no Chromium/browser screenshot dependency.
+- Rendered SVG output: `static/img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.svg`
 - Preferred local asset: `static/img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.jpg`
 - Preferred public asset after merge: <https://oh.mifune.dev/img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.jpg>
 - Fallback local screenshot: `static/img/blog/2026-07-07-open-harness-demo-guide/install-prereqs.jpg`
@@ -146,17 +147,18 @@ Use sparingly; prefer 2-4 per platform.
 
 ## Post Bridge drafts
 
-Preferred dark site-theme drafts:
+Preferred Satori dark site-theme drafts:
 
-- Dark media ID: `9a615b9f-433d-440d-8551-b4baefc18af1`
-- Variant 1: `3fa6c77b-5cd8-4931-83da-71fecb9cbcbc` — checklist/setup path angle
-- Variant 2: `f5e267ca-8afb-4c18-8f0f-4a2c5c31da4d` — worktree/guardrails angle
-- Variant 3: `269aad21-e16a-43a7-9bba-b61a3dbbfed4` — fresh machine/first PR angle
+- Satori media ID: `938a2e4e-163d-4f7b-a42e-ab99cab01868`
+- Variant 1: `e4771829-fdb9-422f-895f-5ac660ca3fe2` — checklist/setup path angle
+- Variant 2: `dff682c4-f7b4-4370-8ec4-05df2bce37c0` — worktree/guardrails angle
+- Variant 3: `8e634328-a218-4565-9a1a-5b1316d2c8e7` — fresh machine/first PR angle
 
 Superseded draft sets kept only for audit/history:
 
 - Original separate drafts: `30214ff7-7b37-4b9c-878b-5e5b26df7fb9`, `8eff3f37-3d41-454f-b084-b63018324647`
 - Light checklist variants: `7a4f81a9-6a37-4d46-89c1-be8c054a9747`, `c7b08db4-1714-4b95-be02-921e35d52ce0`, `d6ba458c-c665-4b8b-95b4-4fdc4c62c702`
+- Hand-positioned dark SVG variants: `3fa6c77b-5cd8-4931-83da-71fecb9cbcbc`, `f5e267ca-8afb-4c18-8f0f-4a2c5c31da4d`, `269aad21-e16a-43a7-9bba-b61a3dbbfed4`
 
 Status: saved in Post Bridge as drafts (`is_draft: true`); not published or scheduled live.
 

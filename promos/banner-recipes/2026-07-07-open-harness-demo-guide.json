@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "renderer": "satori-html-layout-v1",
   "template": "site-hero-card-v1",
   "dimensions": {
     "width": 1200,
@@ -76,6 +77,7 @@
     "jpgQuality": 92
   },
   "reviewChecklist": [
+    "Browserless HTML/CSS-like layout keeps headline, CTA, terminal, steps, and footer aligned without a Chromium screenshot dependency.",
     "Dark palette matches the Open Harness site: black background, near-black surfaces, green terminal accent, muted gray copy.",
     "Headline is grounded in the post and avoids inflated claims.",
     "Terminal lines and steps are pulled from the blog body.",

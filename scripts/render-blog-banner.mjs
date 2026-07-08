@@ -2,6 +2,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import React from "react";
+import satori from "satori";
 import sharp from "sharp";
 
 const cwd = process.cwd();
@@ -12,6 +14,7 @@ if (!recipeArg) {
   process.exit(1);
 }
 
+const h = React.createElement;
 const recipePath = path.resolve(cwd, recipeArg);
 const recipe = JSON.parse(await fs.readFile(recipePath, "utf8"));
 
@@ -35,15 +38,54 @@ const theme = {
   code: recipe.theme?.code ?? "#e5e5e5",
 };
 
-const safe = (value = "") => String(value)
-  .replaceAll("&", "&amp;")
-  .replaceAll("<", "&lt;")
-  .replaceAll(">", "&gt;")
-  .replaceAll('"', "&quot;");
 const rel = (target) => path.relative(cwd, target);
-const tspans = (textLines, x, firstDy, dy) => textLines
-  .map((line, index) => `<tspan x="${x}" dy="${index === 0 ? firstDy : dy}">${safe(line)}</tspan>`)
-  .join("\n");
+const withAlpha = (hex, alpha) => {
+  const clean = hex.replace("#", "");
+  const bigint = Number.parseInt(clean.length === 3
+    ? clean.split("").map((char) => char + char).join("")
+    : clean, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+async function readFont(candidatePaths, label) {
+  for (const candidate of candidatePaths) {
+    try {
+      return await fs.readFile(candidate);
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+    }
+  }
+  throw new Error(`Missing font for ${label}. Tried: ${candidatePaths.join(", ")}`);
+}
+
+async function loadFonts() {
+  const sans = await readFont([
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf",
+  ], "sans regular");
+  const sansBold = await readFont([
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    "/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf",
+  ], "sans bold");
+  const mono = await readFont([
+    "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+    "/usr/share/fonts/truetype/liberation2/LiberationMono-Regular.ttf",
+  ], "mono regular");
+  const monoBold = await readFont([
+    "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf",
+    "/usr/share/fonts/truetype/liberation2/LiberationMono-Bold.ttf",
+  ], "mono bold");
+
+  return [
+    { name: "InterFallback", data: sans, weight: 400, style: "normal" },
+    { name: "InterFallback", data: sansBold, weight: 700, style: "normal" },
+    { name: "MonoFallback", data: mono, weight: 400, style: "normal" },
+    { name: "MonoFallback", data: monoBold, weight: 700, style: "normal" },
+  ];
+}
 
 async function loadImageData(media, fallbackSlot) {
   if (!media?.source) return null;
@@ -62,34 +104,139 @@ async function loadImageData(media, fallbackSlot) {
   };
 }
 
+const lineStack = (lines, style, lineGap = 0) => h(
+  "div",
+  { style: { display: "flex", flexDirection: "column" } },
+  ...(lines ?? []).map((line, index) => h("div", {
+    key: `${line}-${index}`,
+    style: {
+      ...style,
+      marginTop: index === 0 ? 0 : lineGap,
+    },
+  }, line)),
+);
+
 async function renderProofPathCard() {
   const image = await loadImageData(recipe.media, { left: 622, top: 108, width: 500, height: 386, radius: 18 });
   const content = recipe.content ?? {};
-  const headline = content.headlineLines ?? [content.headline ?? ""];
-  const proof = content.proofLines ?? [];
-  const gridLines = Array.from({ length: 18 }, (_, i) => `<line x1="${i * 72}" y1="0" x2="${i * 72 - 260}" y2="${height}"/>`).join("\n");
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="${theme.bg0}"/><stop offset="1" stop-color="${theme.bg1}"/></linearGradient>
-    <radialGradient id="glow" cx="0.55" cy="0" r="0.8"><stop offset="0" stop-color="${theme.accent}" stop-opacity="0.15"/><stop offset="1" stop-color="${theme.accent}" stop-opacity="0"/></radialGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="20" stdDeviation="22" flood-color="#000" flood-opacity="0.5"/></filter>
-    ${image ? `<clipPath id="mediaClip"><rect x="${image.slot.left}" y="${image.slot.top}" width="${image.slot.width}" height="${image.slot.height}" rx="${image.slot.radius ?? 18}"/></clipPath>` : ""}
-  </defs>
-  <rect width="${width}" height="${height}" fill="url(#bg)"/><rect width="${width}" height="${height}" fill="url(#glow)"/>
-  <g opacity="0.13" stroke="${theme.border}" stroke-width="1">${gridLines}</g>
-  <g transform="translate(70 68)">
-    <text x="0" y="0" font-family="Consolas, Menlo, monospace" font-size="15" font-weight="700" fill="${theme.accent}" letter-spacing="2.4">${safe(content.eyebrow ?? "OPEN HARNESS GUIDE")}</text>
-    <text x="0" y="112" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="800" fill="${theme.text}">${tspans(headline, 0, 0, 74)}</text>
-    <text x="0" y="360" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="500" fill="${theme.muted}">${tspans(proof, 0, 0, 36)}</text>
-    <rect x="0" y="445" rx="14" width="455" height="72" fill="${theme.surface}" stroke="${theme.border}"/>
-    <text x="24" y="474" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="${theme.accent2}">${safe(content.ctaTitle ?? "")}</text>
-    <text x="24" y="503" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="${theme.code}">${safe(content.ctaBody ?? "")}</text>
-    <text x="0" y="560" font-family="Consolas, Menlo, monospace" font-size="19" fill="${theme.accent}">${safe(content.footerUrl ?? "")}</text>
-  </g>
-  ${image ? `<g filter="url(#shadow)"><rect x="${image.slot.left - 22}" y="${image.slot.top - 22}" width="${image.slot.width + 44}" height="${image.slot.height + 44}" rx="26" fill="${theme.surface}" stroke="${theme.border}"/></g><image x="${image.slot.left}" y="${image.slot.top}" width="${image.slot.width}" height="${image.slot.height}" href="${image.data}" clip-path="url(#mediaClip)"/>` : ""}
-</svg>`;
+  return h("div", {
+    style: {
+      width,
+      height,
+      display: "flex",
+      position: "relative",
+      backgroundColor: theme.bg0,
+      color: theme.text,
+      fontFamily: "InterFallback",
+      overflow: "hidden",
+    },
+  },
+    h("div", {
+      style: {
+        display: "flex",
+        position: "absolute",
+        inset: 0,
+        backgroundColor: theme.bg1,
+      },
+    }),
+    h("div", {
+      style: {
+        display: "flex",
+        position: "absolute",
+        left: -120,
+        top: -180,
+        width: 760,
+        height: 760,
+        borderRadius: 760,
+        backgroundColor: withAlpha(theme.accent, 0.10),
+      },
+    }),
+    h("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        position: "absolute",
+        left: 70,
+        top: 68,
+        width: 500,
+      },
+    },
+      h("div", {
+        style: {
+          fontFamily: "MonoFallback",
+          fontSize: 15,
+          fontWeight: 700,
+          color: theme.accent,
+          letterSpacing: 2.4,
+          textTransform: "uppercase",
+        },
+      }, content.eyebrow ?? "OPEN HARNESS GUIDE"),
+      h("div", { style: { display: "flex", flexDirection: "column", marginTop: 60 } },
+        lineStack(content.headlineLines ?? [content.headline ?? ""], {
+          fontSize: 64,
+          fontWeight: 700,
+          letterSpacing: -1.2,
+          lineHeight: 1.05,
+          color: theme.text,
+        }, 6),
+      ),
+      h("div", { style: { display: "flex", flexDirection: "column", marginTop: 38 } },
+        lineStack(content.proofLines ?? [], {
+          fontSize: 25,
+          lineHeight: 1.3,
+          color: theme.muted,
+        }, 3),
+      ),
+      h("div", {
+        style: {
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          marginTop: 42,
+          width: 455,
+          height: 72,
+          borderRadius: 14,
+          backgroundColor: theme.surface,
+          border: `1px solid ${theme.border}`,
+          paddingLeft: 24,
+        },
+      },
+        h("div", { style: { fontSize: 18, fontWeight: 700, color: theme.accent2 } }, content.ctaTitle ?? ""),
+        h("div", { style: { marginTop: 8, fontSize: 18, color: theme.code } }, content.ctaBody ?? ""),
+      ),
+      h("div", {
+        style: {
+          marginTop: 34,
+          fontFamily: "MonoFallback",
+          fontSize: 19,
+          color: theme.accent,
+        },
+      }, content.footerUrl ?? ""),
+    ),
+    image && h("div", {
+      style: {
+        display: "flex",
+        position: "absolute",
+        left: image.slot.left - 22,
+        top: image.slot.top - 22,
+        width: image.slot.width + 44,
+        height: image.slot.height + 44,
+        borderRadius: (image.slot.radius ?? 18) + 8,
+        backgroundColor: theme.surface,
+        border: `1px solid ${theme.border}`,
+        padding: 22,
+      },
+    }, h("img", {
+      src: image.data,
+      style: {
+        width: image.slot.width,
+        height: image.slot.height,
+        borderRadius: image.slot.radius ?? 18,
+        objectFit: "cover",
+      },
+    })),
+  );
 }
 
 async function renderSiteHeroCard() {
@@ -97,65 +244,267 @@ async function renderSiteHeroCard() {
   const terminalLines = content.terminalLines ?? [];
   const steps = content.steps ?? [];
   const meta = content.meta ?? [];
-  const terminalRows = terminalLines.map((line, index) => {
-    const y = 194 + index * 28;
-    const prompt = line.prompt ? `<tspan fill="${theme.accent}">${safe(line.prompt)}</tspan>` : "";
-    const text = `<tspan fill="${line.muted ? theme.muted : theme.code}">${safe(line.text ?? line)}</tspan>`;
-    return `<text x="662" y="${y}" font-family="Consolas, Menlo, monospace" font-size="17">${prompt}${text}</text>`;
-  }).join("\n");
-  const stepRows = steps.map((step, index) => {
-    const x = 92 + index * 252;
-    return `<g transform="translate(${x} 532)">
-      <circle cx="0" cy="0" r="18" fill="${theme.accent}" fill-opacity="0.13" stroke="${theme.accent}" stroke-opacity="0.42"/>
-      <text x="0" y="7" font-family="Consolas, Menlo, monospace" font-size="18" font-weight="800" fill="${theme.accent}" text-anchor="middle">${index + 1}</text>
-      <text x="0" y="48" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" fill="${theme.text}" text-anchor="middle">${safe(step)}</text>
-    </g>`;
-  }).join("\n");
-  const metaText = meta.map(safe).join("   ·   ");
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="heroGlow" cx="50%" cy="0%" r="74%"><stop offset="0" stop-color="${theme.accent}" stop-opacity="0.12"/><stop offset="0.62" stop-color="${theme.accent}" stop-opacity="0.03"/><stop offset="1" stop-color="${theme.accent}" stop-opacity="0"/></radialGradient>
-    <filter id="terminalShadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="22" stdDeviation="26" flood-color="#000" flood-opacity="0.55"/></filter>
-  </defs>
-  <rect width="1200" height="675" fill="#000"/>
-  <rect width="1200" height="675" fill="url(#heroGlow)"/>
-  <line x1="0" y1="56" x2="1200" y2="56" stroke="${theme.border}"/>
-  <text x="70" y="36" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="800" fill="${theme.text}">Open Harness</text>
-  <text x="1048" y="36" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="600" fill="${theme.muted}">Blog guide</text>
+  return h("div", {
+    style: {
+      width,
+      height,
+      display: "flex",
+      flexDirection: "column",
+      position: "relative",
+      backgroundColor: theme.bg0,
+      color: theme.text,
+      fontFamily: "InterFallback",
+      overflow: "hidden",
+    },
+  },
+    h("div", {
+      style: {
+        display: "flex",
+        position: "absolute",
+        left: 255,
+        top: -475,
+        width: 920,
+        height: 920,
+        borderRadius: 920,
+        backgroundColor: withAlpha(theme.accent, 0.10),
+      },
+    }),
+    h("div", {
+      style: {
+        display: "flex",
+        position: "absolute",
+        left: 0,
+        top: 0,
+        width,
+        height: 56,
+        borderBottom: `1px solid ${theme.border}`,
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingLeft: 70,
+        paddingRight: 70,
+      },
+    },
+      h("div", { style: { fontSize: 18, fontWeight: 700 } }, "Open Harness"),
+      h("div", { style: { fontSize: 15, fontWeight: 700, color: theme.muted } }, "Blog guide"),
+    ),
 
-  <g transform="translate(70 106)">
-    <text x="0" y="0" font-family="Consolas, Menlo, monospace" font-size="14" font-weight="700" fill="${theme.accent}" letter-spacing="2.5">${safe(content.eyebrow ?? "PORTABLE AGENT HARNESS")}</text>
-    <text x="0" y="78" font-family="Arial, Helvetica, sans-serif" font-size="67" font-weight="900" fill="${theme.text}" letter-spacing="-1.7">${tspans(content.headlineLines ?? [], 0, 0, 74)}</text>
-    <text x="0" y="250" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="${theme.muted}" letter-spacing="-0.2">${tspans(content.subtitleLines ?? [], 0, 0, 34)}</text>
-    <rect x="0" y="330" width="520" height="62" rx="10" fill="${theme.text}"/>
-    <text x="25" y="370" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="800" fill="#000">${safe(content.cta ?? "")}</text>
-  </g>
+    h("div", {
+      style: {
+        display: "flex",
+        flexDirection: "row",
+        position: "absolute",
+        left: 70,
+        top: 106,
+        width: 1060,
+        height: 370,
+        justifyContent: "space-between",
+      },
+    },
+      h("div", {
+        style: {
+          display: "flex",
+          flexDirection: "column",
+          width: 520,
+        },
+      },
+        h("div", {
+          style: {
+            fontFamily: "MonoFallback",
+            fontSize: 14,
+            fontWeight: 700,
+            color: theme.accent,
+            letterSpacing: 2.5,
+            textTransform: "uppercase",
+          },
+        }, content.eyebrow ?? "PORTABLE AGENT HARNESS"),
+        h("div", { style: { display: "flex", flexDirection: "column", marginTop: 38 } },
+          lineStack(content.headlineLines ?? [], {
+            fontSize: 58,
+            fontWeight: 700,
+            letterSpacing: -1.4,
+            lineHeight: 1.03,
+            color: theme.text,
+            whiteSpace: "nowrap",
+          }, 5),
+        ),
+        h("div", { style: { display: "flex", flexDirection: "column", marginTop: 30 } },
+          lineStack(content.subtitleLines ?? [], {
+            fontSize: 23,
+            lineHeight: 1.25,
+            color: theme.muted,
+            whiteSpace: "nowrap",
+          }, 3),
+        ),
+        h("div", {
+          style: {
+            display: "flex",
+            alignItems: "center",
+            marginTop: 32,
+            width: 500,
+            height: 54,
+            borderRadius: 10,
+            backgroundColor: theme.text,
+            color: "#000000",
+            paddingLeft: 25,
+            fontSize: 18,
+            fontWeight: 700,
+          },
+        }, content.cta ?? ""),
+      ),
 
-  <g filter="url(#terminalShadow)">
-    <rect x="622" y="126" width="520" height="326" rx="12" fill="${theme.surface}" stroke="${theme.border}"/>
-    <rect x="622" y="126" width="520" height="44" rx="12" fill="#000" stroke="${theme.border}"/>
-    <circle cx="650" cy="148" r="7" fill="${theme.red}"/>
-    <circle cx="674" cy="148" r="7" fill="${theme.amber}"/>
-    <circle cx="698" cy="148" r="7" fill="${theme.accent}"/>
-    <text x="732" y="154" font-family="Consolas, Menlo, monospace" font-size="13" fill="${theme.muted}">~/openharness — zsh</text>
-    ${terminalRows}
-    <rect x="654" y="384" width="452" height="42" rx="8" fill="#000" stroke="${theme.border}"/>
-    <text x="674" y="411" font-family="Consolas, Menlo, monospace" font-size="16" fill="${theme.accent}">.oh/worktrees/&lt;task&gt; → issue → branch → PR</text>
-  </g>
+      h("div", {
+        style: {
+          display: "flex",
+          flexDirection: "column",
+          width: 520,
+          height: 326,
+          borderRadius: 12,
+          backgroundColor: theme.surface,
+          border: `1px solid ${theme.border}`,
+          overflow: "hidden",
+        },
+      },
+        h("div", {
+          style: {
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            height: 44,
+            backgroundColor: "#000000",
+            borderBottom: `1px solid ${theme.border}`,
+            paddingLeft: 28,
+          },
+        },
+          h("div", { style: { width: 14, height: 14, borderRadius: 14, backgroundColor: theme.red, marginRight: 10 } }),
+          h("div", { style: { width: 14, height: 14, borderRadius: 14, backgroundColor: theme.amber, marginRight: 10 } }),
+          h("div", { style: { width: 14, height: 14, borderRadius: 14, backgroundColor: theme.accent, marginRight: 24 } }),
+          h("div", { style: { fontFamily: "MonoFallback", fontSize: 13, color: theme.muted } }, "~/openharness — zsh"),
+        ),
+        h("div", {
+          style: {
+            display: "flex",
+            flexDirection: "column",
+            paddingLeft: 31,
+            paddingRight: 31,
+            paddingTop: 19,
+          },
+        },
+          ...terminalLines.map((line, index) => h("div", {
+            key: `terminal-${index}`,
+            style: {
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              fontFamily: "MonoFallback",
+              fontSize: 17,
+              lineHeight: 1.2,
+              marginTop: index === 0 ? 0 : 11,
+              color: line.muted ? theme.muted : theme.code,
+            },
+          },
+            line.prompt ? h("span", { style: { color: theme.accent } }, line.prompt) : null,
+            h("span", { style: { color: line.muted ? theme.muted : theme.code } }, line.text ?? line),
+          )),
+          h("div", {
+            style: {
+              display: "flex",
+              alignItems: "center",
+              marginTop: 21,
+              width: 452,
+              height: 42,
+              borderRadius: 8,
+              backgroundColor: "#000000",
+              border: `1px solid ${theme.border}`,
+              paddingLeft: 19,
+              fontFamily: "MonoFallback",
+              fontSize: 16,
+              color: theme.accent,
+            },
+          }, ".oh/worktrees/<task> → issue → branch → PR"),
+        ),
+      ),
+    ),
 
-  <line x1="70" y1="498" x2="1130" y2="498" stroke="${theme.border}"/>
-  ${stepRows}
-  <text x="70" y="642" font-family="Consolas, Menlo, monospace" font-size="15" fill="${theme.muted}">${safe(content.footerUrl ?? "")}${metaText ? "   ·   " : ""}${metaText}</text>
-</svg>`;
+    h("div", {
+      style: {
+        display: "flex",
+        position: "absolute",
+        left: 70,
+        top: 498,
+        width: 1060,
+        height: 1,
+        backgroundColor: theme.border,
+      },
+    }),
+    h("div", {
+      style: {
+        display: "flex",
+        flexDirection: "row",
+        position: "absolute",
+        left: 70,
+        top: 514,
+        width: 1060,
+        justifyContent: "space-between",
+      },
+    },
+      ...steps.map((step, index) => h("div", {
+        key: `step-${step}`,
+        style: {
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          width: 150,
+        },
+      },
+        h("div", {
+          style: {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 38,
+            height: 38,
+            borderRadius: 38,
+            border: `1px solid ${withAlpha(theme.accent, 0.42)}`,
+            backgroundColor: withAlpha(theme.accent, 0.13),
+            fontFamily: "MonoFallback",
+            fontSize: 18,
+            fontWeight: 700,
+            color: theme.accent,
+          },
+        }, String(index + 1)),
+        h("div", {
+          style: {
+            marginTop: 20,
+            fontSize: 17,
+            fontWeight: 700,
+            color: theme.text,
+            textAlign: "center",
+          },
+        }, step),
+      )),
+    ),
+    h("div", {
+      style: {
+        display: "flex",
+        position: "absolute",
+        left: 70,
+        top: 628,
+        width: 1060,
+        fontFamily: "MonoFallback",
+        fontSize: 13,
+        color: theme.muted,
+        whiteSpace: "nowrap",
+      },
+    }, `${content.footerUrl ?? ""}${meta.length ? "   ·   " : ""}${meta.join("   ·   ")}`),
+  );
 }
 
-let svg;
+let element;
 if (recipe.template === "proof-path-card-v1") {
-  svg = await renderProofPathCard();
+  element = await renderProofPathCard();
 } else if (recipe.template === "site-hero-card-v1") {
-  svg = await renderSiteHeroCard();
+  element = await renderSiteHeroCard();
 } else {
   throw new Error(`Unsupported banner template: ${recipe.template}`);
 }
@@ -164,12 +513,19 @@ const svgOutput = path.resolve(path.dirname(recipePath), recipe.outputs.svg);
 const jpgOutput = path.resolve(path.dirname(recipePath), recipe.outputs.jpg);
 await fs.mkdir(path.dirname(svgOutput), { recursive: true });
 await fs.mkdir(path.dirname(jpgOutput), { recursive: true });
+
+const svg = await satori(element, {
+  width,
+  height,
+  fonts: await loadFonts(),
+});
 await fs.writeFile(svgOutput, svg);
 await sharp(Buffer.from(svg)).jpeg({ quality: recipe.outputs.jpgQuality ?? 92, mozjpeg: true }).toFile(jpgOutput);
 
 const metadata = await sharp(jpgOutput).metadata();
 console.log(JSON.stringify({
   recipe: rel(recipePath),
+  renderer: "satori-html-layout-v1",
   svg: rel(svgOutput),
   jpg: rel(jpgOutput),
   width: metadata.width,
