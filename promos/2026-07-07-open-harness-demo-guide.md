@@ -45,7 +45,7 @@ X/Twitter rendering rule: do not leave a URL as the final visible token/line. X 
 
 ### LinkedIn — selected replacement
 
-🧰 **Open Harness demo → fresh sandbox to first PR**
+🧰 𝗢𝗽𝗲𝗻 𝗛𝗮𝗿𝗻𝗲𝘀𝘀 𝗱𝗲𝗺𝗼 → fresh sandbox to first PR
 
 The walkthrough is now a written setup runbook:
 
@@ -95,16 +95,26 @@ Use sparingly; prefer 2-4 per platform.
 
 ## Post Bridge publication
 
-### Replacement draft
+### Separate platform-specific replacement drafts
 
-Created one replacement draft on 2026-07-08 after learning that X suppresses trailing URLs from rendered post text.
+Created separate X-only and LinkedIn-only drafts on 2026-07-08 after learning that X suppresses trailing URLs from rendered post text and LinkedIn does not render markdown-style `**bold**` emphasis from this flow.
 
-- Draft ID: `74655ecc-3aba-493d-bb87-0111a0ce42c8`
-- Replacement media ID: `1e400998-adb7-4edb-aaba-ff9e02840cbd`
-- Targets: X / JohnEggz (`41738`) and LinkedIn / Ruska AI (`41732`)
-- Status: saved as draft only (`is_draft: true`, `scheduled_at: null`); not published or scheduled live.
-- Cadence: exactly one replacement post per target account.
-- X check: 271 chars; final token is `useful`, not a URL.
+- Replacement media ID: `1082bc74-74dd-4960-a98b-95496b14d222`
+- X / JohnEggz draft: `a6548d67-a3a5-415a-8bcd-d1faa94d8d93`
+  - Account: `41738`
+  - Status: saved as draft only (`is_draft: true`, `scheduled_at: null`); not published or scheduled live.
+  - X check: 271 chars; final token is `useful`, not a URL.
+- LinkedIn / Ruska AI draft: `c17709bf-323c-4182-854a-04a687c42b03`
+  - Account: `41732`
+  - Status: saved as draft only (`is_draft: true`, `scheduled_at: null`); not published or scheduled live.
+  - Formatting check: no markdown `**bold**`; uses Unicode emphasis in the first line for review.
+- Cadence: exactly one replacement draft per target account.
+
+### Superseded replacement draft
+
+- Combined multi-account draft: `74655ecc-3aba-493d-bb87-0111a0ce42c8`
+- Prior replacement media ID: `1e400998-adb7-4edb-aaba-ff9e02840cbd`
+- Superseded because account-specific formatting should be reviewed as separate posts, not a single multi-account payload with platform overrides.
 
 ### Superseded publication
 
@@ -131,7 +141,7 @@ Prior status: Post Bridge originally reported `status: posted`, `is_draft: false
 
 ## Posting checklist
 
-Before publishing the replacement draft:
+Before publishing the replacement drafts:
 
 - [x] PR #11 is merged and <https://oh.mifune.dev/blog/open-harness-demo-guide> returns 200.
 - [x] If attaching an image, use the rerendered `social-promo-card.jpg` and the alt text above.
@@ -139,4 +149,5 @@ Before publishing the replacement draft:
 - [x] Keep LinkedIn copy as a post, not an article; link back to the blog.
 - [x] Keep URLs away from the final X token/line.
 - [x] Limit replacement to one post per account for the day.
+- [x] Keep X and LinkedIn as separate account-specific drafts because formatting differs by platform.
 - [ ] Publish only after a fresh explicit `/post-bridge` confirmation gate.
