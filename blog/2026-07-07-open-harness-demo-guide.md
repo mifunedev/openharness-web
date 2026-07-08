@@ -37,7 +37,7 @@ curl -fsSL https://oh.mifune.dev/install.sh | bash
 
 The installer checks the host for the few things it actually needs: Docker with Compose, Git, and `make`/build essentials. It then resolves the Open Harness repo, writes local config, and starts the Docker build.
 
-![Open Harness installer checking Docker, Docker Compose, and Git before cloning the repo.](/img/blog/2026-07-07-open-harness-demo-guide/install-prereqs.jpg)
+![Open Harness installer checking Docker, Docker Compose, and Git before cloning the repo.](https://loom.com/i/f8a7d926f95841a292ac83bf5e682cba?workflows_screenshot=true)
 
 Prefer to review first? Download the script before running it:
 
@@ -55,7 +55,7 @@ During setup, name the sandbox and decide which optional capabilities to include
 
 The default sandbox ships the core agent CLIs: **Claude Code**, **Codex**, and **Pi**. Other tools are optional image-level installs: **OpenCode**, **DeepAgents**, **Hermes**, **Grok Build**, and **agent-browser**. Turn them on only when you need them; optional browser support, for example, adds a headless Chromium footprint for screenshot and preview checks.
 
-![Installer prompts for the sandbox name, optional components, and Docker socket access.](/img/blog/2026-07-07-open-harness-demo-guide/sandbox-options.jpg)
+![Installer prompts for the sandbox name, optional components, and Docker socket access.](https://loom.com/i/ae0e67039ce0477d9476c030b3e6a6ff?workflows_screenshot=true)
 
 The most important prompt in this section is the host Docker socket. Mounting `/var/run/docker.sock` lets the sandbox manage host and sibling containers. That is powerful, but it is effectively host-level control. The safe default is **No**. Enable it only on a machine you trust and only when the agent really needs Docker control.
 
@@ -68,7 +68,7 @@ A cached build can finish quickly; a cold build can take several minutes. When i
 - `make shell` — enter the sandbox from the host.
 - `make destroy` — tear it down later.
 
-![Post-install instructions show how to enter the sandbox and configure GitHub.](/img/blog/2026-07-07-open-harness-demo-guide/post-install-lifecycle.jpg)
+![Post-install instructions show how to enter the sandbox and configure GitHub.](https://loom.com/i/c21db3eadd8a41bca6c72341f0951a2c?workflows_screenshot=true)
 
 From the host checkout, entering the sandbox is intentionally boring:
 
@@ -83,7 +83,7 @@ You land as the `sandbox` user inside `/home/sandbox/harness`.
 
 A terminal shell is enough for CLI agents. For day-to-day work, VS Code Dev Containers is the nicer interface: attach to the running container, open `/home/sandbox/harness`, and keep the editor, terminal, file tree, and forwarded ports in one window.
 
-![VS Code attaches directly to the running Open Harness container.](/img/blog/2026-07-07-open-harness-demo-guide/vscode-attach.jpg)
+![VS Code attaches directly to the running Open Harness container.](https://loom.com/i/3f449daf29eb4e3ab480f556b38f2ee8?workflows_screenshot=true)
 
 The key detail is port forwarding. `make shell` gives you a terminal, but it does not forward container ports to your laptop. VS Code Attach does. That matters for browser-based auth flows, Docusaurus previews, T3 Code, and any app UI running inside the sandbox.
 
@@ -150,7 +150,7 @@ That gives you two useful modes:
 
 In the demo, the agent is asked to create a new public repo and scaffold initial work from inside the sandbox. That proves the chain: Open Harness can go from install → editor attach → GitHub auth → agent-owned project setup without leaving the isolated environment.
 
-![The agent opens an issue and begins the branch and pull-request workflow for a demo repository.](/img/blog/2026-07-07-open-harness-demo-guide/first-agent-issue.jpg)
+![The agent opens an issue and begins the branch and pull-request workflow for a demo repository.](https://loom.com/i/8c6afed8744846a580c2d9416c660342?workflows_screenshot=true)
 
 The raw Loom screenshots show a public demo repo named `test-demo-openharness`. Treat that as a throwaway example, not a naming rule.
 
