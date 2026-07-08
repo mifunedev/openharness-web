@@ -150,14 +150,20 @@ Use sparingly; prefer 2-4 per platform.
 - remote development
 - VS Code Dev Containers
 
-## Post Bridge drafts
+## Post Bridge publication
 
-Preferred Satori dark site-theme drafts:
+Published Satori dark site-theme variants on 2026-07-08 after explicit `POST BRIDGE LIVE CONFIRMED` confirmation.
 
 - Satori media ID: `938a2e4e-163d-4f7b-a42e-ab99cab01868`
 - Variant 1: `e4771829-fdb9-422f-895f-5ac660ca3fe2` — checklist/setup path angle
+  - X / JohnEggz: <https://twitter.com/user/status/2074720526920978909>
+  - LinkedIn / Ruska AI: <https://www.linkedin.com/feed/update/urn:li:share:7480486215687999490>
 - Variant 2: `dff682c4-f7b4-4370-8ec4-05df2bce37c0` — worktree/guardrails angle
+  - X / JohnEggz: <https://twitter.com/user/status/2074720521682309307>
+  - LinkedIn / Ruska AI: <https://www.linkedin.com/feed/update/urn:li:share:7480486213603217408>
 - Variant 3: `8e634328-a218-4565-9a1a-5b1316d2c8e7` — fresh machine/first PR angle
+  - X / JohnEggz: <https://twitter.com/user/status/2074720530951770230>
+  - LinkedIn / Ruska AI: <https://www.linkedin.com/feed/update/urn:li:share:7480486223669821440>
 
 Superseded draft sets kept only for audit/history:
 
@@ -165,16 +171,14 @@ Superseded draft sets kept only for audit/history:
 - Light checklist variants: `7a4f81a9-6a37-4d46-89c1-be8c054a9747`, `c7b08db4-1714-4b95-be02-921e35d52ce0`, `d6ba458c-c665-4b8b-95b4-4fdc4c62c702`
 - Hand-positioned dark SVG variants: `3fa6c77b-5cd8-4931-83da-71fecb9cbcbc`, `f5e267ca-8afb-4c18-8f0f-4a2c5c31da4d`, `269aad21-e16a-43a7-9bba-b61a3dbbfed4`
 
-Status: saved in Post Bridge as drafts (`is_draft: true`); not published or scheduled live.
+Status: published successfully (`status: posted`, `is_draft: false`) to both target accounts; Post Bridge result records reported `success: true` and `error: null` for all six platform results.
 
 ## Posting checklist
 
-Before posting:
+Completed:
 
-- [ ] PR #11 is merged and <https://oh.mifune.dev/blog/open-harness-demo-guide> returns 200.
-- [ ] Link preview renders correctly on LinkedIn and X.com.
-- [ ] If attaching an image, use `social-promo-card.jpg` and the alt text above.
-- [ ] Confirm no screenshot exposes tokens, OAuth codes, private account details, or unwanted personal UI.
-- [ ] Keep LinkedIn copy as a post, not an article; link back to the blog.
-- [ ] For X.com, choose either the single post or the thread, not both at the same time.
-- [ ] Do not auto-publish from this artifact; review manually or hand off to `/post-bridge` with confirmation.
+- [x] PR #11 is merged and <https://oh.mifune.dev/blog/open-harness-demo-guide> returns 200.
+- [x] If attaching an image, use `social-promo-card.jpg` and the alt text above.
+- [x] Confirm no screenshot exposes tokens, OAuth codes, private account details, or unwanted personal UI.
+- [x] Keep LinkedIn copy as a post, not an article; link back to the blog.
+- [x] Publish only after explicit `/post-bridge` confirmation gate.
