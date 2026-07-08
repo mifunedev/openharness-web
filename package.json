@@ -8,7 +8,8 @@
     "build": "docusaurus build",
     "serve": "docusaurus serve",
     "clear": "docusaurus clear",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "render:blog-banner": "node scripts/render-blog-banner.mjs"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.1",
@@ -16,8 +17,8 @@
     "@docusaurus/preset-classic": "3.10.1",
     "@docusaurus/theme-mermaid": "3.10.1",
     "@easyops-cn/docusaurus-search-local": "^0.55.1",
-    "@mermaid-js/layout-elk": "^0.1.9",
     "@mdx-js/react": "^3.0.0",
+    "@mermaid-js/layout-elk": "^0.1.9",
     "clsx": "^2.0.0",
     "prism-react-renderer": "^2.3.0",
     "react": "^18.0.0",
@@ -26,6 +27,7 @@
   "devDependencies": {
     "@docusaurus/tsconfig": "3.10.1",
     "@docusaurus/types": "3.10.1",
+    "sharp": "0.35.3",
     "typescript": "~5.6.0"
   },
   "engines": {

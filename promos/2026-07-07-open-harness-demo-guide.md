@@ -14,8 +14,11 @@
 
 ## Suggested asset
 
-Use the designed promo card first; it pulls the blog's headline, proof path, and setup screenshot into a feed-native image.
+Use the deterministic promo card first; it pulls the blog's headline, proof path, and setup screenshot into a feed-native image.
 
+- Source recipe: `promos/banner-recipes/2026-07-07-open-harness-demo-guide.json`
+- Render command: `pnpm run render:blog-banner -- promos/banner-recipes/2026-07-07-open-harness-demo-guide.json`
+- Editable SVG output: `static/img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.svg`
 - Preferred local asset: `static/img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.jpg`
 - Preferred public asset after merge: <https://oh.mifune.dev/img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.jpg>
 - Fallback local screenshot: `static/img/blog/2026-07-07-open-harness-demo-guide/install-prereqs.jpg`
