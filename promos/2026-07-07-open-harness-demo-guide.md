@@ -14,11 +14,13 @@
 
 ## Suggested asset
 
-Use the first setup screenshot unless the platform link preview is enough:
+Use the designed promo card first; it pulls the blog's headline, proof path, and setup screenshot into a feed-native image.
 
-- Local asset: `static/img/blog/2026-07-07-open-harness-demo-guide/install-prereqs.jpg`
-- Public asset after merge: <https://oh.mifune.dev/img/blog/2026-07-07-open-harness-demo-guide/install-prereqs.jpg>
-- Alt text: "Open Harness installer checking Docker, Docker Compose, and Git before cloning the repo."
+- Preferred local asset: `static/img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.jpg`
+- Preferred public asset after merge: <https://oh.mifune.dev/img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.jpg>
+- Fallback local screenshot: `static/img/blog/2026-07-07-open-harness-demo-guide/install-prereqs.jpg`
+- Fallback public screenshot after merge: <https://oh.mifune.dev/img/blog/2026-07-07-open-harness-demo-guide/install-prereqs.jpg>
+- Alt text: "Social card for the Open Harness demo guide: A repeatable sandbox for coding agents, with install, attach, authenticate, isolate worktrees, and open first PR steps."
 
 ## Positioning
 
@@ -143,7 +145,7 @@ Before posting:
 
 - [ ] PR #11 is merged and <https://oh.mifune.dev/blog/open-harness-demo-guide> returns 200.
 - [ ] Link preview renders correctly on LinkedIn and X.com.
-- [ ] If attaching an image, use `install-prereqs.jpg` and the alt text above.
+- [ ] If attaching an image, use `social-promo-card.jpg` and the alt text above.
 - [ ] Confirm no screenshot exposes tokens, OAuth codes, private account details, or unwanted personal UI.
 - [ ] Keep LinkedIn copy as a post, not an article; link back to the blog.
 - [ ] For X.com, choose either the single post or the thread, not both at the same time.
