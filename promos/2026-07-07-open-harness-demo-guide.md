@@ -49,17 +49,15 @@ X/Twitter rendering rule: do not leave a URL as the final visible token/line. X 
 
 The walkthrough is now a written setup runbook:
 
-1. install the sandbox
+1. install sandbox
 2. attach VS Code
 3. authenticate GitHub
 4. isolate worktrees
 5. open a normal PR
 
-Guide: https://oh.mifune.dev/blog/open-harness-demo-guide
+https://oh.mifune.dev/blog/open-harness-demo-guide
 
-⭐ Repo: https://github.com/mifunedev/openharness — star if this setup is useful.
-
-The useful part is not magic. It is a repeatable workspace with clear boundaries for coding agents.
+⭐ Star the repo if the setup is useful — the guide links through to GitHub.
 
 #AIAgents #DeveloperTools #Docker #OpenSource
 
@@ -69,15 +67,13 @@ The useful part is not magic. It is a repeatable workspace with clear boundaries
 
 Install sandbox → attach VS Code → GitHub auth → isolated worktrees → normal PR.
 
-Links are on the card/site. Search: Open Harness demo guide.
-
-⭐ Star Open Harness on GitHub if useful.
+https://oh.mifune.dev/blog/open-harness-demo-guide
 
 Checks:
 
-- X length: 234 chars.
-- Contains no URL-like tokens (`http`, `oh.mifune.dev`, or `github.com`).
-- Uses a visible/searchable CTA instead of relying on X to render links.
+- X length: 182 chars.
+- Direct blog URL is the only link.
+- No uploaded media attached; the platform should render a clickable link card from the page metadata.
 
 ## Hashtags / keywords
 
@@ -96,25 +92,29 @@ Use sparingly; prefer 2-4 per platform.
 
 ## Post Bridge publication
 
-### No-link X review draft plus link-bearing LinkedIn draft
+### Link-card no-media replacement drafts
 
-Created fresh separate X-only and LinkedIn-only drafts on 2026-07-08 after repeated observation that links disappear from X posts after posting/checking.
+Created fresh separate X-only and LinkedIn-only drafts on 2026-07-08 after deciding the optimal flow is to post the direct blog URL with no uploaded media. The blog page now declares `image: /img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.jpg`, which builds to `summary_large_image` plus `og:image`/`twitter:image` metadata so the rendered card/banner should be clickable.
 
-- No-link media ID: `fb9b7be4-3caf-4dbc-8d08-2da5941f7d5f`
-- X / JohnEggz draft: `98c67ed5-5a5e-489b-b051-acc6aad79e93`
+- No Post Bridge media is attached (`media: null`).
+- X / JohnEggz draft: `c2d45d22-bdfa-4c76-b37b-35222f728849`
   - Account: `41738`
   - Status: saved as draft only (`is_draft: true`, `scheduled_at: null`); not published or scheduled live.
-  - X check: 234 chars and contains no URL-like tokens (`http`, `oh.mifune.dev`, or `github.com`).
-  - CTA strategy: rely on the card/site/search text instead of X caption links.
-- LinkedIn / Ruska AI draft: `3c0f224a-2f03-4b99-9520-eac889376c8c`
+  - X check: 182 chars; direct blog URL is the only link.
+  - Link-card strategy: no uploaded image, so X should render the page card from Open Graph/Twitter metadata.
+- LinkedIn / Ruska AI draft: `dee89070-6df1-4339-b13f-66fbb413762a`
   - Account: `41732`
   - Status: saved as draft only (`is_draft: true`, `scheduled_at: null`); not published or scheduled live.
   - Formatting check: no markdown `**bold**`; uses Unicode emphasis in the first line for review.
-  - Link strategy: normal `https://` links are retained for LinkedIn.
+  - Link-card strategy: direct blog URL is the only link; no uploaded image attached.
 - Cadence: exactly one replacement draft per target account.
+- Publish timing: wait until the PR containing the blog frontmatter `image` metadata is merged/deployed so the live URL serves the specific promo-card image, not only the site default card.
 
 ### Superseded replacement drafts
 
+- No-link X draft: `98c67ed5-5a5e-489b-b051-acc6aad79e93`
+- No-link LinkedIn draft: `3c0f224a-2f03-4b99-9520-eac889376c8c`
+- No-link media ID: `fb9b7be4-3caf-4dbc-8d08-2da5941f7d5f`
 - Protocol-less X draft: `94f87ae9-185d-4e7c-b79e-16935f7a4efd`
 - Protocol-less LinkedIn draft: `bae96c7b-f8ec-46ef-bdd2-f3c7689b673d`
 - Protocol-less media ID: `aeb1ed6c-92fc-4a82-9e01-9c26970e1e89`
@@ -123,7 +123,7 @@ Created fresh separate X-only and LinkedIn-only drafts on 2026-07-08 after repea
 - Separate draft media ID: `1082bc74-74dd-4960-a98b-95496b14d222`
 - Combined multi-account draft: `74655ecc-3aba-493d-bb87-0111a0ce42c8`
 - Prior combined media ID: `1e400998-adb7-4edb-aaba-ff9e02840cbd`
-- Superseded because X links disappeared even after moving away from final position and removing `https://`, or account-specific formatting needed separate review.
+- Superseded because a no-media direct blog URL card is preferred: the rendered banner/card should be clickable and the post should not carry a separate uploaded image.
 
 ### Superseded publication
 
@@ -153,11 +153,12 @@ Prior status: Post Bridge originally reported `status: posted`, `is_draft: false
 Before publishing the replacement drafts:
 
 - [x] PR #11 is merged and <https://oh.mifune.dev/blog/open-harness-demo-guide> returns 200.
-- [x] If attaching an image, use the rerendered `social-promo-card.jpg` and the alt text above.
+- [x] Do not attach uploaded Post Bridge media for the current replacement drafts; let the blog URL render the clickable platform card.
 - [x] Confirm no screenshot exposes tokens, OAuth codes, private account details, or unwanted personal UI.
 - [x] Keep LinkedIn copy as a post, not an article; link back to the blog.
-- [x] Keep X caption link-free because X links disappear after posting/checking in this flow.
-- [x] Put the destination cue in the card/search CTA for X; keep direct links only in LinkedIn.
+- [x] Ensure the blog frontmatter has `image: /img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.jpg`.
+- [x] Verify the built blog HTML contains `summary_large_image`, `og:image`, and `twitter:image` for the promo card.
+- [ ] Before publishing, verify the live deployed HTML serves the specific promo-card `og:image`/`twitter:image`.
 - [x] Limit replacement to one post per account for the day.
 - [x] Keep X and LinkedIn as separate account-specific drafts because formatting differs by platform.
 - [ ] Publish only after a fresh explicit `/post-bridge` confirmation gate.
