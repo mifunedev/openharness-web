@@ -1,52 +1,75 @@
 {
   "version": 1,
-  "template": "proof-path-card-v1",
+  "template": "checklist-card-v1",
   "dimensions": {
     "width": 1200,
     "height": 675
   },
   "theme": {
-    "bg0": "#07111f",
-    "bg1": "#0b1728",
-    "bg2": "#102a2b",
+    "paper": "#f7f3ea",
+    "ink": "#111827",
     "accent": "#5eead4",
-    "accentSoft": "#d6fff6",
-    "success": "#4ade80",
+    "accent2": "#22c55e",
     "text": "#f8fafc",
-    "muted": "#cbd5e1"
+    "muted": "#475569"
   },
   "layout": {
-    "eyebrowWidth": 240
+    "subtitleY": 292,
+    "subtitleSize": 24,
+    "ctaY": 336,
+    "ctaWidth": 500,
+    "ctaTextSize": 18,
+    "footerY": 560
   },
   "content": {
     "eyebrow": "OPEN HARNESS GUIDE",
     "headlineLines": [
-      "A repeatable",
-      "sandbox for",
-      "coding agents"
+      "Fresh sandbox",
+      "→ first PR"
     ],
-    "proofLines": [
-      "Install → attach → authenticate → isolate",
-      "worktrees → open the first PR."
+    "subtitleLines": [
+      "A repeatable setup checklist for coding agents",
+      "working inside an isolated Docker workspace."
     ],
-    "ctaTitle": "Feedback welcome",
-    "ctaBody": "from agent builders and operators.",
+    "cta": "Feedback wanted: setup gaps + guardrails",
     "footerUrl": "oh.mifune.dev/blog/open-harness-demo-guide",
-    "mediaTitle": "Demo: fresh machine → first PR",
-    "mediaBody": "The post includes the exact setup checkpoints and guardrails."
+    "checklistTitle": "What the post walks through",
+    "checklistSubtitle": "Pulled directly from the demo guide",
+    "checklist": [
+      {
+        "kicker": "01",
+        "text": "Install the sandbox"
+      },
+      {
+        "kicker": "02",
+        "text": "Attach VS Code"
+      },
+      {
+        "kicker": "03",
+        "text": "Authenticate GitHub"
+      },
+      {
+        "kicker": "04",
+        "text": "Isolate worktrees"
+      },
+      {
+        "kicker": "05",
+        "text": "Open the first PR"
+      }
+    ]
   },
   "media": {
-    "source": "../../static/img/blog/2026-07-07-open-harness-demo-guide/install-prereqs.jpg",
+    "source": "../../static/img/blog/2026-07-07-open-harness-demo-guide/post-install-lifecycle.jpg",
     "fit": "cover",
-    "position": "center",
+    "position": "left top",
     "slot": {
-      "left": 622,
-      "top": 108,
-      "width": 500,
-      "height": 386,
-      "radius": 18
+      "left": 70,
+      "top": 480,
+      "width": 510,
+      "height": 105,
+      "radius": 22
     },
-    "alt": "Social card for the Open Harness demo guide: A repeatable sandbox for coding agents, with install, attach, authenticate, isolate worktrees, and open first PR steps."
+    "alt": "Open Harness demo guide banner with a five-step setup checklist: install the sandbox, attach VS Code, authenticate GitHub, isolate worktrees, and open the first PR."
   },
   "outputs": {
     "svg": "../../static/img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.svg",
@@ -55,7 +78,7 @@
   },
   "reviewChecklist": [
     "Headline is grounded in the post and avoids inflated claims.",
-    "Proof path matches the blog body and is useful to the target reader.",
+    "Checklist items match the blog body and are useful to the target reader.",
     "Screenshot is from the post assets and contains no secrets, tokens, or unwanted UI.",
     "CTA asks for feedback from the intended audience.",
     "Rendered JPG is 1200×675 and suitable for LinkedIn/X link-adjacent posts."

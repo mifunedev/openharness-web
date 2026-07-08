@@ -148,7 +148,13 @@ Use sparingly; prefer 2-4 per platform.
 
 - X / JohnEggz draft: `30214ff7-7b37-4b9c-878b-5e5b26df7fb9`
 - LinkedIn page draft: `8eff3f37-3d41-454f-b084-b63018324647`
-- Attached media ID: `a4d2ec71-5853-4fa9-8e58-a1e84ee4fcff`
+- Original X / JohnEggz draft: `30214ff7-7b37-4b9c-878b-5e5b26df7fb9`
+- Original LinkedIn page draft: `8eff3f37-3d41-454f-b084-b63018324647`
+- Original attached media ID: `a4d2ec71-5853-4fa9-8e58-a1e84ee4fcff`
+- New draft set media ID: `79aa8dea-c4bd-49ad-938a-ff71a5886155`
+- New cross-platform variant 1: `7a4f81a9-6a37-4d46-89c1-be8c054a9747` — checklist/setup path angle
+- New cross-platform variant 2: `c7b08db4-1714-4b95-be02-921e35d52ce0` — worktree/guardrails angle
+- New cross-platform variant 3: `d6ba458c-c665-4b8b-95b4-4fdc4c62c702` — fresh machine/first PR angle
 - Status: saved in Post Bridge as drafts (`is_draft: true`); not published or scheduled live.
 
 ## Posting checklist
