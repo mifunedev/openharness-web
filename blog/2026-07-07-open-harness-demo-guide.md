@@ -23,19 +23,6 @@ That is what the [full Loom walkthrough](https://www.loom.com/share/875737ef981f
   />
 </div>
 
-<div style={{ margin: "0 0 2rem" }}>
-  <a href="https://www.loom.com/share/875737ef981f4b378a005be62d1e435b">
-    <strong>From Fresh Sandbox to First PR: An Open Harness Demo Guide — Watch Video</strong>
-  </a>
-  <a href="https://www.loom.com/share/875737ef981f4b378a005be62d1e435b" style={{ display: "block", marginTop: "0.75rem" }}>
-    <img
-      alt="From Fresh Sandbox to First PR: An Open Harness Demo Guide - Watch Video"
-      style={{ maxWidth: "300px", borderRadius: "8px" }}
-      src="https://cdn.loom.com/sessions/thumbnails/875737ef981f4b378a005be62d1e435b-0f20cd0f63332118-full-play.gif#t=0.1"
-    />
-  </a>
-</div>
-
 <!-- truncate -->
 
 ## What the demo proves
