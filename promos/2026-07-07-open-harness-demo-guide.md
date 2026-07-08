@@ -39,39 +39,66 @@ Audience:
 
 ## LinkedIn drafts
 
-### LinkedIn — main post
+### LinkedIn — checklist/setup path
 
-I turned my Open Harness walkthrough into a written guide: from a fresh machine to the first agent-created PR.
+🧰 **Open Harness demo → setup checklist**
 
-The flow is simple:
+I turned the walkthrough into a practical setup path:
 
-1. install the Docker sandbox
-2. keep the safe defaults, including Docker socket off by default
-3. attach with VS Code Dev Containers
-4. verify Claude Code / Codex / Pi can see the same `.oh/` workspace
-5. connect GitHub CLI inside the sandbox
-6. use `.oh/worktrees/` so agent tasks stay isolated
-7. let the agent create the first issue/PR
+1. install the sandbox
+2. attach VS Code
+3. authenticate GitHub
+4. isolate worktrees
+5. open the first PR
 
-The point is not “which agent wins?” It is giving agents a repeatable place to work that is not your laptop’s main checkout.
+The point is simple: give coding agents a repeatable place to work — *without using your laptop’s main checkout*.
 
 Guide: https://oh.mifune.dev/blog/open-harness-demo-guide
 
-#AIAgents #DeveloperTools #Docker #OpenSource #GitHub
+⭐ If this setup is useful, star the repo: https://github.com/mifunedev/openharness
 
-### LinkedIn — shorter version
+#AIAgents #DeveloperTools #Docker
 
-New Open Harness guide: fresh sandbox → VS Code attach → GitHub auth → isolated worktrees → first agent-created PR.
+### LinkedIn — worktree/guardrails angle
 
-If you are testing Claude Code, Codex, Pi, or other coding agents, the useful pattern is putting them in a repeatable Docker sandbox with shared context and isolated task workspaces.
+🛠️ **The useful pattern:** make the workspace boring and repeatable.
 
-I’d value feedback from agent builders and operators: what setup steps, safety defaults, or workflow guardrails would make this more useful?
+The Open Harness guide walks through:
+
+• Docker sandbox
+• shared `.oh/` context
+• GitHub auth inside the container
+• isolated worktrees for PRs
+
+That setup turns agent output into normal GitHub artifacts: issue → branch → PR.
 
 Guide: https://oh.mifune.dev/blog/open-harness-demo-guide
 
-#AIAgents #Docker #DeveloperTools
+⭐ Star the repo if this is useful: https://github.com/mifunedev/openharness
 
-### LinkedIn — first comment / CTA
+#AIAgents #Docker #GitHub #DeveloperTools
+
+### LinkedIn — fresh machine/first PR angle
+
+🚀 **Fresh machine → first PR**
+
+Open Harness is the operator loop I wanted for coding agents:
+
+• install the sandbox
+• attach VS Code
+• authenticate GitHub
+• isolate work in `.oh/worktrees/`
+• let the agent open a normal PR
+
+The useful part is not a new magic agent. It is a repeatable workspace with clear boundaries.
+
+Guide: https://oh.mifune.dev/blog/open-harness-demo-guide
+
+⭐ If it helps, star the repo: https://github.com/mifunedev/openharness
+
+#AIAgents #OpenSource #DevTools
+
+### LinkedIn — first comment / optional Loom reference
 
 The original Loom walkthrough is here too: https://www.loom.com/share/875737ef981f4b378a005be62d1e435b
 
@@ -79,56 +106,34 @@ If you try it, the setup detail I would not skip is VS Code Dev Containers attac
 
 ## X.com drafts
 
-### X — single post
+### X — checklist/setup path
 
-I wrote up the Open Harness demo: fresh machine → Docker sandbox → VS Code attach → GitHub auth → isolated `.oh/worktrees/` → first PR.
+🧰 Open Harness demo → setup checklist
 
-If you run coding agents, I’d value feedback on the setup path and guardrails.
+Install sandbox → attach VS Code → GitHub auth → isolated worktrees → first PR.
 
-https://oh.mifune.dev/blog/open-harness-demo-guide
-
-### X — thread
-
-1/ I turned the Open Harness walkthrough into a written guide.
-
-Goal: start with a fresh machine and end with an agent opening its first GitHub PR from inside an isolated Docker sandbox.
-
-https://oh.mifune.dev/blog/open-harness-demo-guide
-
-2/ The important setup choices:
-
-- Docker + Git + make on the host
-- agent CLIs inside the sandbox
-- Docker socket off by default
-- VS Code Dev Containers attach for the full workstation flow
-
-3/ The useful mental model is `.oh/` as the shared control plane:
-
-- context
-- skills
-- memory
-- scripts
-- worktrees
-
-Claude Code, Codex, Pi, etc. can all work against the same repo state.
-
-4/ The payoff is `.oh/worktrees/`.
-
-Agent tasks should not all mutate your main checkout. Worktrees/project clones give each task a safe place to branch, scaffold, and open a normal PR.
-
-5/ If you are experimenting with coding agents, start by fixing the environment.
-
-A repeatable sandbox beats another one-off local setup.
+A repeatable place for coding agents to work.
 
 Guide: https://oh.mifune.dev/blog/open-harness-demo-guide
+⭐ Star: https://github.com/mifunedev/openharness
 
-### X — quote-post variant
+### X — worktree/guardrails angle
 
-Fresh sandbox to first PR.
+🛠️ Coding agents work better in boring, repeatable workspaces.
 
-Install once, attach cleanly, authenticate inside the sandbox, isolate work in `.oh/worktrees/`, and let agents create normal GitHub artifacts.
+Open Harness pattern: Docker sandbox, shared `.oh/` context, GitHub auth, isolated worktrees.
 
-https://oh.mifune.dev/blog/open-harness-demo-guide
+Guide: https://oh.mifune.dev/blog/open-harness-demo-guide
+⭐ Star: https://github.com/mifunedev/openharness
+
+### X — fresh machine/first PR angle
+
+🚀 Fresh machine → first PR, without giving agents your main checkout.
+
+The walkthrough covers the setup checks that matter: install, attach, auth, isolate, PR.
+
+Guide: https://oh.mifune.dev/blog/open-harness-demo-guide
+⭐ Star: https://github.com/mifunedev/openharness
 
 ## Hashtags / keywords
 
