@@ -5,6 +5,7 @@ date: 2026-07-07
 authors: [ryan]
 tags: [open-harness, docker, sandbox, github, worktrees]
 slug: open-harness-demo-guide
+image: /img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.jpg
 ---
 
 The fastest way to understand Open Harness is to watch a clean machine become an agent-ready development environment: install the sandbox, attach an editor, verify the agents, connect GitHub, then let an agent create its first issue and pull request.
