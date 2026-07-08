@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "renderer": "satori-html-layout-v1",
+  "template": "site-hero-card-v1",
+  "dimensions": {
+    "width": 1200,
+    "height": 675
+  },
+  "theme": {
+    "bg0": "#000000",
+    "bg1": "#0a0a0a",
+    "surface": "#0a0a0a",
+    "border": "#1f1f1f",
+    "accent": "#4ade80",
+    "accent2": "#86efac",
+    "amber": "#d97706",
+    "red": "#dc2626",
+    "text": "#ffffff",
+    "muted": "#888888",
+    "code": "#e5e5e5"
+  },
+  "content": {
+    "eyebrow": "PORTABLE AGENT HARNESS",
+    "headlineLines": [
+      "Fresh sandbox",
+      "to first PR"
+    ],
+    "subtitleLines": [
+      "A repeatable setup flow for coding agents",
+      "inside an isolated Docker workspace."
+    ],
+    "cta": "Feedback welcome: setup gaps + guardrails",
+    "footerUrl": "oh.mifune.dev/blog/open-harness-demo-guide",
+    "terminalLines": [
+      {
+        "prompt": "$ ",
+        "text": "curl -fsSL oh.mifune.dev/install.sh | bash"
+      },
+      {
+        "prompt": "$ ",
+        "text": "make shell"
+      },
+      {
+        "prompt": "$ ",
+        "text": "gh auth login && gh auth setup-git"
+      },
+      {
+        "prompt": "$ ",
+        "text": "claude   # or codex · pi"
+      },
+      {
+        "text": "# safe default: Docker socket off",
+        "muted": true
+      },
+      {
+        "text": "# isolate agent work in .oh/worktrees/",
+        "muted": true
+      }
+    ],
+    "steps": [
+      "Install",
+      "Attach",
+      "Auth",
+      "Isolate",
+      "PR"
+    ],
+    "meta": [
+      "Docker sandbox",
+      "shared .oh context",
+      "worktree isolation",
+      "normal GitHub PRs"
+    ]
+  },
+  "outputs": {
+    "svg": "../../static/img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.svg",
+    "jpg": "../../static/img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.jpg",
+    "jpgQuality": 92
+  },
+  "reviewChecklist": [
+    "Browserless HTML/CSS-like layout keeps headline, CTA, terminal, steps, and footer aligned without a Chromium screenshot dependency.",
+    "Dark palette matches the Open Harness site: black background, near-black surfaces, green terminal accent, muted gray copy.",
+    "Headline is grounded in the post and avoids inflated claims.",
+    "Terminal lines and steps are pulled from the blog body.",
+    "CTA asks for feedback from the intended audience.",
+    "Rendered JPG is 1200×675 and suitable for LinkedIn/X link-adjacent posts."
+  ]
+}
