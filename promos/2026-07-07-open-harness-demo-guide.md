@@ -95,6 +95,8 @@ A written walkthrough for setting up an isolated coding-agent workspace:
 • open a normal PR
 
 https://oh.mifune.dev/blog/open-harness-demo-guide
+
+⭐ If useful, star mifunedev/openharness on GitHub.
 ```
 
 ### Discord
@@ -107,6 +109,8 @@ Fresh sandbox → VS Code attach → GitHub auth → isolated worktrees → firs
 If you want a repeatable setup for coding agents without letting them loose on your laptop directly, this is the runbook:
 
 https://oh.mifune.dev/blog/open-harness-demo-guide
+
+⭐ If useful, star mifunedev/openharness on GitHub.
 ```
 
 ### Telegram
@@ -117,6 +121,8 @@ https://oh.mifune.dev/blog/open-harness-demo-guide
 Fresh sandbox → VS Code attach → GitHub auth → isolated worktrees → first PR.
 
 https://oh.mifune.dev/blog/open-harness-demo-guide
+
+⭐ Star mifunedev/openharness on GitHub if useful.
 ```
 
 ## Hashtags / keywords
