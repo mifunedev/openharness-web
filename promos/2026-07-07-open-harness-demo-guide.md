@@ -37,103 +37,46 @@ Audience:
 - operators comparing Claude Code, Codex, Pi, and other harnesses
 - teams that need repeatable setup docs instead of one-off local machines
 
-## LinkedIn drafts
+## Selected replacement copy
 
-### LinkedIn — checklist/setup path
+Cadence rule: publish or schedule at most one post per account per day. Keep extra angles as private drafts/options, not same-day posts.
 
-🧰 **Open Harness demo → setup checklist**
+X/Twitter rendering rule: do not leave a URL as the final visible token/line. X can suppress trailing URLs from the rendered post; keep visible text after each URL, especially the final URL.
 
-I turned the walkthrough into a practical setup path:
+### LinkedIn — selected replacement
+
+🧰 **Open Harness demo → fresh sandbox to first PR**
+
+The walkthrough is now a written setup runbook:
 
 1. install the sandbox
 2. attach VS Code
 3. authenticate GitHub
 4. isolate worktrees
-5. open the first PR
+5. open a normal PR
 
-The point is simple: give coding agents a repeatable place to work — *without using your laptop’s main checkout*.
+Guide: https://oh.mifune.dev/blog/open-harness-demo-guide (setup runbook)
 
-Guide: https://oh.mifune.dev/blog/open-harness-demo-guide
+⭐ Repo: https://github.com/mifunedev/openharness — star if this setup is useful.
 
-⭐ If this setup is useful, star the repo: https://github.com/mifunedev/openharness
+The useful part is not magic. It is a repeatable workspace with clear boundaries for coding agents.
 
-#AIAgents #DeveloperTools #Docker
+#AIAgents #DeveloperTools #Docker #OpenSource
 
-### LinkedIn — worktree/guardrails angle
+### X.com — selected replacement
 
-🛠️ **The useful pattern:** make the workspace boring and repeatable.
+🧰 Open Harness demo → fresh sandbox to first PR.
 
-The Open Harness guide walks through:
+Install sandbox → attach VS Code → GitHub auth → isolated worktrees → normal PR.
 
-• Docker sandbox
-• shared `.oh/` context
-• GitHub auth inside the container
-• isolated worktrees for PRs
+Guide: https://oh.mifune.dev/blog/open-harness-demo-guide (setup runbook)
+⭐ Repo: https://github.com/mifunedev/openharness — star if useful
 
-That setup turns agent output into normal GitHub artifacts: issue → branch → PR.
+Checks:
 
-Guide: https://oh.mifune.dev/blog/open-harness-demo-guide
-
-⭐ Star the repo if this is useful: https://github.com/mifunedev/openharness
-
-#AIAgents #Docker #GitHub #DeveloperTools
-
-### LinkedIn — fresh machine/first PR angle
-
-🚀 **Fresh machine → first PR**
-
-Open Harness is the operator loop I wanted for coding agents:
-
-• install the sandbox
-• attach VS Code
-• authenticate GitHub
-• isolate work in `.oh/worktrees/`
-• let the agent open a normal PR
-
-The useful part is not a new magic agent. It is a repeatable workspace with clear boundaries.
-
-Guide: https://oh.mifune.dev/blog/open-harness-demo-guide
-
-⭐ If it helps, star the repo: https://github.com/mifunedev/openharness
-
-#AIAgents #OpenSource #DevTools
-
-### LinkedIn — first comment / optional Loom reference
-
-The original Loom walkthrough is here too: https://www.loom.com/share/875737ef981f4b378a005be62d1e435b
-
-If you try it, the setup detail I would not skip is VS Code Dev Containers attach — it makes port forwarding and browser-based auth much less painful.
-
-## X.com drafts
-
-### X — checklist/setup path
-
-🧰 Open Harness demo → setup checklist
-
-Install sandbox → attach VS Code → GitHub auth → isolated worktrees → first PR.
-
-A repeatable place for coding agents to work.
-
-Guide: https://oh.mifune.dev/blog/open-harness-demo-guide
-⭐ Star: https://github.com/mifunedev/openharness
-
-### X — worktree/guardrails angle
-
-🛠️ Coding agents work better in boring, repeatable workspaces.
-
-Open Harness pattern: Docker sandbox, shared `.oh/` context, GitHub auth, isolated worktrees.
-
-Guide: https://oh.mifune.dev/blog/open-harness-demo-guide
-⭐ Star: https://github.com/mifunedev/openharness
-
-### X — fresh machine/first PR angle
-
-🚀 Fresh machine → first PR, without giving agents your main checkout.
-
-The walkthrough covers the setup checks that matter: install, attach, auth, isolate, PR.
-
-Guide: https://oh.mifune.dev/blog/open-harness-demo-guide
-⭐ Star: https://github.com/mifunedev/openharness
+- X length: 271 chars.
+- Final X token: `useful`, not a URL.
+- Both URLs have visible non-URL text after them.
 
 ## Hashtags / keywords
 
@@ -152,9 +95,22 @@ Use sparingly; prefer 2-4 per platform.
 
 ## Post Bridge publication
 
-Published Satori dark site-theme variants on 2026-07-08 after explicit `POST BRIDGE LIVE CONFIRMED` confirmation.
+### Replacement draft
 
-- Satori media ID: `938a2e4e-163d-4f7b-a42e-ab99cab01868`
+Created one replacement draft on 2026-07-08 after learning that X suppresses trailing URLs from rendered post text.
+
+- Draft ID: `74655ecc-3aba-493d-bb87-0111a0ce42c8`
+- Replacement media ID: `1e400998-adb7-4edb-aaba-ff9e02840cbd`
+- Targets: X / JohnEggz (`41738`) and LinkedIn / Ruska AI (`41732`)
+- Status: saved as draft only (`is_draft: true`, `scheduled_at: null`); not published or scheduled live.
+- Cadence: exactly one replacement post per target account.
+- X check: 271 chars; final token is `useful`, not a URL.
+
+### Superseded publication
+
+The prior three-variant publish set is superseded because X suppressed final URLs, leaving `Guide:` / `Star:` labels without visible URLs in the rendered tweet. The operator indicated those live posts are being deleted.
+
+- Prior Satori media ID: `938a2e4e-163d-4f7b-a42e-ab99cab01868`
 - Variant 1: `e4771829-fdb9-422f-895f-5ac660ca3fe2` — checklist/setup path angle
   - X / JohnEggz: <https://twitter.com/user/status/2074720526920978909>
   - LinkedIn / Ruska AI: <https://www.linkedin.com/feed/update/urn:li:share:7480486215687999490>
@@ -171,14 +127,16 @@ Superseded draft sets kept only for audit/history:
 - Light checklist variants: `7a4f81a9-6a37-4d46-89c1-be8c054a9747`, `c7b08db4-1714-4b95-be02-921e35d52ce0`, `d6ba458c-c665-4b8b-95b4-4fdc4c62c702`
 - Hand-positioned dark SVG variants: `3fa6c77b-5cd8-4931-83da-71fecb9cbcbc`, `f5e267ca-8afb-4c18-8f0f-4a2c5c31da4d`, `269aad21-e16a-43a7-9bba-b61a3dbbfed4`
 
-Status: published successfully (`status: posted`, `is_draft: false`) to both target accounts; Post Bridge result records reported `success: true` and `error: null` for all six platform results.
+Prior status: Post Bridge originally reported `status: posted`, `is_draft: false`, `success: true`, and `error: null` for all six platform results before the X rendering issue was identified.
 
 ## Posting checklist
 
-Completed:
+Before publishing the replacement draft:
 
 - [x] PR #11 is merged and <https://oh.mifune.dev/blog/open-harness-demo-guide> returns 200.
-- [x] If attaching an image, use `social-promo-card.jpg` and the alt text above.
+- [x] If attaching an image, use the rerendered `social-promo-card.jpg` and the alt text above.
 - [x] Confirm no screenshot exposes tokens, OAuth codes, private account details, or unwanted personal UI.
 - [x] Keep LinkedIn copy as a post, not an article; link back to the blog.
-- [x] Publish only after explicit `/post-bridge` confirmation gate.
+- [x] Keep URLs away from the final X token/line.
+- [x] Limit replacement to one post per account for the day.
+- [ ] Publish only after a fresh explicit `/post-bridge` confirmation gate.

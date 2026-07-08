@@ -29,7 +29,7 @@
       "A repeatable setup flow for coding agents",
       "inside an isolated Docker workspace."
     ],
-    "cta": "Feedback welcome: setup gaps + guardrails",
+    "cta": "⭐ Star the repo if this setup helps",
     "footerUrl": "oh.mifune.dev/blog/open-harness-demo-guide",
     "terminalLines": [
       {
@@ -81,7 +81,7 @@
     "Dark palette matches the Open Harness site: black background, near-black surfaces, green terminal accent, muted gray copy.",
     "Headline is grounded in the post and avoids inflated claims.",
     "Terminal lines and steps are pulled from the blog body.",
-    "CTA asks for feedback from the intended audience.",
+    "CTA points to the GitHub star action without promising inflated outcomes.",
     "Rendered JPG is 1200×675 and suitable for LinkedIn/X link-adjacent posts."
   ]
 }
