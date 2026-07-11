@@ -5,6 +5,7 @@ import process from "node:process";
 import React from "react";
 import satori from "satori";
 import sharp from "sharp";
+import { createPostHogClient, BUILD_DISTINCT_ID } from "./posthog.mjs";
 
 const cwd = process.cwd();
 const args = process.argv.slice(2).filter((arg) => arg !== "--");
@@ -514,6 +515,8 @@ const jpgOutput = path.resolve(path.dirname(recipePath), recipe.outputs.jpg);
 await fs.mkdir(path.dirname(svgOutput), { recursive: true });
 await fs.mkdir(path.dirname(jpgOutput), { recursive: true });
 
+const posthog = createPostHogClient();
+
 const svg = await satori(element, {
   width,
   height,
@@ -531,3 +534,16 @@ console.log(JSON.stringify({
   width: metadata.width,
   height: metadata.height,
 }, null, 2));
+
+posthog?.capture({
+  distinctId: BUILD_DISTINCT_ID,
+  event: 'blog banner rendered',
+  properties: {
+    template: recipe.template,
+    svg: rel(svgOutput),
+    jpg: rel(jpgOutput),
+    width: metadata.width,
+    height: metadata.height,
+  },
+});
+await posthog?.shutdown();

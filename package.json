@@ -4,12 +4,12 @@
   "private": true,
   "scripts": {
     "start": "docusaurus start",
-    "prebuild": "node scripts/sync-external-scripts.mjs && node scripts/build-oh-cli.mjs",
+    "prebuild": "node --env-file-if-exists=.env scripts/sync-external-scripts.mjs && node --env-file-if-exists=.env scripts/build-oh-cli.mjs",
     "build": "docusaurus build",
     "serve": "docusaurus serve",
     "clear": "docusaurus clear",
     "typecheck": "tsc --noEmit",
-    "render:blog-banner": "node scripts/render-blog-banner.mjs"
+    "render:blog-banner": "node --env-file-if-exists=.env scripts/render-blog-banner.mjs"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.1",
@@ -20,6 +20,7 @@
     "@mdx-js/react": "^3.0.0",
     "@mermaid-js/layout-elk": "^0.1.9",
     "clsx": "^2.0.0",
+    "posthog-node": "^5.41.0",
     "prism-react-renderer": "^2.3.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"

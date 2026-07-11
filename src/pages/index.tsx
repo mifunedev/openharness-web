@@ -116,6 +116,12 @@ const WHY: Array<{ title: string; body: string }> = [
   },
 ];
 
+function captureEvent(event: string, properties?: Record<string, unknown>): void {
+  if (typeof window !== "undefined") {
+    window.posthog?.capture(event, properties);
+  }
+}
+
 export default function Home(): React.ReactElement {
   const stars = useGitHubStars(FALLBACK_STARS);
   const starLabel = formatStars(stars);
@@ -141,6 +147,7 @@ export default function Home(): React.ReactElement {
                 <Link
                   className="button button--primary button--lg"
                   to="/docs/quickstart"
+                  onClick={() => captureEvent("get started clicked", { location: "hero" })}
                 >
                   Get started
                 </Link>
@@ -148,6 +155,7 @@ export default function Home(): React.ReactElement {
                   className="button button--secondary button--lg"
                   href={GITHUB_URL}
                   aria-label={`Star Open Harness on GitHub, ${starLabel} stars`}
+                  onClick={() => captureEvent("github star clicked", { location: "hero" })}
                 >
                   ★ Star on GitHub
                 </Link>
@@ -174,6 +182,7 @@ export default function Home(): React.ReactElement {
                 <Link
                   className={styles.terminalFooterLink}
                   to="/docs/quickstart#end-to-end-setup-walkthrough"
+                  onClick={() => captureEvent("quickstart walkthrough clicked")}
                 >
                   Full end-to-end walkthrough →
                 </Link>
@@ -202,6 +211,7 @@ export default function Home(): React.ReactElement {
                 className={styles.starPanelCta}
                 href={GITHUB_URL}
                 aria-label={`Star Open Harness on GitHub, ${starLabel} stars`}
+                onClick={() => captureEvent("github star clicked", { location: "star_section" })}
               >
                 Star on GitHub →
               </Link>
@@ -231,7 +241,12 @@ export default function Home(): React.ReactElement {
 
                 if (agent.href && !agent.comingSoon) {
                   return (
-                    <Link key={agent.name} className={styles.agentCard} to={agent.href}>
+                    <Link
+                      key={agent.name}
+                      className={styles.agentCard}
+                      to={agent.href}
+                      onClick={() => captureEvent("agent card clicked", { agent_name: agent.name })}
+                    >
                       {body}
                     </Link>
                   );
@@ -284,7 +299,11 @@ export default function Home(): React.ReactElement {
               <p>
                 Multi-agent setups — like a Pi+Mom Slack bot — ship as separate harness packs you <code>git clone</code> into the workspace.
               </p>
-              <Link className={styles.archLink} to="/docs/quickstart">
+              <Link
+                className={styles.archLink}
+                to="/docs/quickstart"
+                onClick={() => captureEvent("arch read more clicked")}
+              >
                 Read the quickstart →
               </Link>
             </div>
@@ -298,6 +317,7 @@ export default function Home(): React.ReactElement {
               <Link
                 className={styles.linkCard}
                 href={GITHUB_URL}
+                onClick={() => captureEvent("get involved link clicked", { link_label: "Star Open Harness" })}
               >
                 <span className={styles.linkCardLabel}>Star Open Harness</span>
                 <span className={styles.linkCardSub}>
@@ -307,11 +327,16 @@ export default function Home(): React.ReactElement {
               <Link
                 className={styles.linkCard}
                 href="https://github.com/mifunedev/openharness/blob/main/LICENSE"
+                onClick={() => captureEvent("get involved link clicked", { link_label: "License" })}
               >
                 <span className={styles.linkCardLabel}>License</span>
                 <span className={styles.linkCardSub}>MIT — use freely</span>
               </Link>
-              <Link className={styles.linkCard} to="/docs">
+              <Link
+                className={styles.linkCard}
+                to="/docs"
+                onClick={() => captureEvent("get involved link clicked", { link_label: "Documentation" })}
+              >
                 <span className={styles.linkCardLabel}>Documentation</span>
                 <span className={styles.linkCardSub}>
                   Quickstart, architecture, agents

@@ -13,6 +13,7 @@ import {
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createPostHogClient, BUILD_DISTINCT_ID } from "./posthog.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = process.env.OH_GITHUB_REPO || "mifunedev/openharness";
@@ -22,6 +23,7 @@ const DEST = join(ROOT, "static", "oh.js");
 
 const run = (cmd, cwd) => execSync(cmd, { cwd, stdio: "inherit" });
 
+const posthog = createPostHogClient();
 const work = mkdtempSync(join(tmpdir(), "oh-cli-build-"));
 try {
   run(`git clone --depth 1 --branch ${REF} https://github.com/${REPO}.git src`, work);
@@ -35,8 +37,11 @@ try {
   mkdirSync(dirname(DEST), { recursive: true });
   copyFileSync(built, DEST);
   console.log(`[build-oh-cli] wrote static/oh.js <- ${REPO}@${REF} (.oh/cli)`);
+  posthog?.capture({ distinctId: BUILD_DISTINCT_ID, event: 'cli build completed', properties: { repo: REPO, ref: REF } });
 } catch (err) {
   console.warn(`[build-oh-cli] skip static/oh.js: ${err.message}`);
+  posthog?.capture({ distinctId: BUILD_DISTINCT_ID, event: 'cli build failed', properties: { repo: REPO, ref: REF, error: err.message } });
 } finally {
   rmSync(work, { recursive: true, force: true });
+  await posthog?.shutdown();
 }
