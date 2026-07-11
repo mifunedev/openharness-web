@@ -35,13 +35,13 @@ This IS the rendered docs site (oh.mifune.dev) — use the search bar (top-right
 
 ## What is Open Harness?
 
-Open Harness is a single repo that *is* your harness: it boots one Docker container — the sandbox — and wraps your project inside it. You bring the sandbox up with `docker compose`, attach to it from your terminal or VS Code, and let your chosen agent work the project over time. Because the harness is a git repo, its whole setup is tracked and versioned — reproducible and portable. Clone-and-Compose deployments need no host CLI; alternatively, the standalone `oh` CLI equips an existing project repo. See [Docker deployment](/docs/docker-deployment) for both modes.
+Open Harness is a single repo that *is* your harness: it boots one Docker container — the sandbox — and wraps your project inside it. You bring the sandbox up with `docker compose`, attach to it from your terminal or VS Code, and let your chosen agent work the project over time. Because the harness is a git repo, its whole setup is tracked and versioned — reproducible and portable. There is no per-agent fan-out and no host CLI; everything happens through standard `docker compose` commands and the croner runtime that ships in the image.
 
 Key capabilities:
 
 - **One repo, one sandbox.** Your portable harness is one repo; it boots one container. The agent owns its workspace; your machine stays clean — you're not running agents straight on your host.
 - **Markdown-defined crons.** `crons/*.md` files declare schedules; an in-container croner runtime fires the bodies as agent prompts so the agent can work autonomously while you focus on other things.
-- **Minimal host dependencies.** Clone-and-Compose uses Docker, Git, and make with no Node or Python; the standalone `oh` CLI uses Node.js ≥ 20, Git, and Docker. See [Prerequisites](/docs/installation#prerequisites).
+- **Host dependencies: Docker, Git, and make.** No Node, no Python, and no toolchain maintenance required on your laptop. (`make` drives the `make sandbox` / `make shell` wrappers — see [Prerequisites](/docs/installation#prerequisites).)
 - **Cloudflared previews.** Share sandbox app ports through Cloudflared tunnels; SSH and pack-supplied services remain opt-in Docker Compose overlays.
 - **Multi-agent messaging.** Bridge Slack (and other messengers) to a Pi agent with the [`pi-messenger-bridge`](/docs/integrations/slack) npm package; SSH and pack-supplied services remain opt-in Docker Compose overlays.
 
@@ -85,8 +85,8 @@ flowchart TB
 If you are new, follow this order:
 
 1. [Installation](/docs/installation) — install Docker.
-2. [Quickstart](/docs/quickstart) — choose a setup mode and start a sandbox.
-3. [Docker deployment](/docs/docker-deployment) — choose a local build or prebuilt image.
+2. [Quickstart](/docs/quickstart) — go from zero to a running sandbox in under five minutes.
+3. [Raw Docker deployment](/docs/docker-deployment) — run the public image with no checkout or build.
 
 If you already have a sandbox running, jump directly to the page you need.
 

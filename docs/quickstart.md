@@ -5,7 +5,7 @@ title: "Quickstart"
 
 # Quickstart
 
-This guide takes you from zero to a running sandbox with an interactive shell. The clone-and-Compose path requires [Docker](https://docs.docker.com/get-docker/) with the Compose plugin, [Git](https://git-scm.com/), and `make` (build-essential); the standalone CLI path instead requires Node.js ≥ 20, Git, and Docker. See [Installation](./installation.md) and [Docker deployment](/docs/docker-deployment) for the distinct modes.
+This guide takes you from zero to a running sandbox with an interactive shell in under five minutes. Required host dependencies are [Docker](https://docs.docker.com/get-docker/) with the Compose plugin, [Git](https://git-scm.com/), and `make` (build-essential) — the full list with install commands is in [Prerequisites](./installation.md#prerequisites). To run the public image with no checkout or build, use the [raw Docker deployment guide](/docs/docker-deployment).
 
 ## Before you start
 
@@ -49,7 +49,7 @@ The installer clones into `~/.openharness`, prompts to share your host `gh` toke
 
 **Self-hosting from an existing clone:** run `bash .oh/scripts/install.sh` from inside the directory — it detects the local clone automatically.
 
-**Standalone `oh` CLI (equip an existing project repo):** if you already have Node.js ≥ 20, install the `oh` command from npm — `npm install -g @mifune/openharness` (or zero-install `npx @mifune/openharness init`). Otherwise bootstrap it with `curl -fsSL https://oh.mifune.dev/get-oh.sh | bash` (or `source <(curl -fsSL https://oh.mifune.dev/get-oh.sh)` to also put `oh` on the current shell's PATH). Then `cd <your-project> && oh init` → `oh sandbox --image` (prebuilt) or `oh sandbox` (local build) → `oh shell`; see [Installation → Standalone CLI](./installation.md#standalone-cli-oh-equip-an-existing-repo) and [Docker deployment](/docs/docker-deployment). Requires Node.js ≥ 20 (get-oh.sh offers nvm + Node 22 if missing); Docker only for sandbox commands.
+**Standalone `oh` CLI (equip an existing project repo):** if you already have Node.js ≥ 20, install the `oh` command from npm — `npm install -g @mifune/openharness` (or zero-install `npx @mifune/openharness init`). Otherwise bootstrap it with `curl -fsSL https://oh.mifune.dev/get-oh.sh | bash` (or `source <(curl -fsSL https://oh.mifune.dev/get-oh.sh)` to also put `oh` on the current shell's PATH). Then `cd <your-project> && oh init` → `oh sandbox` / `oh shell` / `oh gateway` — see [Installation → Standalone CLI](./installation.md#standalone-cli-oh-equip-an-existing-repo). Requires Node.js ≥ 20 (get-oh.sh offers nvm + Node 22 if missing); Docker only for `oh sandbox`.
 
 </details>
 

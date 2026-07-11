@@ -5,81 +5,173 @@ sidebar_position: 3
 
 # Docker deployment
 
-Open Harness publishes the same release image that its release workflow builds and smoke-tests:
+Run the public Open Harness image directly with Docker—no checkout, local build, CLI wrapper, or Compose required. This walkthrough creates two containers with isolated workspaces and shared GitHub, SSH, Claude, and Pi authentication.
 
-```text
-ghcr.io/mifunedev/openharness:latest
-ghcr.io/mifunedev/openharness:<CalVer>   # for example, 2026.7.10
-```
-
-The image is public. Use `latest` for convenient toolchain updates, or pin a CalVer tag when you need reproducible recreation.
-
-## Fastest path: an equipped project
-
-If your repository is already equipped with Open Harness (`oh init`), run:
+## 1. Create the network and pull a pinned image
 
 ```bash
-oh sandbox --image
-oh shell
+docker network create openharness
+docker pull ghcr.io/mifunedev/openharness:2026.7.10
 ```
 
-That is the recommended service quickstart. The image supplies the toolchain, while your bind-mounted repository—including Git history and the live `.oh/` control plane—remains authoritative. This is **Flavor A**: prebuilt tools, normal project ownership, and no local image build.
+Pinning `2026.7.10` makes recreation predictable. The `latest` tag follows the newest release, which is convenient for updates but can change between pulls.
 
-Pin a release per invocation when needed:
+## 2. Start sandbox A
+
+Replace the Git name and email placeholders, then run:
 
 ```bash
-oh sandbox --image=ghcr.io/mifunedev/openharness:2026.7.10
-```
-
-Or make the choice durable without a settings dump:
-
-```yaml title="harness.yaml"
-sandbox:
-  image: ghcr.io/mifunedev/openharness:latest
-  pull_policy: always # optional; default pulls only when missing
-```
-
-At boot, the normal entrypoint still repairs provider links, starts configured cron sessions, and runs the repository dependency install only when its fingerprint changes. Skipping the image build does not skip project initialization.
-
-See [Installation](./installation.md) if the project is not equipped yet. The [detailed prebuilt-image source](https://github.com/mifunedev/openharness/blob/development/.oh/docs/deployment-prebuilt-image.md) documents precedence, direct Compose usage, and the VS Code Dev Containers caveat.
-
-## No checkout: image-only mode
-
-**Flavor B** needs only Docker. It mounts a named workspace volume and, on first boot, copies the baked control plane from `/opt/oh-seed`. After that seed, the volume is authoritative and is not overwritten when the image changes. The seeded workspace has **no initial Git history**; clone or initialize repositories inside it as needed.
-
-The canonical standalone Compose file includes health checks and optional credential volumes. Download and run it without cloning Open Harness:
-
-```bash
-curl -fsSLO https://raw.githubusercontent.com/mifunedev/openharness/development/.devcontainer/docker-compose.image-only.yml
-OH_SANDBOX_IMAGE=ghcr.io/mifunedev/openharness:2026.7.10 \
-  docker compose -f docker-compose.image-only.yml up -d
-docker compose -f docker-compose.image-only.yml exec -u sandbox sandbox zsh
-```
-
-Review the [canonical Compose file](https://github.com/mifunedev/openharness/blob/development/.devcontainer/docker-compose.image-only.yml) before use. To use the newest release instead, omit `OH_SANDBOX_IMAGE` or set it to `ghcr.io/mifunedev/openharness:latest`.
-
-For a deliberately minimal direct-Docker alternative:
-
-```bash
-docker volume create oh_workspace
-docker run -d --name openharness --init \
+docker run -itd \
+  --name oh-a \
+  --network openharness \
+  --restart unless-stopped \
+  --init \
   -e OH_IMAGE_ONLY=1 \
-  -v oh_workspace:/home/sandbox/harness \
-  ghcr.io/mifunedev/openharness:2026.7.10 sleep infinity
-docker exec -it -u sandbox openharness zsh
+  -e OH_PROJECT_ROOT=/home/sandbox/harness \
+  -e SANDBOX_NAME=oh-a \
+  -e GIT_USER_NAME="<your-name>" \
+  -e GIT_USER_EMAIL="<you@example.com>" \
+  -v oh-workspace-a:/home/sandbox/harness \
+  -v oh-gh-config:/home/sandbox/.config/gh \
+  -v oh-ssh:/home/sandbox/.ssh \
+  -v oh-claude-auth:/home/sandbox/.claude \
+  -v oh-pi-auth:/home/sandbox/.pi \
+  ghcr.io/mifunedev/openharness:2026.7.10 \
+  sleep infinity
 ```
 
-Only the seeded workspace is mounted here. Agent credential/config volumes are optional; add only the providers you use, or use the canonical Compose file for the complete supported set. Authenticate interactively after attaching rather than placing personal credentials in commands.
+The workspace volume is unique to A. Only the auth state used in this walkthrough is shared.
 
-## Operations and constraints
+## 3. Verify and attach
 
-These details matter after the first successful shell, not before it:
+Confirm the container is running and that first-boot seeding completed:
 
-- **Updates:** pull a newer tag and recreate the container. Reuse `oh_workspace`; an already seeded volume is not reseeded.
-- **Stop or remove:** `docker compose ... down` (or `docker rm -f openharness`) retains named volumes. `docker compose ... down -v` or `docker volume rm oh_workspace` permanently erases the image-only workspace.
-- **Architecture:** the published release is currently single-architecture (Linux/AMD64), not a multi-architecture manifest. Use a local build on other CPU architectures.
-- **Networking:** no application ports are published by default. Add explicit mappings only for services you intend to expose.
-- **Host control:** the Docker socket is not mounted by default. Mounting `/var/run/docker.sock` lets sandbox processes control the host Docker daemon and should be limited to trusted workloads.
-- **Credentials:** named auth/config volumes persist sensitive state but are not backups. Protect and back them up appropriately.
+```bash
+docker ps --filter 'name=^/oh-a$' --format 'table {{.Names}}\t{{.Status}}'
+docker logs oh-a
+docker exec oh-a test -f /home/sandbox/harness/.oh/.image-seeded \
+  && echo "sandbox A seed ready"
+```
 
-For the full environment, volume, direct-Compose, VS Code, verification, and lifecycle options, use the [upstream detailed prebuilt-image guide](https://github.com/mifunedev/openharness/blob/development/.oh/docs/deployment-prebuilt-image.md).
+Attach from a terminal:
+
+```bash
+docker exec -it -u sandbox oh-a zsh
+```
+
+Or use VS Code with the Dev Containers extension:
+
+1. Open the Command Palette.
+2. Select **Dev Containers: Attach to Running Container...**.
+3. Select `oh-a`.
+4. Open `/home/sandbox/harness`.
+
+This is **Attach to Running Container**, not **Reopen in Container**.
+
+## 4. Authenticate inside sandbox A
+
+Run these commands in A's shell.
+
+### GitHub and SSH
+
+```bash
+gh auth login
+```
+
+Choose **GitHub.com** → **SSH** → allow `gh` to generate and upload an SSH key → **Paste an authentication token**. Then verify and configure Git:
+
+```bash
+gh auth setup-git
+gh auth status
+```
+
+### Claude
+
+```bash
+claude auth login
+claude auth status
+```
+
+### Pi
+
+```bash
+pi
+```
+
+Inside Pi, enter `/login`, choose device authentication, open the displayed browser URL on any device, enter the displayed code, and finish authorization. Exit Pi with `Ctrl-D` when login completes.
+
+Authentication persists in the named `oh-gh-config`, `oh-ssh`, `oh-claude-auth`, and `oh-pi-auth` volumes. Do not put tokens in the Docker command.
+
+## 5. Start sandbox B with shared auth
+
+Use the same image, network, and auth volumes. Change the container identity and give B its own workspace volume:
+
+```bash
+docker run -itd \
+  --name oh-b \
+  --network openharness \
+  --restart unless-stopped \
+  --init \
+  -e OH_IMAGE_ONLY=1 \
+  -e OH_PROJECT_ROOT=/home/sandbox/harness \
+  -e SANDBOX_NAME=oh-b \
+  -e GIT_USER_NAME="<your-name>" \
+  -e GIT_USER_EMAIL="<you@example.com>" \
+  -v oh-workspace-b:/home/sandbox/harness \
+  -v oh-gh-config:/home/sandbox/.config/gh \
+  -v oh-ssh:/home/sandbox/.ssh \
+  -v oh-claude-auth:/home/sandbox/.claude \
+  -v oh-pi-auth:/home/sandbox/.pi \
+  ghcr.io/mifunedev/openharness:2026.7.10 \
+  sleep infinity
+```
+
+B starts with the shared GitHub/SSH, Claude, and Pi auth state but an isolated workspace. Re-authentication is normally unnecessary, subject to each provider's session and expiry policies.
+
+Verify both seeds and prove that workspace content does not cross between them:
+
+```bash
+docker exec oh-b test -f /home/sandbox/harness/.oh/.image-seeded \
+  && echo "sandbox B seed ready"
+docker exec oh-a touch /home/sandbox/harness/.sandbox-a-only
+docker exec oh-b test ! -e /home/sandbox/harness/.sandbox-a-only \
+  && echo "A and B workspaces are isolated"
+docker exec oh-a rm /home/sandbox/harness/.sandbox-a-only
+```
+
+## First-boot and persistence model
+
+With `OH_IMAGE_ONLY=1`, the entrypoint copies the baked `/opt/oh-seed` control plane into each empty workspace volume and writes `.oh/.image-seeded`. After that, the workspace volume is authoritative and is not overwritten on later boots or image updates. A seeded image-only workspace has no Git history; clone or initialize repositories inside it as needed.
+
+## Lifecycle and security
+
+Stop and restart either sandbox without losing state:
+
+```bash
+docker stop oh-a oh-b
+docker start oh-a oh-b
+```
+
+Remove the containers while retaining all named volumes:
+
+```bash
+docker rm -f oh-a oh-b
+```
+
+Workspace deletion is destructive and permanently removes each sandbox's files:
+
+```bash
+docker volume rm oh-workspace-a oh-workspace-b
+```
+
+Auth deletion is also destructive and requires signing in again:
+
+```bash
+docker volume rm oh-gh-config oh-ssh oh-claude-auth oh-pi-auth
+```
+
+No ports are published by these commands; the `openharness` network remains private until you deliberately add `-p HOST:CONTAINER`. The Docker socket is not mounted, so sandbox processes cannot control the host daemon. The published image is currently Linux/AMD64 only; hosts on another architecture are outside this happy path until a multi-architecture image is published.
+
+## Full-option references
+
+The raw `docker run` path above is the recommended walkthrough. For the complete image/boot model and advanced settings, see the [detailed prebuilt-image documentation](https://github.com/mifunedev/openharness/blob/development/.oh/docs/deployment-prebuilt-image.md). The [canonical image-only Compose file](https://github.com/mifunedev/openharness/blob/development/.devcontainer/docker-compose.image-only.yml) is available as a reference for operators who specifically need Compose-managed options.
