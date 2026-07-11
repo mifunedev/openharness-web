@@ -7,14 +7,14 @@ sidebar_position: 3
 
 Run the public Open Harness image directly with Docker—no checkout, local build, CLI wrapper, or Compose required. This walkthrough creates two containers with isolated workspaces and shared GitHub, SSH, Claude, and Pi authentication.
 
-## 1. Create the network and pull a pinned image
+## 1. Create the network and pull the image
 
 ```bash
 docker network create openharness
-docker pull ghcr.io/mifunedev/openharness:2026.7.10
+docker pull ghcr.io/mifunedev/openharness:latest
 ```
 
-Pinning `2026.7.10` makes recreation predictable. The `latest` tag follows the newest release, which is convenient for updates but can change between pulls.
+`latest` follows the newest release. Pull it again when you want to update.
 
 ## 2. Start sandbox A
 
@@ -36,7 +36,7 @@ docker run -itd \
   -v oh-ssh:/home/sandbox/.ssh \
   -v oh-claude-auth:/home/sandbox/.claude \
   -v oh-pi-auth:/home/sandbox/.pi \
-  ghcr.io/mifunedev/openharness:2026.7.10 \
+  ghcr.io/mifunedev/openharness:latest \
   sleep infinity
 ```
 
@@ -98,7 +98,7 @@ claude auth status
 pi
 ```
 
-Inside Pi, enter `/login`, choose device authentication, open the displayed browser URL on any device, enter the displayed code, and finish authorization. Exit Pi with `Ctrl-D` when login completes.
+Inside Pi, enter `/login`, choose a provider and device authentication, open the displayed browser URL on any device, enter the displayed code, and finish authorization. Then enter `/model` and select the provider and model you want Pi to use. Exit Pi with `Ctrl-D` when setup is complete.
 
 Authentication persists in the named `oh-gh-config`, `oh-ssh`, `oh-claude-auth`, and `oh-pi-auth` volumes. Do not put tokens in the Docker command.
 
@@ -122,7 +122,7 @@ docker run -itd \
   -v oh-ssh:/home/sandbox/.ssh \
   -v oh-claude-auth:/home/sandbox/.claude \
   -v oh-pi-auth:/home/sandbox/.pi \
-  ghcr.io/mifunedev/openharness:2026.7.10 \
+  ghcr.io/mifunedev/openharness:latest \
   sleep infinity
 ```
 
@@ -138,6 +138,16 @@ docker exec oh-b test ! -e /home/sandbox/harness/.sandbox-a-only \
   && echo "A and B workspaces are isolated"
 docker exec oh-a rm /home/sandbox/harness/.sandbox-a-only
 ```
+
+## Optional: connect another service
+
+Attach an existing container to the same private network so A and B can reach it:
+
+```bash
+docker network connect --alias app openharness my-app
+```
+
+`app` becomes that container's network-local DNS name. From either sandbox, connect to `http://app:<container-port>`. The alias is available only on the `openharness` network; it does not publish the service to the host or internet. Choose a short, unique alias, and omit `--alias app` if the container name is sufficient.
 
 ## First-boot and persistence model
 

@@ -13,11 +13,11 @@ Open Harness publishes a ready-to-run sandbox image at `ghcr.io/mifunedev/openha
 
 ## Start sandbox A
 
-Create a private Docker network and pull a reproducible release tag. `latest` tracks the newest release, but a pinned tag will not change between recreations.
+Create a private Docker network and pull the newest release image:
 
 ```bash
 docker network create openharness
-docker pull ghcr.io/mifunedev/openharness:2026.7.10
+docker pull ghcr.io/mifunedev/openharness:latest
 ```
 
 Replace the Git identity placeholders and start A:
@@ -38,7 +38,7 @@ docker run -itd \
   -v oh-ssh:/home/sandbox/.ssh \
   -v oh-claude-auth:/home/sandbox/.claude \
   -v oh-pi-auth:/home/sandbox/.pi \
-  ghcr.io/mifunedev/openharness:2026.7.10 \
+  ghcr.io/mifunedev/openharness:latest \
   sleep infinity
 ```
 
@@ -66,7 +66,7 @@ claude auth status
 pi
 ```
 
-Inside Pi, enter `/login`, choose device auth, open the displayed URL in a browser, and enter its code. Exit with `Ctrl-D` when complete. GitHub config, SSH keys, Claude auth, and Pi auth persist in their four named volumes.
+Inside Pi, enter `/login`, choose a provider and device auth, open the displayed URL in a browser, and enter its code. Then enter `/model` and select the provider and model Pi should use. Exit with `Ctrl-D` when setup is complete. GitHub config, SSH keys, Claude auth, and Pi auth persist in their four named volumes.
 
 ## Add sandbox B
 
@@ -88,7 +88,7 @@ docker run -itd \
   -v oh-ssh:/home/sandbox/.ssh \
   -v oh-claude-auth:/home/sandbox/.claude \
   -v oh-pi-auth:/home/sandbox/.pi \
-  ghcr.io/mifunedev/openharness:2026.7.10 \
+  ghcr.io/mifunedev/openharness:latest \
   sleep infinity
 ```
 
@@ -101,6 +101,13 @@ docker exec oh-b test ! -e /home/sandbox/harness/.sandbox-a-only \
 docker exec oh-a rm /home/sandbox/harness/.sandbox-a-only
 ```
 
-These containers publish no ports, stay on a private Docker network, and do not mount the host Docker socket. See the [Docker deployment guide](/docs/docker-deployment) for verification, lifecycle, destructive volume cleanup, the Linux/AMD64 caveat, and advanced source references.
+To make another container reachable from both sandboxes, attach it to their network with an optional DNS alias:
+
+```bash
+docker network connect --alias app openharness my-app
+# A and B can now reach http://app:<container-port>
+```
+
+The alias is private to that Docker network; it does not publish a host port. These containers publish no ports and do not mount the host Docker socket. See the [Docker deployment guide](/docs/docker-deployment) for verification, lifecycle, destructive volume cleanup, the Linux/AMD64 caveat, and advanced source references.
 
 Self-hosted Docker is available today. Open Harness Cloud is a future possibility, not a shipped service.
