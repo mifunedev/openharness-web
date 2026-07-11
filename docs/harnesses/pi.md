@@ -17,6 +17,16 @@ pi --version
 
 [`@earendil-works/pi-coding-agent` on npm](https://www.npmjs.com/package/@earendil-works/pi-coding-agent) — see the upstream repository at [earendil-works/pi-mono](https://github.com/earendil-works/pi-mono) for documentation, configuration, and roadmap. (The previous package, `@mariozechner/pi-coding-agent`, is deprecated — install the `@earendil-works/...` successor instead.)
 
+## Choose a model
+
+Use Pi's `/model` command to select among configured provider models:
+
+```text
+/model
+```
+
+Before choosing, follow [Choosing a Model](../model-selection.md) to compare public long-horizon software-engineering evidence with your task, provider, cost, latency, tool, context, and reasoning constraints.
+
 ## Default packages
 
 Open Harness loads these project-local Pi packages from `.pi/settings.json`:

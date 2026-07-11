@@ -9,6 +9,8 @@ Open Harness ships with three agent CLIs in the default sandbox image: **Claude 
 
 Open Harness is the harness; the **agent** is your call. To go beyond the preinstalled options, install via `npm` / `pip` / `cargo` inside the sandbox or edit the Dockerfile. For Pi+Slack specifically, the recommended path is the `pi-messenger-bridge` npm package (pinned in `.pi/settings.json`; see [Slack integration](../integrations/slack.md)). The product surface is one developer, one project, one agent — not racing or stacking multiple CLIs against each other.
 
+For help matching a model to the work, see [Choosing a Model](../model-selection.md). It explains the public benchmark resource Open Harness consults and the task-fit checks to apply before selecting a model.
+
 ## Supported agents
 
 | Agent | Role | Start command | Source |
