@@ -10,7 +10,8 @@ const FALLBACK_STARS = 18;
 
 const QUICKSTART = `# 1 · install  (host: Docker + git, make recommended)
 curl -fsSL https://oh.mifune.dev/install.sh | bash
-# ...or, with Node >= 20, just the 'oh' CLI:  npm install -g @mifune/openharness && oh init
+# ...or equip a project with Node >= 20:
+# npm install -g @mifune/openharness && oh init && oh sandbox --image
 
 # 2 · attach — VS Code command palette (Ctrl+Shift+P):
 #     "Dev Containers: Attach to Running Container" · select openharness
@@ -159,7 +160,7 @@ export default function Home(): React.ReactElement {
                 <span aria-hidden="true">·</span>
                 <span>Self-hosted</span>
                 <span aria-hidden="true">·</span>
-                <span>No host toolchains</span>
+                <span>Compose or standalone CLI</span>
               </div>
             </div>
             <aside className={styles.heroTerminal} aria-label="Quickstart commands">
@@ -173,9 +174,9 @@ export default function Home(): React.ReactElement {
               <div className={styles.terminalFooter}>
                 <Link
                   className={styles.terminalFooterLink}
-                  to="/docs/quickstart#end-to-end-setup-walkthrough"
+                  to="/docs/docker-deployment"
                 >
-                  Full end-to-end walkthrough →
+                  Docker deployment options →
                 </Link>
               </div>
             </aside>

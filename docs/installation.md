@@ -5,7 +5,7 @@ title: "Installation"
 
 # Installation
 
-Open Harness is a portable harness — a single repo that boots an isolated Docker sandbox for your project. Installation clones the repo and runs `docker compose` against `.devcontainer/docker-compose.yml` — there is no host CLI, agent, or Node toolchain required on the host.
+Open Harness is a portable harness that boots an isolated Docker sandbox for your project. Choose either the clone-and-Compose mode, which needs no host CLI or Node toolchain, or the standalone `oh` CLI mode, which equips an existing project and requires Node.js. See [Docker deployment](/docs/docker-deployment) for build, prebuilt-image, and runtime options.
 
 ## Prerequisites
 
@@ -164,7 +164,7 @@ Edit `.devcontainer/.env` and set your `SANDBOX_NAME` and any optional tokens. S
 docker compose -f .devcontainer/docker-compose.yml up -d --build
 ```
 
-On a cold Docker cache the build takes around ten minutes; subsequent starts are a few seconds.
+On a cold Docker cache the build takes around ten minutes; subsequent starts are a few seconds. See [Docker deployment](/docs/docker-deployment) for the prebuilt-image alternative.
 
 Check the sandbox health before attaching:
 
@@ -219,11 +219,12 @@ Then equip any project:
 cd <your-project>
 oh init            # equip the repo (fetches scaffold payload on demand — no repo clone)
 oh sandbox         # provision + start the sandbox (docker compose up -d --build)
+oh sandbox --image # pull the prebuilt release image instead of building locally
 oh shell           # zsh in the running container (or: oh shell <container>)
 oh gateway status  # manage messaging client sessions (pi|hermes)
 ```
 
-Repos equipped this way mount your project at `/home/sandbox/project` inside the sandbox (the clone paths above use `/home/sandbox/harness`). Upgrade the vendored `.oh/` later with `oh update` (offline: `oh init --from <local-checkout>`).
+See [Docker deployment](/docs/docker-deployment) for image selection and Compose details. Repos equipped this way mount your project at `/home/sandbox/project` inside the sandbox (the clone paths above use `/home/sandbox/harness`). Upgrade the vendored `.oh/` later with `oh update` (offline: `oh init --from <local-checkout>`).
 
 ## Next step
 
