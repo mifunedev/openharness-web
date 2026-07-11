@@ -86,6 +86,7 @@ If you are new, follow this order:
 
 1. [Installation](/docs/installation) — install Docker.
 2. [Quickstart](/docs/quickstart) — go from zero to a running sandbox in under five minutes.
+3. [Docker deployment](/docs/docker-deployment) — run the public image with no checkout or build.
 
 If you already have a sandbox running, jump directly to the page you need.
 
