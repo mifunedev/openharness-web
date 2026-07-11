@@ -184,4 +184,4 @@ No ports are published by these commands; the `openharness` network remains priv
 
 ## Full-option references
 
-The raw `docker run` path above is the recommended walkthrough. For the complete image/boot model and advanced settings, see the [detailed prebuilt-image documentation](https://github.com/mifunedev/openharness/blob/development/.oh/docs/deployment-prebuilt-image.md). The [canonical image-only Compose file](https://github.com/mifunedev/openharness/blob/development/.devcontainer/docker-compose.image-only.yml) is available as a reference for operators who specifically need Compose-managed options.
+The `docker run` path above is the recommended walkthrough. For the complete image/boot model and advanced settings, see the [detailed prebuilt-image documentation](https://github.com/mifunedev/openharness/blob/development/.oh/docs/deployment-prebuilt-image.md). The [canonical image-only Compose file](https://github.com/mifunedev/openharness/blob/development/.devcontainer/docker-compose.image-only.yml) is available as a reference for operators who specifically need Compose-managed options.

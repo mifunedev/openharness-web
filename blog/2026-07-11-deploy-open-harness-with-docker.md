@@ -1,5 +1,5 @@
 ---
-title: "Deploy Open Harness with raw Docker"
+title: "Deploy Open Harness with Docker"
 description: "Start two isolated Open Harness workspaces from the public image while sharing agent authentication."
 date: 2026-07-11
 authors: [ryan]
@@ -7,7 +7,7 @@ tags: [open-harness, docker, deployment, self-hosted]
 slug: deploy-open-harness-with-docker
 ---
 
-Open Harness publishes a ready-to-run sandbox image at `ghcr.io/mifunedev/openharness`. You can launch it with raw Docker—no checkout, local build, CLI wrapper, or Compose required—and keep each workspace isolated while sharing authentication.
+Open Harness publishes a ready-to-run sandbox image at `ghcr.io/mifunedev/openharness`. You can launch it directly with Docker—no checkout, local build, CLI wrapper, or Compose required—and keep each workspace isolated while sharing authentication.
 
 <!-- truncate -->
 

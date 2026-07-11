@@ -5,7 +5,7 @@ title: "Installation"
 
 # Installation
 
-Open Harness is a portable harness — a single repo that boots an isolated Docker sandbox for your project. Installation clones the repo and runs `docker compose` against `.devcontainer/docker-compose.yml` — there is no host CLI, agent, or Node toolchain required on the host. For a no-checkout, no-build alternative, see the [raw Docker deployment guide](/docs/docker-deployment).
+Open Harness is a portable harness — a single repo that boots an isolated Docker sandbox for your project. Installation clones the repo and runs `docker compose` against `.devcontainer/docker-compose.yml` — there is no host CLI, agent, or Node toolchain required on the host. For a no-checkout, no-build alternative, see the [Docker deployment guide](/docs/docker-deployment).
 
 ## Prerequisites
 
@@ -164,7 +164,7 @@ Edit `.devcontainer/.env` and set your `SANDBOX_NAME` and any optional tokens. S
 docker compose -f .devcontainer/docker-compose.yml up -d --build
 ```
 
-On a cold Docker cache the build takes around ten minutes; subsequent starts are a few seconds. See the [raw Docker deployment guide](/docs/docker-deployment) for the no-checkout, no-build alternative.
+On a cold Docker cache the build takes around ten minutes; subsequent starts are a few seconds. See the [Docker deployment guide](/docs/docker-deployment) for the no-checkout, no-build alternative.
 
 Check the sandbox health before attaching:
 
@@ -223,7 +223,7 @@ oh shell           # zsh in the running container (or: oh shell <container>)
 oh gateway status  # manage messaging client sessions (pi|hermes)
 ```
 
-The separate [raw Docker deployment guide](/docs/docker-deployment) runs the public image without equipping a host repository. Repos equipped this way mount your project at `/home/sandbox/project` inside the sandbox (the clone paths above use `/home/sandbox/harness`). Upgrade the vendored `.oh/` later with `oh update` (offline: `oh init --from <local-checkout>`).
+The separate [Docker deployment guide](/docs/docker-deployment) runs the public image without equipping a host repository. Repos equipped this way mount your project at `/home/sandbox/project` inside the sandbox (the clone paths above use `/home/sandbox/harness`). Upgrade the vendored `.oh/` later with `oh update` (offline: `oh init --from <local-checkout>`).
 
 ## Next step
 

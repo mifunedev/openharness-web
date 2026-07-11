@@ -176,7 +176,7 @@ export default function Home(): React.ReactElement {
                   className={styles.terminalFooterLink}
                   to="/docs/docker-deployment"
                 >
-                  Raw Docker deployment →
+                  Docker deployment →
                 </Link>
               </div>
             </aside>
