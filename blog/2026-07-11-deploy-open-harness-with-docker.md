@@ -1,51 +1,57 @@
 ---
 title: "Deploy Open Harness with Docker: a practical self-hosting path"
-description: "Run Open Harness on infrastructure you control, skip the local cold build with the public image, and keep workspace and credentials persistent across container recreation."
+description: "Start Open Harness from its published image, either with an equipped repository or in a Docker-only seeded workspace."
 date: 2026-07-11
 authors: [ryan]
 tags: [open-harness, docker, deployment, self-hosted]
 slug: deploy-open-harness-with-docker
 ---
 
-Self-hosting Open Harness does not have to mean assembling an agent workstation from scratch. If you already have a Docker host, you can run the published Open Harness image, attach to the sandbox, and keep the state that matters outside the container lifecycle.
+Open Harness releases include a public sandbox image at `ghcr.io/mifunedev/openharness`. It is the same image the release workflow already builds and smoke-tests, so a Docker host can pull the toolchain instead of spending a cold build on it.
 
-This is the right path for developers and teams that want control over where their code and agent processes run, are comfortable operating Docker, and can own host security, backups, updates, and availability. It is also useful for an always-on machine where an agent should keep working after a laptop closes.
+There are two useful modes: keep an existing repository authoritative, or start with no checkout at all.
 
 <!-- truncate -->
 
-## Pull the environment instead of building it cold
+## Mode 1: accelerate an equipped repository
 
-Open Harness includes a substantial toolchain. Building that environment locally on a fresh host can take time because Docker must construct and cache every layer. The public image at `ghcr.io/mifunedev/openharness` moves that work out of the first deployment: Docker downloads prebuilt layers, then starts the same packaged environment without a local cold build.
+From a repository prepared with `oh init`, this is the complete quickstart:
 
-For a quick evaluation, `latest` follows the current published image. For a reproducible deployment, pin a specific **CalVer tag** instead. A pinned tag makes recreation intentional and prevents a later pull from silently changing the toolchain you operate.
+```bash
+oh sandbox --image
+oh shell
+```
 
-The complete commands, Compose configuration, update flow, and security choices live in the [Docker deployment guide](/docs/docker-deployment). Use that guide as the runbook rather than copying a one-off command from a blog post.
+The published image supplies the toolchain. Your bind-mounted repository, Git history, and live `.oh/` control plane still supply the project. Boot also repairs provider links, starts configured crons, and runs the fingerprint-gated repository dependency install when needed.
 
-## Treat the container as replaceable
+`latest` is a practical default because the image is a toolchain convenience rather than the authoritative project state. For reproducible recreation, pin a release instead:
 
-A durable deployment separates the runtime from its state. The container can be stopped, removed, and recreated from an image; the data you care about should live in mounted storage.
+```bash
+oh sandbox --image=ghcr.io/mifunedev/openharness:2026.7.10
+oh shell
+```
 
-In the documented setup, persistence covers two categories:
+## Mode 2: start with Docker only
 
-- **Workspace state:** repositories, the `.oh/` control plane, task artifacts, and other files under the sandbox workspace.
-- **User state:** agent credentials and configuration plus GitHub CLI authentication stored in mounted home-scoped volumes.
+With no checkout, download the canonical standalone Compose file and start a seeded workspace:
 
-That separation makes image updates and container replacement routine without implying that persistence is a backup. Back up the mounted workspace and credential/config volumes according to your own recovery requirements, and protect them as sensitive data.
+```bash
+curl -fsSLO https://raw.githubusercontent.com/mifunedev/openharness/development/.devcontainer/docker-compose.image-only.yml
+OH_SANDBOX_IMAGE=ghcr.io/mifunedev/openharness:2026.7.10 \
+  docker compose -f docker-compose.image-only.yml up -d
+docker compose -f docker-compose.image-only.yml exec -u sandbox sandbox zsh
+```
 
-## Know what self-hosting asks of you
+On first boot, Open Harness copies `/opt/oh-seed` into the `oh_workspace` volume. The volume then becomes authoritative and survives image pulls or container recreation; it is not reseeded over your edits. This workspace starts without Git history, so clone or initialize the project you want from inside the sandbox.
 
-Docker provides a repeatable package, not a managed operations layer. You still choose and maintain the host, control network exposure, decide whether powerful capabilities such as Docker socket access are appropriate, monitor capacity, rotate credentials, and apply image updates.
+The [canonical Compose file](https://github.com/mifunedev/openharness/blob/development/.devcontainer/docker-compose.image-only.yml) carries the supported health check and optional credential volumes. The [detailed upstream model](https://github.com/mifunedev/openharness/blob/development/.oh/docs/deployment-prebuilt-image.md) explains the boot and persistence contract.
 
-That trade is attractive when infrastructure control matters or when a team already operates container workloads. It may be the wrong fit if nobody owns patching, backups, or incident response. Start with the smallest permissions and exposure the sandbox needs, then add capabilities deliberately.
+## Operate it deliberately
 
-## Self-hosted Docker is not Open Harness Cloud
+The happy path publishes no application ports and does not mount the Docker socket. Keep it that way until a workload needs more access: mounting the socket gives sandbox processes effective control of the host Docker daemon.
 
-This deployment model is Open Harness running on **your** infrastructure under **your** operational control. A future managed Open Harness Cloud would be a different product model: the managed service would take responsibility for parts of the operating experience that self-hosters handle themselves.
+The release image is currently single-architecture (Linux/AMD64). Pull a newer tag and recreate the container to update; preserve the workspace volume. Normal container teardown retains named volumes, while teardown with `-v` permanently deletes the seeded workspace and persisted credentials.
 
-Open Harness Cloud is not being presented here as an available service, and this post makes no promises about its timing, pricing, architecture, or migration path. Docker self-hosting stands on its own today; choose it because its ownership model fits your needs, not as a placeholder for an announced transition.
+Use the [Docker deployment guide](/docs/docker-deployment) for lifecycle commands, security notes, direct `docker run`, durable image settings, credential persistence, and full options.
 
-## Start with the deployment guide
-
-Before deploying, decide where the persistent data will live, who can access the host, which image tag you will run, and how updates and backups will work. Then follow [Deploy Open Harness with Docker](/docs/docker-deployment) for the supported setup and lifecycle options.
-
-The short version is simple: pull a prebuilt image, keep state in mounted storage, pin a CalVer tag when reproducibility matters, and operate the host with the same care as any development system that holds source code and credentials.
+Self-hosted Docker is available today and leaves host operations with you. A managed Open Harness Cloud is a possible future offering, not a shipped service.
