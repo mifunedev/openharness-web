@@ -18,7 +18,7 @@ curl -fsSL https://oh.mifune.dev/install.sh | bash
 cd ~/.openharness && make shell   # terminal fallback
 
 # 3 · run your agent inside the sandbox
-claude          # or codex · pi · hermes · openclaw (coming soon) · opencode
+claude          # or codex · pi · opencode · optional codelayer
 
 # 4 · optional — Hermes + Slack messaging (in order)
 hermes setup            # 1. model/provider auth
@@ -82,6 +82,12 @@ const AGENTS: Array<{
     icon: <img src="https://x.ai/favicon.ico" alt="" width={28} height={28} />,
   },
   {
+    name: "CodeLayer",
+    description: "Optional local multi-provider coding harness.",
+    href: "/docs/harnesses/codelayer",
+    icon: <CodeLayerIcon />,
+  },
+  {
     name: "T3 Code",
     description: "Browser UI over Claude/Codex/OpenCode (port 3773).",
     href: "/docs/harnesses/t3code",
@@ -122,7 +128,7 @@ export default function Home(): React.ReactElement {
   const starLabel = formatStars(stars);
 
   return (
-    <Layout description="Open Harness is a portable harness — one repo per sandbox — that wraps your project in an isolated Docker container and versions its state. Run coding agents like Claude Code, Codex, OpenCode, or Pi inside, never straight on your machine.">
+    <Layout description="Open Harness is a portable harness — one repo per sandbox — that wraps your project in an isolated Docker container and versions its state. Run coding agents like Claude Code, Codex, OpenCode, Pi, or optional CodeLayer inside, never straight on your machine.">
       <main>
         <section className={styles.hero}>
           <div className={styles.heroBg} aria-hidden="true" />
@@ -136,7 +142,7 @@ export default function Home(): React.ReactElement {
                 Run coding agents in a sandbox, not on your machine.
               </h1>
               <p className={styles.heroSubtitle}>
-                Open Harness is a portable harness: one repo per sandbox that wraps your project in an isolated Docker container and versions its state. Bring your agent — Claude Code, Codex, OpenCode, Pi — and let it work while you sleep.
+                Open Harness is a portable harness: one repo per sandbox that wraps your project in an isolated Docker container and versions its state. Bring your agent — Claude Code, Codex, OpenCode, Pi, or optional CodeLayer — and let it work while you sleep.
               </p>
               <div className={styles.heroButtons}>
                 <Link
@@ -214,7 +220,7 @@ export default function Home(): React.ReactElement {
           <div className={styles.container}>
             <h2 className={styles.sectionTitle}>Pick your agent.</h2>
             <p className={styles.sectionLede}>
-              Claude Code, Codex, and Pi ship preinstalled. OpenCode, DeepAgents, Hermes, and Grok Build are opt-in image installs. Switch between them inside the sandbox — or add your own by editing the Dockerfile.
+              Claude Code, Codex, and Pi ship preinstalled. OpenCode, DeepAgents, Hermes, Grok Build, and bounded local CodeLayer are opt-in image installs. CodeLayer is installed-only until you configure provider credentials; its remote daemon is unsupported. Switch between agents inside the sandbox — or add your own by editing the Dockerfile.
             </p>
             <div className={styles.agentGrid}>
               {AGENTS.map((agent) => {
@@ -384,6 +390,16 @@ function OpenCodeIcon(): React.ReactElement {
         fill="currentColor"
         d="M8 14c0-3.6 2.5-6.2 6-6.2s6 2.6 6 6.2-2.5 6.2-6 6.2-6-2.6-6-6.2Zm3.1 0c0 2 1.1 3.4 2.9 3.4s2.9-1.4 2.9-3.4-1.1-3.4-2.9-3.4-2.9 1.4-2.9 3.4Z"
       />
+    </svg>
+  );
+}
+
+function CodeLayerIcon(): React.ReactElement {
+  return (
+    <svg viewBox="0 0 28 28" width="28" height="28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="4" y="5" width="20" height="5" rx="2" fill="currentColor" opacity="0.35" />
+      <rect x="4" y="12" width="20" height="5" rx="2" fill="currentColor" opacity="0.65" />
+      <rect x="4" y="19" width="20" height="5" rx="2" fill="currentColor" />
     </svg>
   );
 }
