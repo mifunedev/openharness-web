@@ -7,10 +7,13 @@
 - PR: <https://github.com/mifunedev/openharness-web/pull/11>
 - Loom source: <https://www.loom.com/share/875737ef981f4b378a005be62d1e435b>
 
-## Target profiles
+## Target profiles and channels
 
 - LinkedIn: <https://www.linkedin.com/in/ryan-eggleston>
 - X.com: <https://x.com/JohnEggz>
+- Slack: internal/community announcement channel; paste manually and allow link unfurl.
+- Discord: community updates/devtools channel; paste manually and allow link embed.
+- Telegram: broadcast/community channel; paste manually and allow link preview.
 
 ## Suggested asset
 
@@ -75,6 +78,53 @@ Checks:
 - Direct blog URL is the only link.
 - No uploaded media attached; the platform should render a clickable link card from the page metadata.
 
+## Channel blasts
+
+Use the direct blog URL as the only link so Slack, Discord, and Telegram can render the blog card/banner from Open Graph metadata. Do not attach the promo image separately unless a channel preview fails.
+
+### Slack
+
+```text
+🧰 New Open Harness demo guide: fresh sandbox → first PR
+
+A written walkthrough for setting up an isolated coding-agent workspace:
+• install the Docker sandbox
+• attach VS Code
+• authenticate GitHub
+• isolate work in .oh/worktrees
+• open a normal PR
+
+https://oh.mifune.dev/blog/open-harness-demo-guide
+
+⭐ If useful, star mifunedev/openharness on GitHub.
+```
+
+### Discord
+
+```text
+🧰 **Open Harness demo guide**
+
+Fresh sandbox → VS Code attach → GitHub auth → isolated worktrees → first PR.
+
+If you want a repeatable setup for coding agents without letting them loose on your laptop directly, this is the runbook:
+
+https://oh.mifune.dev/blog/open-harness-demo-guide
+
+⭐ If useful, star mifunedev/openharness on GitHub.
+```
+
+### Telegram
+
+```text
+🧰 Open Harness demo guide is live.
+
+Fresh sandbox → VS Code attach → GitHub auth → isolated worktrees → first PR.
+
+https://oh.mifune.dev/blog/open-harness-demo-guide
+
+⭐ Star mifunedev/openharness on GitHub if useful.
+```
+
 ## Hashtags / keywords
 
 Use sparingly; prefer 2-4 per platform.
@@ -92,23 +142,24 @@ Use sparingly; prefer 2-4 per platform.
 
 ## Post Bridge publication
 
-### Link-card no-media replacement drafts
+### Published link-card no-media posts
 
-Created fresh separate X-only and LinkedIn-only drafts on 2026-07-08 after deciding the optimal flow is to post the direct blog URL with no uploaded media. The blog page now declares `image: /img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.jpg`, which builds to `summary_large_image` plus `og:image`/`twitter:image` metadata so the rendered card/banner should be clickable.
+Published separate X-only and LinkedIn-only posts on 2026-07-08 after verifying the deployed blog page serves `summary_large_image` plus `og:image`/`twitter:image` metadata for `social-promo-card.jpg`.
 
-- No Post Bridge media is attached (`media: null`).
-- X / JohnEggz draft: `c2d45d22-bdfa-4c76-b37b-35222f728849`
+- No Post Bridge media was attached (`media: null`); the direct blog URL is the only link so the platform-rendered card/banner can be clickable.
+- X / JohnEggz post: `c2d45d22-bdfa-4c76-b37b-35222f728849`
   - Account: `41738`
-  - Status: saved as draft only (`is_draft: true`, `scheduled_at: null`); not published or scheduled live.
-  - X check: 182 chars; direct blog URL is the only link.
-  - Link-card strategy: no uploaded image, so X should render the page card from Open Graph/Twitter metadata.
-- LinkedIn / Ruska AI draft: `dee89070-6df1-4339-b13f-66fbb413762a`
+  - Status: posted (`is_draft: false`, `scheduled_at: null`).
+  - Result: `success: true`, <https://twitter.com/user/status/2074734574584705499>
+  - X check: direct blog URL is the only link.
+- LinkedIn / Ruska AI post: `05f06363-7027-4aad-b6f4-5e187c9ab455`
   - Account: `41732`
-  - Status: saved as draft only (`is_draft: true`, `scheduled_at: null`); not published or scheduled live.
-  - Formatting check: no markdown `**bold**`; uses Unicode emphasis in the first line for review.
-  - Link-card strategy: direct blog URL is the only link; no uploaded image attached.
-- Cadence: exactly one replacement draft per target account.
-- Publish timing: wait until the PR containing the blog frontmatter `image` metadata is merged/deployed so the live URL serves the specific promo-card image, not only the site default card.
+  - Status: posted (`is_draft: false`, `scheduled_at: null`).
+  - Result: `success: true`, <https://www.linkedin.com/feed/update/urn:li:share:7480501537111191552>
+  - Formatting check: no markdown `**bold**`; uses Unicode emphasis in the first line.
+- Cadence: exactly one live replacement post per target account.
+
+Note: the original LinkedIn draft `dee89070-6df1-4339-b13f-66fbb413762a` returned a Post Bridge 500 when patched live and remains a draft. It is superseded by live post `05f06363-7027-4aad-b6f4-5e187c9ab455`.
 
 ### Superseded replacement drafts
 
@@ -150,7 +201,7 @@ Prior status: Post Bridge originally reported `status: posted`, `is_draft: false
 
 ## Posting checklist
 
-Before publishing the replacement drafts:
+Publication status for the replacement posts:
 
 - [x] PR #11 is merged and <https://oh.mifune.dev/blog/open-harness-demo-guide> returns 200.
 - [x] Do not attach uploaded Post Bridge media for the current replacement drafts; let the blog URL render the clickable platform card.
@@ -158,7 +209,8 @@ Before publishing the replacement drafts:
 - [x] Keep LinkedIn copy as a post, not an article; link back to the blog.
 - [x] Ensure the blog frontmatter has `image: /img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.jpg`.
 - [x] Verify the built blog HTML contains `summary_large_image`, `og:image`, and `twitter:image` for the promo card.
-- [ ] Before publishing, verify the live deployed HTML serves the specific promo-card `og:image`/`twitter:image`.
+- [x] Before publishing, verify the live deployed HTML serves the specific promo-card `og:image`/`twitter:image`.
 - [x] Limit replacement to one post per account for the day.
-- [x] Keep X and LinkedIn as separate account-specific drafts because formatting differs by platform.
-- [ ] Publish only after a fresh explicit `/post-bridge` confirmation gate.
+- [x] Keep X and LinkedIn as separate account-specific posts because formatting differs by platform.
+- [x] Publish only after a fresh explicit `/post-bridge` confirmation gate.
+- [x] Record live X and LinkedIn URLs above.
