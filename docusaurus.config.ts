@@ -1,6 +1,7 @@
 import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
 import { terminalDark, terminalLight } from "./src/theme/prism-terminal";
+import timeOfDayThemePlugin from "./src/plugins/time-of-day-theme";
 
 // To deploy via GitHub Pages without custom domain, swap to:
 // url: "https://mifunedev.github.io"
@@ -75,6 +76,11 @@ const config: Config = {
   ],
 
   plugins: [
+    // Client-timezone default theme. Emits a preBodyTags script that runs after
+    // Docusaurus's own color-mode script and upgrades light -> dark during the
+    // night window, only when the reader has made no explicit choice and the OS
+    // is not already asking for dark. See src/plugins/time-of-day-theme.
+    timeOfDayThemePlugin,
     [
       "@docusaurus/plugin-client-redirects",
       {
