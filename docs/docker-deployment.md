@@ -185,3 +185,11 @@ No ports are published by these commands; the `openharness` network remains priv
 ## Full-option references
 
 The `docker run` path above is the recommended walkthrough. For the complete image/boot model and advanced settings, see the [detailed prebuilt-image documentation](https://github.com/mifunedev/openharness/blob/development/.oh/docs/deployment-prebuilt-image.md). The [canonical image-only Compose file](https://github.com/mifunedev/openharness/blob/development/.devcontainer/docker-compose.image-only.yml) is available as a reference for operators who specifically need Compose-managed options.
+
+## The same image runs under MicroSandbox
+
+`msb` runs standard OCI images, so this image is also what you point MicroSandbox
+at if you want a microVM rather than a container. The `docker run` recipe above is
+the invocation to translate — see
+[Running Open Harness on MicroSandbox](./runtimes/microsandbox.md#running-open-harness-on-microsandbox).
+Untested end to end; the risks are listed there.
