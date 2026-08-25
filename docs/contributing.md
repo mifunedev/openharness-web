@@ -24,18 +24,23 @@ Open Harness has no host-side build step. The orchestrator runs at the project r
 
 ### Provision the sandbox
 
-The lifecycle is driven entirely by the root `Makefile`:
+On the host, in a source checkout, the lifecycle is driven by the root `Makefile`:
 
 ```bash
-make sandbox    # provision and start the sandbox (docker compose up -d --build)
-make shell      # enter the sandbox as the `sandbox` user
-make ps         # show service status
-make logs       # tail compose logs
-make stop       # stop the sandbox, preserving volumes
-make destroy    # stop and remove the sandbox (volumes wiped)
-make restart    # restart the service
-make help       # list all targets
+make sandbox    # provision and start the sandbox (docker compose up -d --build)   → oh sandbox
+make shell      # enter the sandbox as the `sandbox` user                          → oh shell
+make ps         # show service status                                              → oh ps
+make logs       # tail compose logs                                                → oh logs
+make stop       # stop the sandbox, preserving volumes                             → oh stop
+make destroy    # stop and remove the sandbox (volumes wiped)                      → host only
+make restart    # restart the service                                              → oh restart
+make help       # list all targets (it prints the `oh` equivalents too)
 ```
+
+The right-hand column is the `oh` verb for the same job, which is what you use
+inside the sandbox and in a repo equipped by `oh init` (it has no Makefile).
+[Lifecycle commands](./lifecycle-commands.md) is the full mapping and explains
+why `make destroy` has no `oh` counterpart.
 
 A first-run helper is available at `.oh/scripts/install.sh` — it prompts for the values written to `.devcontainer/.env` (GitHub token autodetect, idempotent re-runs) before you call `make sandbox`.
 

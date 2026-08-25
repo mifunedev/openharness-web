@@ -95,11 +95,11 @@ demand via the `/t3` skill or direct `npx`. Authenticate at least one harness be
 
 - **[Claude Code](./harnesses/claude-code.md)**: `claude auth login` (or `/login` in an interactive session), then `claude auth status` to verify
 - **[Codex](./harnesses/codex.md)**: `codex login --device-auth` (device mode; or `/login` in-session)
-- **[OpenCode](./harnesses/opencode.md)**: set `install.opencode: true` in `harness.yaml` (or `INSTALL_OPENCODE=true` in `.devcontainer/.env`), rebuild, then run `opencode auth login`
+- **[OpenCode](./harnesses/opencode.md)**: `oh harness install opencode` (no rebuild), then run `opencode auth login`
 - **[Pi](./harnesses/pi.md)**: configure provider keys via environment variables
-- **[DeepAgents](./harnesses/deepagents.md)**: set `install.deepagents: true` in `harness.yaml` (or `INSTALL_DEEPAGENTS=true` in `.devcontainer/.env`), rebuild, then write provider keys to `~/.deepagents/.env`
-- **[Hermes](./harnesses/hermes.md)**: set `install.hermes: true` in `harness.yaml` (or `INSTALL_HERMES=true` in `.devcontainer/.env`), rebuild, then run `hermes setup`
-- **[Grok Build](./harnesses/grok-build.md)**: set `install.grok_build: true` in `harness.yaml` (or `INSTALL_GROK_BUILD=true` in `.devcontainer/.env`), rebuild, verify `grok --version`, then run `grok login --device-auth` (headless/remote) or `grok login`
+- **[DeepAgents](./harnesses/deepagents.md)**: `oh harness install deepagents` (no rebuild), then write provider keys to `~/.deepagents/.env`
+- **[Hermes](./harnesses/hermes.md)**: `oh harness install hermes` (no rebuild), then run `hermes setup`
+- **[Grok Build](./harnesses/grok-build.md)**: `oh harness install grok-build` (no rebuild), verify `grok --version`, then run `grok login --device-auth` (headless/remote) or `grok login`
 - **[T3 Code](./harnesses/t3code.md)**: authenticate one of Claude / Codex / OpenCode, then `/t3` or `npx t3` (browser UI on port 3773)
 
 Claude Code remains the documented default. See
@@ -154,13 +154,15 @@ The file also has `crons:`, `autopilot:`, `slack:`, and `compose:` sections (all
 | `sandbox.timezone` | Container timezone |
 | `git.user_name` | Commit author name → `GIT_USER_NAME` (spaces OK) |
 | `git.user_email` | Commit author email → `GIT_USER_EMAIL` |
-| `install.agent_browser` | Set `true` to install Chromium (~1 GB) |
+| `install.agent_browser` | Set `true` to install Chromium (~1 GB) — or run `oh tool install agent-browser` |
 | `install.opencode` | Set `true` to include OpenCode in the sandbox image |
 | `install.deepagents` | Set `true` to include DeepAgents in the sandbox image |
 | `install.hermes` | Set `true` to include Hermes in the sandbox image; state defaults to `~/harness/.hermes`, auth lives in `~/.hermes` |
 | `install.grok_build` | Set `true` to include Grok Build in the sandbox image; all Grok user state lives in the persisted `~/.grok` volume |
 
-Apply changes with `make destroy && make sandbox`.
+Apply changes with `make destroy && make sandbox`. `oh harness install <name>` and
+`oh tool install <name>` write these `install:` keys for you and install into the running
+sandbox, so a rebuild is only needed for keys they do not cover.
 
 For additional services (databases, tunnels, reverse proxies), add tracked
 overlays under `compose.overrides:` in `harness.yaml`, or add user-local
@@ -253,3 +255,7 @@ make stop
 ```
 
 Bring it back later with `make sandbox`.
+
+Inside the sandbox — and in any repo equipped by `oh init`, which has no Makefile — the
+same verbs are `oh stop`, `oh restart`, `oh logs`, `oh ps`, and `oh sandbox`. See
+[Lifecycle commands](./lifecycle-commands.md) for the full mapping.
