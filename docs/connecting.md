@@ -25,6 +25,8 @@ make shell
 ```
 Pass an optional container name to attach to a different running container, e.g. `make shell portfolio-advisor` (add `SHELL_USER=<user>` if the target has no `sandbox` user).
 
+`oh shell` does the same job from inside the sandbox or from a repo equipped by `oh init` — see [Lifecycle commands](./lifecycle-commands.md).
+
 You land inside the container as the `sandbox` user. This is enough to run CLI agents and configure Slack. Container ports are **not** forwarded to your laptop — you cannot open `localhost:3000` in your browser via this method alone.
 
 ### Option B — VSCode Attach to Running Container (local host)

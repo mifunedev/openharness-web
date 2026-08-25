@@ -26,8 +26,9 @@ Full terminal / Remote-SSH options: see [Connecting → Option B](/docs/connecti
 
 ### Prefer Hermes?
 
-[Hermes](/docs/harnesses/hermes) — Nous Research's self-improving agent CLI — is an opt-in harness: set
-`install.hermes: true` in harness.yaml, rebuild, then run `hermes setup`.
+[Hermes](/docs/harnesses/hermes) — Nous Research's self-improving agent CLI — is an opt-in harness.
+Run `oh harness install hermes` inside the sandbox to add it without a rebuild, then run
+`hermes setup`.
 
 :::tip You're reading it
 This IS the rendered docs site (oh.mifune.dev) — use the search bar (top-right) to jump anywhere.
@@ -35,7 +36,7 @@ This IS the rendered docs site (oh.mifune.dev) — use the search bar (top-right
 
 ## What is Open Harness?
 
-Open Harness is a single repo that *is* your harness: it boots one Docker container — the sandbox — and wraps your project inside it. You bring the sandbox up with `docker compose`, attach to it from your terminal or VS Code, and let your chosen agent work the project over time. Because the harness is a git repo, its whole setup is tracked and versioned — reproducible and portable. There is no per-agent fan-out and no host CLI; everything happens through standard `docker compose` commands and the croner runtime that ships in the image.
+Open Harness is a single repo that *is* your harness: it boots one Docker container — the sandbox — and wraps your project inside it. You bring the sandbox up with `docker compose`, attach to it from your terminal or VS Code, and let your chosen agent work the project over time. Because the harness is a git repo, its whole setup is tracked and versioned — reproducible and portable. There is no per-agent fan-out, and no host CLI is *required* — everything works through standard `docker compose` commands, the `make` wrappers around them, and the croner runtime that ships in the image. A standalone `oh` CLI does exist: it is baked into the sandbox image, and you can install it on the host to equip an arbitrary repo. See [Lifecycle commands](/docs/lifecycle-commands) for which door is canonical where.
 
 Key capabilities:
 

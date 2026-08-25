@@ -5,7 +5,7 @@ title: "Installation"
 
 # Installation
 
-Open Harness is a portable harness — a single repo that boots an isolated Docker sandbox for your project. Installation clones the repo and runs `docker compose` against `.devcontainer/docker-compose.yml` — there is no host CLI, agent, or Node toolchain required on the host. For a no-checkout, no-build alternative, see the [Docker deployment guide](/docs/docker-deployment).
+Open Harness is a portable harness — a single repo that boots an isolated Docker sandbox for your project. Installation clones the repo and runs `docker compose` against `.devcontainer/docker-compose.yml` — no host CLI, agent, or Node toolchain is *required* on the host. A standalone `oh` CLI is available if you want it (see [Standalone CLI](#standalone-cli-oh-equip-an-existing-repo) below); it is the only door in a repo equipped by `oh init`, which has no Makefile. [Lifecycle commands](/docs/lifecycle-commands) says which is canonical where. For a no-checkout, no-build alternative, see the [Docker deployment guide](/docs/docker-deployment).
 
 ## Prerequisites
 
@@ -13,7 +13,7 @@ Open Harness is a portable harness — a single repo that boots an isolated Dock
 |---|---|---|
 | Docker (with Compose plugin) | Sandbox image | [docs.docker.com/get-docker](https://docs.docker.com/get-docker/) |
 | git | Cloning the repo | [git-scm.com](https://git-scm.com/) |
-| make (build-essential) | The `make sandbox` / `make shell` / `make destroy` wrappers around `docker compose` | `sudo apt-get install build-essential` (Debian/Ubuntu) · Xcode Command Line Tools (macOS) |
+| make (build-essential) | The `make sandbox` / `make shell` / `make destroy` wrappers around `docker compose` (see [Lifecycle commands](/docs/lifecycle-commands)) | `sudo apt-get install build-essential` (Debian/Ubuntu) · Xcode Command Line Tools (macOS) |
 
 That is the entire host requirement. Node.js, pnpm, and any AI CLI live inside the sandbox.
 
@@ -220,8 +220,32 @@ cd <your-project>
 oh init            # equip the repo (fetches scaffold payload on demand — no repo clone)
 oh sandbox         # provision + start the sandbox (docker compose up -d --build)
 oh shell           # zsh in the running container (or: oh shell <container>)
+oh stop            # stop the container, keeping volumes
+oh restart         # restart it
+oh logs            # follow the container logs (oh logs -- --tail 50 forwards extra args)
+oh ps              # show container status
 oh gateway status  # manage messaging client sessions (pi|hermes)
 ```
+
+The four lifecycle verbs are 1:1 with the `make` targets of the same name, and an
+equipped repo has no Makefile — so in that repo they are the only way to reach them.
+[Lifecycle commands](/docs/lifecycle-commands) is the full mapping, including the
+three verbs deliberately left out.
+
+Three catalog commands inspect and extend a running sandbox without a rebuild:
+
+```bash
+oh harness list                  # agent CLIs
+oh harness install opencode
+oh tool list                     # tooling that is neither an agent nor a runtime
+oh tool install agent-browser
+oh runtime list                  # the isolation runtime underneath
+oh runtime status docker
+```
+
+See [Harnesses](/docs/harnesses/overview#installing-a-harness) for what `oh harness`
+installs, and [Runtimes](/docs/runtimes/overview) for what `oh runtime` measures — and
+why it selects nothing.
 
 The separate [Docker deployment guide](/docs/docker-deployment) runs the public image without equipping a host repository. Repos equipped this way mount your project at `/home/sandbox/project` inside the sandbox (the clone paths above use `/home/sandbox/harness`). Upgrade the vendored `.oh/` later with `oh update` (offline: `oh init --from <local-checkout>`).
 
@@ -248,11 +272,15 @@ Default CLIs are always present. Optional CLIs are excluded from the default ima
 | Claude Code | `claude` | Anthropic's coding agent (aliased to `claude --dangerously-skip-permissions`) | default |
 | OpenAI Codex | `codex` | OpenAI's coding agent (aliased to `codex --dangerously-bypass-approvals-and-sandbox`) | default |
 | Pi | `pi` | `@earendil-works/pi-coding-agent` — local-first coding agent (was `@mariozechner/pi-coding-agent`, now deprecated) | default |
-| OpenCode | `opencode` | `opencode-ai` — terminal coding agent with OpenAI OAuth support | optional: set `install.opencode: true` in `harness.yaml` (or `INSTALL_OPENCODE=true` in `.devcontainer/.env`) |
-| DeepAgents | `deepagents` | LangChain's multi-provider terminal agent (`deepagents-cli` via `uv tool install`) | optional: set `install.deepagents: true` in `harness.yaml` (or `INSTALL_DEEPAGENTS=true` in `.devcontainer/.env`) |
-| Hermes | `hermes` | Nous Research's self-improving agent CLI | optional: set `install.hermes: true` in `harness.yaml` (or `INSTALL_HERMES=true` in `.devcontainer/.env`) |
-| Grok Build | `grok` | xAI's proprietary Grok Build CLI (`@xai-official/grok@0.2.39`, Node >=20) | optional: set `install.grok_build: true` in `harness.yaml` (or `INSTALL_GROK_BUILD=true` in `.devcontainer/.env`) |
-| agent-browser | `agent-browser` | Headless Chromium for web-capable agents | optional: set `install.agent_browser: true` in `harness.yaml` (or `INSTALL_AGENT_BROWSER=true` in `.devcontainer/.env`) |
+| OpenCode | `opencode` | `opencode-ai` — terminal coding agent with OpenAI OAuth support | optional: `oh harness install opencode`, or set `install.opencode: true` in `harness.yaml` (or `INSTALL_OPENCODE=true` in `.devcontainer/.env`) |
+| DeepAgents | `deepagents` | LangChain's multi-provider terminal agent (`deepagents-cli` via `uv tool install`) | optional: `oh harness install deepagents`, or set `install.deepagents: true` in `harness.yaml` (or `INSTALL_DEEPAGENTS=true` in `.devcontainer/.env`) |
+| Hermes | `hermes` | Nous Research's self-improving agent CLI | optional: `oh harness install hermes`, or set `install.hermes: true` in `harness.yaml` (or `INSTALL_HERMES=true` in `.devcontainer/.env`) |
+| Grok Build | `grok` | xAI's proprietary Grok Build CLI (`@xai-official/grok@0.2.39`, Node >=20) | optional: `oh harness install grok-build`, or set `install.grok_build: true` in `harness.yaml` (or `INSTALL_GROK_BUILD=true` in `.devcontainer/.env`) |
+| agent-browser | `agent-browser` | Headless Chromium for web-capable agents | optional: `oh tool install agent-browser`, or set `install.agent_browser: true` in `harness.yaml` (or `INSTALL_AGENT_BROWSER=true` in `.devcontainer/.env`) |
+
+**agent-browser is the one opt-in tool.** It is not in the image;
+`oh tool install agent-browser` fetches it (~1 GB with Chromium) into the running
+sandbox and sets the `harness.yaml` flag so it survives the next build.
 
 ### Runtimes & package managers
 
@@ -265,10 +293,15 @@ Default CLIs are always present. Optional CLIs are excluded from the default ima
 
 ### DevOps & infrastructure
 
+`oh tool list` reports which of these are present, and `oh tool status <name>` adds a
+version where the tool has a verified version flag. They are baked into the image, so
+there is nothing to install.
+
 | Tool | Purpose |
 |------|---------|
 | Docker CLI + Compose | Container management from inside the sandbox (host docker socket is opt-in, off by default — enable via `sandbox.docker_socket: true`) |
 | GitHub CLI (`gh`) | PRs, issues, releases from the terminal |
+| cloudflared | Cloudflare Tunnel client, for exposing a sandbox port |
 | tmux | Detachable terminal sessions for long-running agents |
 | croner | Markdown-frontmatter cron scheduler for autonomous agent tasks |
 
