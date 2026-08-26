@@ -24,7 +24,7 @@ mix or non-interactive shell-allow-list model is the right fit for a task.
 
 ## Install (optional)
 
-The shortest path is the CLI, which sets the `harness.yaml` flag **and**
+The shortest path is the CLI, which sets the `.devcontainer/.env` flag **and**
 installs into the already-running sandbox without a rebuild:
 
 ```bash
@@ -36,7 +36,7 @@ See [Harnesses Overview](./overview.md#installing-a-harness) for `--persist-only
 
 ### Manual path
 
-Enable DeepAgents in `harness.yaml`:
+Enable DeepAgents in `.devcontainer/.env`:
 
 ```yaml
 install:
@@ -67,8 +67,8 @@ Verify the install inside the sandbox:
 deepagents -v
 ```
 
-If the command is not found, confirm `install.deepagents: true` is set in
-`harness.yaml` (or `INSTALL_DEEPAGENTS=true` in `.devcontainer/.env`), then rebuild with `make stop && make sandbox`.
+If the command is not found, confirm `INSTALL_DEEPAGENTS=true` is set in
+`.devcontainer/.env`, then rebuild with `make stop && make sandbox`.
 
 ## Authentication and provider keys
 
@@ -178,7 +178,7 @@ Two environment overrides apply:
 > **`--shell-allow-list all` warning.** Choosing `--shell-allow-list all`
 > via `RALPH_DEEPAGENTS_FLAGS` grants unrestricted non-interactive shell
 > execution. If the optional host Docker socket is enabled (off by
-> default — `sandbox.docker_socket: true`), this can additionally affect
+> default — `DOCKER_SOCKET=true`), this can additionally affect
 > sibling containers or the host Docker daemon. Only use `all` for trusted tasks where
 > you have accepted that risk explicitly.
 
