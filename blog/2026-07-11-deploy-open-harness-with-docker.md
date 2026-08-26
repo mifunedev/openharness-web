@@ -7,7 +7,7 @@ tags: [open-harness, docker, deployment, self-hosted]
 slug: deploy-open-harness-with-docker
 ---
 
-Open Harness publishes a ready-to-run sandbox image at `ghcr.io/mifunedev/openharness`. You can launch it directly with Docker—no checkout, local build, CLI wrapper, or Compose required—and keep each workspace isolated while sharing authentication.
+Open Harness publishes a ready-to-run sandbox image at `ghcr.io/mifunedev/openharness`. You can launch it directly with Docker—no checkout, local build, or CLI wrapper required—and keep each workspace isolated while sharing authentication. Compose is optional; a complete file is given below.
 
 <!-- truncate -->
 
@@ -100,6 +100,72 @@ docker exec oh-b test ! -e /home/sandbox/harness/.sandbox-a-only \
   && echo "workspaces are isolated"
 docker exec oh-a rm /home/sandbox/harness/.sandbox-a-only
 ```
+
+## Compose equivalent
+
+Compose is not required, but it records the same run as a file you can commit. This file starts sandbox A on the `openharness` network, and adds a fifth auth volume for Hermes.
+
+Write `docker-compose.yml`:
+
+```yaml
+services:
+  oh-a:
+    image: ghcr.io/mifunedev/openharness:latest
+    container_name: oh-a
+    hostname: oh-a
+    init: true
+    tty: true
+    stdin_open: true
+    restart: unless-stopped
+    networks:
+      - openharness
+    environment:
+      OH_IMAGE_ONLY: "1"
+      OH_PROJECT_ROOT: /home/sandbox/harness
+      SANDBOX_NAME: oh-a
+      GIT_USER_NAME: ${GIT_USER_NAME:-<your-name>}
+      GIT_USER_EMAIL: ${GIT_USER_EMAIL:-<you@example.com>}
+      INSTALL_HERMES: "true"
+      HERMES_HOME: /home/sandbox/.hermes
+    volumes:
+      - oh-workspace-a:/home/sandbox/harness
+      - oh-gh-config:/home/sandbox/.config/gh
+      - oh-ssh:/home/sandbox/.ssh
+      - oh-claude-auth:/home/sandbox/.claude
+      - oh-pi-auth:/home/sandbox/.pi
+      - oh-hermes-auth:/home/sandbox/.hermes
+    command: ["sleep", "infinity"]
+
+networks:
+  openharness:
+    name: openharness
+
+volumes:
+  oh-workspace-a:
+    name: oh-workspace-a
+  oh-gh-config:
+    name: oh-gh-config
+  oh-ssh:
+    name: oh-ssh
+  oh-claude-auth:
+    name: oh-claude-auth
+  oh-pi-auth:
+    name: oh-pi-auth
+  oh-hermes-auth:
+    name: oh-hermes-auth
+```
+
+Start the sandbox and open a shell:
+
+```bash
+GIT_USER_NAME="<your-name>" GIT_USER_EMAIL="<you@example.com>" \
+  docker compose up -d
+docker compose exec -u sandbox oh-a zsh
+```
+
+Compose creates the network and every named volume on the first `up`, so the `docker network create` step is not needed. Add sandbox B as a second service: copy the `oh-a` block, set the service name, `container_name`, `hostname`, and `SANDBOX_NAME` to `oh-b`, and mount `oh-workspace-b` instead of `oh-workspace-a`. Keep the network and the auth volumes the same, and B inherits A's logins without sharing A's files.
+
+`HERMES_HOME` points at the `oh-hermes-auth` volume. Hermes replaces `auth.json` atomically, and an atomic replace across two filesystems fails with `EXDEV`. This mount keeps `auth.json` and its temporary file on one filesystem. To keep Hermes state in the workspace volume instead, remove the `HERMES_HOME` variable and the `oh-hermes-auth` mount.
 
 To make another container reachable from both sandboxes, attach it to their network with an optional DNS alias:
 
