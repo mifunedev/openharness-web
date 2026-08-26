@@ -5,7 +5,7 @@ title: "Harnesses Overview"
 
 # Harnesses Overview
 
-Open Harness ships with three agent CLIs in the default sandbox image: **Claude Code** (default), **Codex**, and **Pi**. **OpenCode**, **DeepAgents**, **Hermes**, and **Grok Build** are optional installs, added with `oh harness install <name>` or by `harness.yaml` `install:` keys (or `.devcontainer/.env` build flags). **T3 Code** runs on demand via the `/t3` skill (or directly with `npx t3`) as a browser UI on port 3773. Inside the sandbox, launch whichever you prefer — switch between them at any time, or keep long-running sessions in tmux.
+Open Harness ships with three agent CLIs in the default sandbox image: **Claude Code** (default), **Codex**, and **Pi**. **OpenCode**, **DeepAgents**, **Hermes**, and **Grok Build** are optional installs, added with `oh harness install <name>` or by the `INSTALL_*` keys in `.devcontainer/.env`. **T3 Code** runs on demand via the `/t3` skill (or directly with `npx t3`) as a browser UI on port 3773. Inside the sandbox, launch whichever you prefer — switch between them at any time, or keep long-running sessions in tmux.
 
 Open Harness is the harness; the **agent** is your call. To go beyond the preinstalled options, install via `npm` / `pip` / `cargo` inside the sandbox or edit the Dockerfile. For Pi+Slack specifically, the recommended path is the `pi-messenger-bridge` npm package (pinned in `.pi/settings.json`; see [Slack integration](../integrations/slack.md)). The product surface is one developer, one project, one agent — not racing or stacking multiple CLIs against each other.
 
@@ -14,7 +14,7 @@ For help matching a model to the work, see [Choosing a Model](../model-selection
 ## Installing a harness
 
 `oh harness` is the shortest path. It does both halves in one command: it sets
-the `harness.yaml` `install:` flag so the choice survives the next image build,
+the `.devcontainer/.env` `INSTALL_*` flag so the choice survives the next image build,
 **and** installs the CLI into the already-running container so it is usable now.
 It never rebuilds or restarts the sandbox.
 
@@ -32,15 +32,15 @@ Two escape hatches:
 
 | Flag | Effect |
 |---|---|
-| `--persist-only` | Only set the `harness.yaml` flag; do no container work |
-| `--no-persist` | Live-install only; leave `harness.yaml` unchanged (ephemeral — a container recreate loses it) |
+| `--persist-only` | Only set the `.devcontainer/.env` flag; do no container work |
+| `--no-persist` | Live-install only; leave `.devcontainer/.env` unchanged (ephemeral — a container recreate loses it) |
 
-The manual path still works: uncomment the key in `harness.yaml` (or set the
+The manual path still works: uncomment the key in `.devcontainer/.env` (or export the
 `INSTALL_*` build flag in `.devcontainer/.env`) and run
 `make stop && make sandbox` — `make sandbox` rebuilds either way, and `make destroy`
 would wipe the volumes holding your provider auth for nothing. The name `oh harness` uses is the hyphenated
-one (`grok-build`); the `harness.yaml` key is the underscored one
-(`install.grok_build`).
+one (`grok-build`); the `.devcontainer/.env` key is the underscored one
+(`INSTALL_GROK_BUILD`).
 
 For the full `make` / `oh` split, see
 [Lifecycle commands](../lifecycle-commands.md).
@@ -65,11 +65,11 @@ claude --version
 codex --version
 pi --version
 
-# Optional image-level CLIs, present only when enabled in harness.yaml (or .devcontainer/.env):
-opencode --version      # install.opencode: true
-deepagents -v           # install.deepagents: true
-hermes --version        # install.hermes: true
-grok --version          # install.grok_build: true
+# Optional image-level CLIs, present only when enabled in .devcontainer/.env:
+opencode --version      # INSTALL_OPENCODE=true
+deepagents -v           # INSTALL_DEEPAGENTS=true
+hermes --version        # INSTALL_HERMES=true
+grok --version          # INSTALL_GROK_BUILD=true
 
 npx t3 --version        # T3 Code (not preinstalled — fetched on demand)
 ```

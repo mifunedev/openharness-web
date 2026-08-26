@@ -75,7 +75,7 @@ Two things worth knowing:
 
 - **The host Docker socket is off by default.** Mounting the host
   `/var/run/docker.sock` into the sandbox is effectively host root, so it is
-  opt-in via the `harness.yaml` key `sandbox.docker_socket`.
+  opt-in via the `DOCKER_SOCKET` key in `.devcontainer/.env`.
 - **The container is the unit of disposal.** `make destroy` removes containers
   and volumes; provider auth persists in named volumes across a rebuild. See
   [Lifecycle commands](../lifecycle-commands.md).
