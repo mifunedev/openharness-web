@@ -122,7 +122,7 @@ export default function Home(): React.ReactElement {
   const starLabel = formatStars(stars);
 
   return (
-    <Layout description="Open Harness is a portable harness — one repo per sandbox — that wraps your project in an isolated Docker container and versions its state. Run coding agents like Claude Code, Codex, OpenCode, or Pi inside, never straight on your machine.">
+    <Layout description="Open Harness is a durable Docker workspace for coding agents. Bring Claude Code, Codex, OpenCode, or Pi; keep its tools, identity, schedules, branches, and communication channels together on a laptop or remote VM.">
       <main>
         <section className={styles.hero}>
           <div className={styles.heroBg} aria-hidden="true" />
@@ -130,13 +130,13 @@ export default function Home(): React.ReactElement {
             <div className={styles.heroCopy}>
               <p className={styles.heroEyebrow}>
                 <span className={styles.heroEyebrowDot} aria-hidden="true" />
-                Portable agent harness
+                Durable workspace for coding agents
               </p>
               <h1 className={styles.heroTitle}>
-                Run coding agents in a sandbox, not on your machine.
+                Give coding agents a place to live and work.
               </h1>
               <p className={styles.heroSubtitle}>
-                Open Harness is a portable harness: one repo per sandbox that wraps your project in an isolated Docker container and versions its state. Bring your agent — Claude Code, Codex, OpenCode, Pi — and let it work while you sleep.
+                Open Harness turns your repository into a persistent Docker workspace for autonomous coding agents. Bring Claude Code, Codex, OpenCode, or Pi; keep its tools, identity, schedules, branches, and Slack access together locally or on a remote VM.
               </p>
               <div className={styles.heroButtons}>
                 <Link
@@ -274,10 +274,10 @@ export default function Home(): React.ReactElement {
 
         <section className={styles.section}>
           <div className={styles.container}>
-            <h2 className={styles.sectionTitle}>One repo. One sandbox.</h2>
+            <h2 className={styles.sectionTitle}>A durable home for agent work.</h2>
             <div className={styles.archCard}>
               <p>
-                Open Harness is one repo — your portable harness — that boots a single long-lived Docker sandbox. The repo tracks and versions the agent's whole setup in git: identity, skills, crons, memory. Your project lives in the bind-mounted <code>workspace/</code> — one repo or several, side-by-side branches, scratch dirs. The agent owns its workspace; your machine stays clean, never running agents straight on your host.
+                Open Harness keeps the agent environment with the project instead of scattering it across a laptop. Git versions the portable control plane: identity, task procedures, schedules, and checks. Docker provides the isolated runtime. Herdr preserves interactive terminals, and git worktrees keep parallel agent sessions from colliding. The agent owns its workspace while the host stays clean.
               </p>
               <p>
                 A markdown cron runtime reads <code>crons/*.md</code> and wakes the agent on a schedule — issue triage, PR review, background grooming, anything you want running while you sleep. Configure the sandbox via <code>.devcontainer/.env</code>; Postgres ships as an opt-in compose overlay, and additional infra (tunnels, reverse proxies) is registered via harness-pack overlays in <code>config.json</code>.

@@ -6,14 +6,14 @@ title: "Introduction"
 
 # Open Harness
 
-Open Harness is your **portable harness** — one repo per sandbox — that wraps your project in an isolated Docker container and versions its state. The repo tracks the agent's identity, skills, crons, and memory in git; the sandbox keeps the agent (Claude Code, Codex, Pi, or another of your choice) off your host machine. The agent owns its workspace, runs against your code, and wakes itself on a schedule via a tiny croner runtime.
+Open Harness is a durable home for autonomous coding agents. It keeps an agent's tools, identity, schedules, branches, and communication channels with the project instead of scattering them across a laptop. Docker provides the isolated runtime. The portable control plane under `.oh/` keeps the agent environment reproducible in git.
 
 ## Start Here
 
-Open Harness provides the sandbox; you choose the harness — a Docker workspace you
-clone-and-own, where `make sandbox` boots one long-lived container and the coding agent
-of your choice (Claude Code, Codex, Pi, Hermes, and more) works on its own branch and
-identity, running identically on your laptop or an unattended, lights-out remote VM.
+Open Harness provides the workspace; you choose the coding harness. Claude Code,
+Codex, Pi, Hermes, and other harnesses share the same project state and portable
+control plane. Run the workspace on a laptop or leave it on a remote VM where agent
+sessions continue after you disconnect.
 
 ### Attach in 3 steps (VS Code)
 
@@ -36,11 +36,11 @@ This IS the rendered docs site (oh.mifune.dev) — use the search bar (top-right
 
 ## What is Open Harness?
 
-Open Harness is a single repo that *is* your harness: it boots one Docker container — the sandbox — and wraps your project inside it. You bring the sandbox up with `docker compose`, attach to it from your terminal or VS Code, and let your chosen agent work the project over time. Because the harness is a git repo, its whole setup is tracked and versioned — reproducible and portable. There is no per-agent fan-out, and no host CLI is *required* — everything works through standard `docker compose` commands, the `make` wrappers around them, and the croner runtime that ships in the image. A standalone `oh` CLI does exist: it is baked into the sandbox image, and you can install it on the host to equip an arbitrary repo. See [Lifecycle commands](/docs/lifecycle-commands) for which door is canonical where.
+Open Harness surrounds your chosen coding harness with two layers. `.devcontainer/` defines the isolated Docker runtime. `.oh/` provides the portable control plane for agent identity, schedules, task procedures, and checks. Bring the sandbox up with Docker Compose, attach from a terminal or VS Code, and let agent sessions work over time. Herdr preserves interactive terminals, named tmux sessions hold unattended services, and git worktrees isolate parallel branches. No host CLI is required: standard Docker Compose commands and their `make` wrappers remain available. The standalone `oh` CLI is also baked into the sandbox image and can equip another repository. See [Lifecycle commands](/docs/lifecycle-commands) for each entry point.
 
 Key capabilities:
 
-- **One repo, one sandbox.** Your portable harness is one repo; it boots one container. The agent owns its workspace; your machine stays clean — you're not running agents straight on your host.
+- **A stable agent environment.** The portable control plane stays with the project while Docker isolates execution from the host. Agent sessions own their workspaces; your machine stays clean.
 - **Markdown-defined crons.** `crons/*.md` files declare schedules; an in-container croner runtime fires the bodies as agent prompts so the agent can work autonomously while you focus on other things.
 - **Host dependencies: Docker, Git, and make.** No Node, no Python, and no toolchain maintenance required on your laptop. (`make` drives the `make sandbox` / `make shell` wrappers — see [Prerequisites](/docs/installation#prerequisites).)
 - **Cloudflared previews.** Share sandbox app ports through Cloudflared tunnels; SSH and pack-supplied services remain opt-in Docker Compose overlays.
