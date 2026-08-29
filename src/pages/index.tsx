@@ -8,14 +8,15 @@ const GITHUB_REPO = "mifunedev/openharness";
 const GITHUB_URL = `https://github.com/${GITHUB_REPO}`;
 const FALLBACK_STARS = 18;
 
-const QUICKSTART = `# 1 · install  (host: Docker + git, make recommended)
+const QUICKSTART = `# 1 · install the oh CLI  (host: Docker + git + Node.js ≥ 20)
 curl -fsSL https://oh.mifune.dev/install.sh | bash
 # ...or run the public image directly, with no checkout/build:
 # https://oh.mifune.dev/docs/docker-deployment
 
-# 2 · attach — VS Code command palette (Ctrl+Shift+P):
-#     "Dev Containers: Attach to Running Container" · select openharness
-cd ~/.openharness && make shell   # terminal fallback
+# 2 · start the sandbox and open a shell in it
+cd ~/.openharness && oh sandbox && oh shell
+# VS Code alternative: "Dev Containers: Attach to Running Container"
+# (Reopen in Container skips oh, so no overlays apply — see the docs)
 
 # 3 · run your agent inside the sandbox
 claude          # or codex · pi · hermes · openclaw (coming soon) · opencode

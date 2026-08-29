@@ -4,12 +4,37 @@ on:
   push:
     branches:
       - main
+  # The mirror steps can now fail the build, so run it before merge rather than
+  # discovering a broken mirror only after it has been deployed. The deploy job's
+  # gates require github.ref == refs/heads/main, which a pull_request run never is,
+  # so this builds and publishes nothing.
+  pull_request:
+    branches:
+      - main
+  # A release in mifunedev/openharness refreshes the mirrored get-oh.sh and oh.js
+  # without anyone having to remember to push to this repo. Sending the dispatch is
+  # a follow-up on the harness side and is not part of this repo's diff.
+  repository_dispatch:
+    types: [openharness-release]
+  # Backstop: the mirror going stale is invisible until someone installs, so rebuild
+  # daily even if no dispatch arrives.
+  schedule:
+    - cron: "17 6 * * *"
   workflow_dispatch:
+    inputs:
+      ref:
+        description: "openharness ref to mirror (default: main)"
+        required: false
+        default: "main"
 
 permissions:
   contents: read
   pages: write
   id-token: write
+
+env:
+  OH_SCRIPTS_REF: >-
+    ${{ github.event.client_payload.ref || inputs.ref || 'main' }}
 
 jobs:
   build:
@@ -41,20 +66,20 @@ jobs:
         run: pnpm run build
 
       - name: Configure Pages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'mifunedev/openharness-web'
+        if: github.ref == 'refs/heads/main' && github.repository == 'mifunedev/openharness-web'
         uses: actions/configure-pages@v5
         with:
           enablement: true
 
       - name: Upload Pages artifact
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'mifunedev/openharness-web'
+        if: github.ref == 'refs/heads/main' && github.repository == 'mifunedev/openharness-web'
         uses: actions/upload-pages-artifact@v3
         with:
           path: build
 
   deploy:
     name: Deploy to GitHub Pages
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'mifunedev/openharness-web'
+    if: github.ref == 'refs/heads/main' && github.repository == 'mifunedev/openharness-web'
     needs: build
     runs-on: ubuntu-latest
     concurrency:
