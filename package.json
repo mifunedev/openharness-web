@@ -8,6 +8,7 @@
     "build": "docusaurus build",
     "postbuild": "node scripts/check-theme-script-order.mjs",
     "check:theme-order": "node scripts/check-theme-script-order.mjs",
+    "check:docs-drift": "node scripts/check-docs-drift.mjs",
     "serve": "docusaurus serve",
     "clear": "docusaurus clear",
     "typecheck": "tsc --noEmit",
