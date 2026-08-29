@@ -7,27 +7,33 @@ title: "Connecting to the Sandbox"
 
 # Connecting to the Sandbox
 
-The sandbox is a Docker container running on your host (or a remote server). Getting UI apps like the docs site and T3 Code onto your laptop browser depends on **how** you connect — not every connection method forwards ports. This page covers your options, explains which one to use, and walks an end-to-end recipe.
+The sandbox is a Docker container running on your host (or a remote server). Getting UI apps like T3 Code onto your laptop browser depends on **how** you connect — not every connection method forwards ports. This page covers your options, explains which one to use, and walks an end-to-end recipe.
 
 ## Three ways to connect
 
 | Option | Command / action | Port forwarding to laptop |
 |--------|-----------------|--------------------------|
-| **A — Terminal** | `make shell` from the host | None — plain shell only |
+| **A — Terminal** | `oh shell` from the host | None — plain shell only |
 | **B — VSCode Attach (local)** | Dev Containers extension → "Attach to Running Container" → `openharness` | Automatic while attached |
 | **C — VSCode Remote-SSH + Attach (remote host)** | SSH into your host in VSCode, then Attach to Container | Automatic while attached |
+| **D — Direct SSH (opt-in)** | `ssh -p 2222 sandbox@localhost` after enabling the sshd overlay | None — SSH shell only (tunnel/proxy separately) |
 
 ### Option A — Terminal
 
 ```bash
 cd ~/.openharness
-make shell
+oh shell
 ```
-Pass an optional container name to attach to a different running container, e.g. `make shell portfolio-advisor` (add `SHELL_USER=<user>` if the target has no `sandbox` user).
+Pass an optional container name to attach to a different running container, e.g. `oh shell portfolio-advisor`. `oh shell` always attaches as the `sandbox` user; if the target container has no such user, use `docker exec -it -u <user> <container> zsh` instead.
 
-`oh shell` does the same job from inside the sandbox or from a repo equipped by `oh init` — see [Lifecycle commands](./lifecycle-commands.md).
+You land inside the container as the `sandbox` user. Run `herdr` first, then launch CLI agents and complete interactive setup from its panes. Container ports are **not** forwarded to your laptop — you cannot open `localhost:3000` in your browser via this method alone.
 
-You land inside the container as the `sandbox` user. This is enough to run CLI agents and configure Slack. Container ports are **not** forwarded to your laptop — you cannot open `localhost:3000` in your browser via this method alone.
+> **Attach, do not "Reopen in Container".** *Dev Containers: Reopen in Container*
+> reads `.devcontainer/devcontainer.json`, which names `docker-compose.yml` alone,
+> so it bypasses `.oh/scripts/docker-compose.sh` and applies **no compose overlays** —
+> no SSH, no host Docker socket, no Hermes dashboard, nothing from
+> `composeOverrides[]`. Provision with `oh sandbox`, then attach. Details:
+> [lifecycle commands](lifecycle-commands.md#vs-code-reopen-in-container-applies-no-overlays).
 
 ### Option B — VSCode Attach to Running Container (local host)
 
@@ -46,11 +52,26 @@ If the sandbox runs on a remote server:
 
 Port forwarding works identically — VSCode tunnels the container ports through the SSH connection to your laptop `localhost`. No manual `ssh -L` required.
 
+### Option D — Direct SSH (opt-in)
+
+The base container runs no SSH daemon. Enabling the opt-in `sshd` overlay
+publishes a loopback SSH port so you can connect straight in:
+
+```bash
+ssh -p 2222 sandbox@localhost
+```
+
+Auth is public-key by default and the host bind is loopback-only. This is the
+foundation for routing multiple tenants' containers behind one nginx proxy on a
+single VM. Full setup — enabling the overlay, adding your key, the port-collision
+preflight, and the nginx multi-tenant recipe — is in
+[Integrations → SSH](https://github.com/mifunedev/openharness/blob/main/docs/integrations/sshd.md).
+
 ## Why VSCode Attach is the recommended path
 
 Attaching via VSCode is the easiest way to reach container UIs on your laptop browser. The auto-forwarding is session-scoped: ports appear under the **Ports** panel while attached and disappear when you close or detach from the VSCode window.
 
-If you only need a terminal (no browser UI), Option A is fine.
+If you only need a terminal (no browser UI), Option A is fine. Whichever attach path you choose, make `herdr` the first command in the sandbox.
 
 ## What happens when you close VSCode
 
@@ -84,6 +105,10 @@ This is NOT the default; you opt in explicitly. Be aware that binding to `0.0.0.
 
 The harness ships no built-in tunnel tool. For public access, bring your own: `cloudflared`, `ngrok`, `tailscale funnel`, or an nginx/Caddy reverse proxy. Start the tunnel inside the sandbox in a named tmux session (see [tmux conventions](#tmux-session-naming)).
 
+**3. Direct SSH + nginx multi-tenant routing**
+
+To SSH straight into the container — and to route several tenants' containers through one nginx reverse proxy on a single VM — enable the opt-in `sshd` overlay. See [Integrations → SSH](https://github.com/mifunedev/openharness/blob/main/docs/integrations/sshd.md).
+
 ## tmux session naming
 
 All long-running processes inside the sandbox run in named tmux sessions. The naming convention is `<category>-<identifier>`:
@@ -92,13 +117,13 @@ All long-running processes inside the sandbox run in named tmux sessions. The na
 |----------|---------|---------|
 | `client-` | `client-slack-pi`, `client-discord` | External-surface clients bridging an in-sandbox agent |
 | `agent-` | `agent-watcher`, `agent-batch` | Headless / long-running agent processes (interactive CLIs are foreground, not tmux) |
-| `app-` | `app-docs`, `app-api` | Dev servers |
+| `app-` | `app-api` | Dev servers |
 
-For the full convention see [`context/rules/sandbox-processes.md`](https://github.com/mifunedev/openharness/blob/development/context/rules/sandbox-processes.md).
+For the full convention see [`.oh/skills/t3/references/sandbox-processes.md`](https://github.com/mifunedev/openharness/blob/development/.oh/skills/t3/references/sandbox-processes.md).
 
 ## End-to-end recipe
 
-This recipe assumes the sandbox is already running (`make ps` confirms the `openharness` container is up). Steps run inside the sandbox unless noted.
+This recipe assumes the sandbox is already running (`oh ps` confirms the `openharness` container is up). Steps run inside the sandbox unless noted.
 
 ### Step 1 — Attach via VSCode
 
@@ -106,7 +131,7 @@ Follow Option B (or C for a remote host). The Ports panel in VSCode shows forwar
 
 ### Step 2 — Configure Slack
 
-Set `PI_SLACK_APP_TOKEN` / `PI_SLACK_BOT_TOKEN` in `.devcontainer/.env`, then configure the messenger from inside the session with the bridge's `/msg-bridge` command (trusted users, channels) — that is the default method. The `client-slack-pi` session starts automatically on container boot; manage it with `gateway pi` (`gateway pi --restart` to pick up token edits, `gateway status` to check). The tracked `.pi/msg-bridge.json` (`autoConnect`, `auth.trustedUsers`) is an optional headless pre-seed. For the full walkthrough see [Integrations → Slack](/docs/integrations/slack).
+Create/update the Slack app from `.pi/install/slack-manifest.json`, set `PI_SLACK_APP_TOKEN` / `PI_SLACK_BOT_TOKEN` in `.devcontainer/.env`, then manage the Pi-side bridge session with `/msg-bridge` from inside `client-slack-pi`. Trust/channel admin is handled by challenge auth plus manifest-backed Slack admin commands, not separate Pi commands. The `client-slack-pi` session starts automatically on container boot; manage it with `gateway pi` (`gateway pi --restart` to pick up token edits, `gateway status` to check). The tracked `.pi/msg-bridge.json` (`autoConnect`, `auth.trustedUsers`) is an optional headless pre-seed. For the full walkthrough see [Integrations → Slack](/docs/integrations/slack).
 
 After the bridge is up, verify it is live:
 
@@ -136,21 +161,12 @@ Detach from the tmux session without stopping it: `Ctrl-b d`.
 
 For more on T3 Code setup see [Harnesses → T3 Code](/docs/harnesses/t3code).
 
-### Step 4 — Launch the docs site
-
-```bash
-tmux new-session -d -s app-docs 'pnpm --filter @openharness/docs start 2>&1 | tee /tmp/app-docs.log'
-```
-
-The Docusaurus dev server binds port 3000 inside the container. Via VSCode auto-forwarding, open `localhost:3000` in your laptop browser.
-
-### Step 5 — Confirm ports in VSCode
+### Step 4 — Confirm ports in VSCode
 
 Open the **Ports** panel (bottom status bar → Ports, or `Ctrl+Shift+P` → "Focus on Ports"). You should see:
 
 | Port | Forwarded to | App |
 |------|-------------|-----|
-| 3000 | localhost:3000 | Docs site |
 | 3773 | localhost:3773 | T3 Code UI |
 
 If a port is missing, confirm the tmux session is running (`tmux ls`) and that you are still attached via VSCode.
@@ -159,5 +175,4 @@ If a port is missing, confirm the tmux session is running (`tmux ls`) and that y
 
 | App | Container port | Laptop URL (VSCode attached) |
 |-----|---------------|------------------------------|
-| Docs site | 3000 | `http://localhost:3000` |
 | T3 Code UI | 3773 | `http://localhost:3773` |

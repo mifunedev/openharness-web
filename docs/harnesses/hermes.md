@@ -49,12 +49,10 @@ the key in `.devcontainer/.env`:
 INSTALL_HERMES=true
 ```
 
-Or set `INSTALL_HERMES=true` in `.devcontainer/.env` (legacy).
-
 Then rebuild/restart the sandbox:
 
 ```bash
-make stop && make sandbox
+oh stop && oh sandbox
 ```
 
 The executable is installed during image build, not at container boot, so
@@ -80,9 +78,9 @@ curl -fsSL -o hermes-install.sh https://hermes-agent.nousresearch.com/install.sh
 bash hermes-install.sh --skip-setup --skip-browser
 ```
 
-If you already use [`vet`](https://github.com/vet-run/vet), `vet https://hermes-agent.nousresearch.com/install.sh --skip-setup --skip-browser` gives the installer a fetch/review/approve gate. `vet` is optional and is not required by Open Harness.
+If you already use [`vet`](https://github.com/vet-run/vet), `vet https://hermes-agent.nousresearch.com/install.sh --skip-setup --skip-browser` gives the installer a fetch, review, and approve gate. `vet` is optional and is not required by Open Harness.
 
-That keeps `make sandbox` non-interactive. User setup remains explicit
+That keeps `oh sandbox` non-interactive. User setup remains explicit
 inside the running sandbox.
 
 ## Authentication
@@ -98,7 +96,7 @@ hermes doctor           # health check
 Config, memory, runtime skills, and sessions write to `~/harness/.hermes/`
 through `HERMES_HOME=/home/sandbox/harness/.hermes`. On boot with
 Hermes enabled, the entrypoint links `.hermes/skills/openharness` to the
-tracked shared skills directory (`.mifune/skills/`), making the same harness
+tracked shared skills directory (`.oh/skills/`), making the same harness
 skills used by Claude, Codex, and Pi visible to Hermes by default.
 
 Auth lives directly inside `HERMES_HOME` (`~/harness/.hermes/auth.json`).
@@ -121,7 +119,7 @@ survive container rebuilds and follow the project directory. The
 project-local runtime contents are ignored by git; do not commit
 secrets from this directory.
 
-`make destroy` stops containers and removes volumes but does not delete
+`oh destroy` stops containers and removes volumes but does not delete
 the bind-mounted `.hermes/` directory from the checkout. Remove that
 directory manually if you want a full Hermes project-state reset.
 
@@ -140,7 +138,7 @@ hermes
 ```
 
 For long-running interactive sessions, wrap in a tmux session per
-[`context/rules/sandbox-processes.md`](https://github.com/mifunedev/openharness/blob/development/context/rules/sandbox-processes.md):
+[`.oh/skills/t3/references/sandbox-processes.md`](https://github.com/mifunedev/openharness/blob/development/.oh/skills/t3/references/sandbox-processes.md):
 
 ```bash
 tmux new-session -d -s agent-hermes 'hermes'
@@ -165,8 +163,11 @@ separate (`hermes gateway setup` for Hermes, the in-session `/msg-bridge` for Pi
 #### Run and verify (read-only)
 
 Run the Hermes gateway **from inside the sandbox** — both `gateway hermes` and
-`make gateway hermes` require `hermes` on `PATH`, so they only work in the container
-(`gateway.sh` errors otherwise):
+`oh gateway hermes` require `hermes` on `PATH`, so they only work in the container
+(`gateway.sh` errors otherwise). The launcher pins `HERMES_HOME` to
+`~/harness/.hermes`, persists Hermes `terminal.cwd` to `~/harness` (override with
+`HERMES_GATEWAY_HOME` / `HERMES_GATEWAY_CWD`), and self-installs Teams webhook deps
+when Teams credentials are configured:
 
 ```bash
 gateway hermes            # start the client-slack-hermes session (wraps `hermes gateway run`)
@@ -201,17 +202,16 @@ HERMES_DASHBOARD_PORT=9119   # optional; 9119 is the default
 Then rebuild:
 
 ```bash
-make stop && make sandbox
+oh stop && oh sandbox
 ```
 
-The legacy `.devcontainer/.env` vars `HERMES_DASHBOARD=true` /
-`HERMES_DASHBOARD_PORT=9119` still work as a fallback (migrated to
-`.devcontainer/.env`). Both paths require `INSTALL_HERMES=true` (or
-`INSTALL_HERMES=true`) to take effect.
+`HERMES_DASHBOARD` requires `INSTALL_HERMES=true` to take effect: the dashboard
+overlay is applied whether or not Hermes is installed, but there is nothing for
+it to serve without the binary.
 
 ### What auto-launches
 
-When both `INSTALL_HERMES=true` and `hermes.dashboard: true` are set (or
+When both `INSTALL_HERMES=true` and `HERMES_DASHBOARD=true` are set (or
 the equivalent legacy env vars), the entrypoint starts the dashboard in a
 named tmux session:
 

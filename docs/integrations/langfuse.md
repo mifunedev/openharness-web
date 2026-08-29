@@ -6,41 +6,212 @@ title: Langfuse
 # Langfuse
 
 [Langfuse](https://langfuse.com) is optional, external observability for **Pi**
-and [**Claude Code**](../harnesses/claude-code.md) sessions. Open Harness does
-not bundle or operate Langfuse: deploy it separately (Langfuse Cloud or your own
-installation) and follow the [official Docker Compose deployment
-guide](https://langfuse.com/self-hosting/deployment/docker-compose) if you
-self-host. Secure that external service with appropriate access controls and TLS.
+and **Claude Code** sessions. Open Harness does not bundle or operate Langfuse:
+deploy it separately (Langfuse Cloud or your own installation) and follow the
+[official Docker Compose deployment guide](https://langfuse.com/self-hosting/deployment/docker-compose)
+if you self-host. Secure that external service with appropriate access controls
+and TLS.
 
 The two integrations provide end-to-end observability, **not identical event
 schemas or privacy controls**. In particular, Pi supports deliberate capture
 presets including `metadata-only`; the Claude Code plugin does not. Read the
-privacy sections for the CLI you use before enabling either integration. This
-guide adds no proxy, exporter, credential pass-through, MCP server, custom
-launcher, native OpenTelemetry configuration, Compose change, or runtime change.
+privacy sections for the CLI you use before enabling either integration.
 
 ## Pi
 
-[`pi-langfuse` v1.5.6](https://www.npmjs.com/package/pi-langfuse/v/1.5.6) is a
-Pi package. Its `v1.5.6` tag resolves to
-[commit `fa415f33458f010265a287251fd3e7d249e97b99`](https://github.com/gooyoung/pi-langfuse/commit/fa415f33458f010265a287251fd3e7d249e97b99).
-Pi packages can execute arbitrary code, so review that source before installing
-it. Choose the narrowest installation scope and pin the version:
+[`pi-langfuse` v1.5.9](https://www.npmjs.com/package/pi-langfuse/v/1.5.9) is a
+Pi package. While the upstream shutdown fix is under review, Open Harness uses
+the maintained fork at commit
+[`51a59c854859bbb08a43baad98f0b9eb4a94588c`](https://github.com/ryaneggz/pi-langfuse/commit/51a59c854859bbb08a43baad98f0b9eb4a94588c),
+which is the source for upstream PR
+[#14](https://github.com/gooyoung/pi-langfuse/pull/14). Pi packages can execute
+arbitrary code, so review that source before installing it.
+
+Install the pinned fork through the repository-owned helper:
 
 ```bash
-# User installation: writes to ~/.pi/agent/settings.json
-pi install npm:pi-langfuse@1.5.6
-
-# Project installation: writes to .pi/settings.json (review before committing)
-pi install -l npm:pi-langfuse@1.5.6
-
-# One session only: does not change settings
-pi -e npm:pi-langfuse@1.5.6
+bash .pi/install/install-langfuse.sh
 ```
+
+The helper installs the fork commit in user scope through Pi's managed npm
+root, registers the installed path with Pi, applies the scoped
+`@opentelemetry/sdk-node@0.220.0` override, verifies the package lock resolves
+the exact reviewed commit, and requires a clean `npm audit`. The upstream fix
+classifies only an `AbortError` caused by pi-langfuse's own shutdown controller
+as an expected bounded timeout; with `PI_LANGFUSE_DEBUG=1` it remains visible as
+a debug message, while other shutdown errors still update runtime status and
+emit the normal warning. Rerun the helper after any package reinstall or `~/.pi`
+volume reset. The OpenTelemetry override remediates the vulnerable tree selected
+by pi-langfuse's declared `^0.218.0` range without npm audit's unsafe
+recommendation to downgrade pi-langfuse to `1.0.0`; unrelated npm overrides are
+preserved.
+
+This fork pin is temporary and intentionally immutable. If upstream merges and
+publishes #14, migrate the installer to that reviewed upstream release in a
+separate change; do not follow a moving branch automatically.
 
 This is deliberately **not** an Open Harness default package. It instruments Pi
 sessions only; it does not instrument standalone Claude Code, Codex CLI, or
 Gemini CLI sessions.
+
+### Local self-hosted setup walkthrough
+
+The following procedure mirrors a working local installation: clone Langfuse as
+an independent project under Open Harness's `projects/` namespace,
+start its Compose stack, attach the existing sandbox to Langfuse's Docker
+network, and configure Pi against the service hostname. The same service can be
+used by Claude Code after completing steps 1–5; see [Claude Code](#claude-code)
+for its plugin configuration.
+
+Commands run from the normal host terminal unless marked **SANDBOX** or **PI**.
+
+#### 1. Clone Langfuse under `projects/`
+
+Start from the Open Harness checkout:
+
+```bash
+cd /path/to/openharness
+PROJECTS_ROOT="$(bash .oh/scripts/oh-path projects --no-create 2>/dev/null || printf '%s' projects)"
+mkdir -p "$PROJECTS_ROOT/langfuse"
+git clone https://github.com/langfuse/langfuse.git \
+  "$PROJECTS_ROOT/langfuse/langfuse"
+cd "$PROJECTS_ROOT/langfuse/langfuse"
+```
+
+This is an independent repository with its own `.git`, not a harness branch or
+Git worktree. Its own worktrees, if any, live at
+`projects/langfuse/langfuse/.worktrees/`. If it is already cloned, update it instead:
+
+```bash
+cd /path/to/openharness
+PROJECTS_ROOT="$(bash .oh/scripts/oh-path projects --no-create 2>/dev/null || printf '%s' projects)"
+cd "$PROJECTS_ROOT/langfuse/langfuse"
+git pull --ff-only
+```
+
+#### 2. Start and verify Langfuse
+
+```bash
+docker compose up -d --wait --wait-timeout 300
+docker compose ps
+curl -fsS http://localhost:3000/api/public/health
+```
+
+A failed health check can be investigated with:
+
+```bash
+docker compose logs --tail=200
+```
+
+#### 3. Start the sandbox and discover Langfuse's network
+
+```bash
+docker start oh-sbx-local
+LANGFUSE_WEB_ID=$(docker compose ps -q langfuse-web)
+LANGFUSE_NETWORK=$(
+  docker inspect "$LANGFUSE_WEB_ID" \
+    --format '{{range $name, $_ := .NetworkSettings.Networks}}{{$name}}{{"\n"}}{{end}}' |
+  head -n 1
+)
+printf 'Langfuse container: %s\nLangfuse network: %s\n' \
+  "$LANGFUSE_WEB_ID" "$LANGFUSE_NETWORK"
+```
+
+Run these commands from the cloned Langfuse repository so `docker compose`
+selects its Compose project.
+
+#### 4. Attach the sandbox to Langfuse
+
+The conditional network attachment is idempotent:
+
+```bash
+docker inspect oh-sbx-local \
+  --format '{{range $name, $_ := .NetworkSettings.Networks}}{{$name}}{{"\n"}}{{end}}' |
+  grep -Fxq "$LANGFUSE_NETWORK" ||
+  docker network connect "$LANGFUSE_NETWORK" oh-sbx-local
+```
+
+Confirm that both containers share the network, then verify DNS and HTTP from
+the sandbox:
+
+```bash
+docker network inspect "$LANGFUSE_NETWORK" \
+  --format '{{range .Containers}}{{println .Name}}{{end}}' |
+  sort
+
+docker exec -u sandbox oh-sbx-local getent hosts langfuse-web
+docker exec -u sandbox oh-sbx-local \
+  curl -fsS http://langfuse-web:3000/api/public/health
+```
+
+Compose may prefix the Langfuse container's displayed name. The service DNS
+name remains `langfuse-web`. Repeat the network attachment whenever the
+`oh-sbx-local` container is destroyed and recreated.
+
+#### 5. Create the local user, project, and keys
+
+Open [http://localhost:3000](http://localhost:3000) on the host and:
+
+1. Select **Sign up** and create the initial local user.
+2. Sign in and create an organization when prompted.
+3. Create a project, for example `openharness-local`.
+4. Open **Settings → API Keys** and select **Create new API keys**.
+5. Copy the public key (`pk-lf-...`) and secret key (`sk-lf-...`) while shown.
+
+Keep the secret key out of source files, shell history, screenshots, and chat.
+
+#### 6. Install and configure Pi
+
+Enter the existing sandbox:
+
+```bash
+docker exec -it -u sandbox oh-sbx-local bash
+```
+
+Then run these commands in the **SANDBOX**:
+
+```bash
+pi --version
+bash .pi/install/install-langfuse.sh
+pi list
+export LANGFUSE_PRIVACY_PRESET=metadata-only
+pi
+```
+
+At the **PI** prompt, run `/langfuse-setup` and enter:
+
+```text
+Public key:  pk-lf-...
+Secret key:  sk-lf-...
+Langfuse URL: http://langfuse-web:3000
+```
+
+Do not use `localhost` here: inside the sandbox it refers to the sandbox, not
+the Langfuse container. The saved configuration lives at
+`~/.pi/agent/pi-langfuse/config.json` on Open Harness's persistent `pi-auth`
+volume.
+
+#### 7. Verify Pi tracing and permissions
+
+At the **PI** prompt:
+
+1. Run `/langfuse-status`; confirm the masked public key, host
+   `http://langfuse-web:3000`, `metadata-only` privacy, and no runtime error.
+2. Run `/langfuse-test`; confirm the test trace appears in the local project.
+3. Send a normal prompt and confirm its session trace appears as well.
+
+Exit Pi, then verify restrictive permissions from the **SANDBOX** without
+printing the credential file:
+
+```bash
+stat -c '%a %n' \
+  ~/.pi/agent/pi-langfuse \
+  ~/.pi/agent/pi-langfuse/config.json
+```
+
+Expected permissions are `700` for the directory and `600` for the file. Keep
+`LANGFUSE_PRIVACY_PRESET=metadata-only` set before future Pi launches unless a
+broader capture policy is deliberately approved.
 
 ### Configure Pi
 
@@ -56,7 +227,7 @@ Enter the Langfuse public key (`pk-lf-...`), secret key (`sk-lf-...`), and
 external Langfuse URL. The package persists them in
 `~/.pi/agent/pi-langfuse/config.json`; in the sandbox, `~/.pi` is on the
 `pi-auth` named volume. When the package writes the file it creates a `0700`
-directory and a `0600` file where POSIX permissions are available. `make destroy`
+directory and a `0600` file where POSIX permissions are available. `oh destroy`
 removes named volumes, including `pi-auth`, so configure again after destroying
 the sandbox.
 
@@ -75,16 +246,24 @@ pi
 `LANGFUSE_HOST` is supported as a fallback name. For an environment-only
 configuration, `LANGFUSE_BASE_URL` wins over `LANGFUSE_HOST`.
 
-`.devcontainer/.env` is Docker Compose interpolation, **not** a file that is
-automatically injected wholesale into Pi. If you keep Langfuse variables there,
-explicitly export them in the shell that launches Pi:
+Set the host and the privacy preset in `oh.json` instead of exporting them by
+hand. `oh` renders `langfuse.baseUrl` and `langfuse.privacyPreset` into the
+Compose environment, and both compose files put them in the sandbox process
+environment, so Pi reads them on every launch:
 
-```bash
-set -a
-source /home/sandbox/harness/.devcontainer/.env
-set +a
-pi
+```json
+{
+  "langfuse": {
+    "baseUrl": "http://langfuse-web:3000",
+    "privacyPreset": "metadata-only"
+  }
+}
 ```
+
+Apply the change with `oh stop && oh sandbox`. The two credentials stay secrets:
+keep `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` in the root dotenv (`oh
+secret set`) or in the saved `~/.pi/agent/pi-langfuse/config.json`, and export
+them in the shell that launches Pi if you use the environment-only path.
 
 ### Pi configuration and privacy precedence
 
@@ -152,12 +331,15 @@ meets the need, and treat the Langfuse deployment as an external data boundary.
 | Old key or host still wins | A complete saved config takes precedence for credentials and host. Use `/langfuse-status` to see its source, then rerun `/langfuse-setup` to replace stale saved values. |
 | Wrong URL | With environment-only setup, use `LANGFUSE_BASE_URL`; it wins over `LANGFUSE_HOST`. A saved host still wins over either, so update or remove the stale saved config deliberately. |
 | Connection refused or timeout | Check the location table: sandbox `localhost` is not the Docker host; use `host.docker.internal` for the host, or explicitly share a Compose network for a service hostname. |
+| `DOMException [AbortError]` during shutdown | Rerun `bash .pi/install/install-langfuse.sh` so the reviewed local patch is applied. The package's own bounded deadline is best-effort and may leave telemetry incomplete; unexpected shutdown errors remain visible. |
 | TLS or DNS error | Use the externally reachable HTTPS URL, verify the hostname resolves from the Pi process, and provide a certificate chain trusted by that process. |
 | Test works but no useful trace | Send a real Pi prompt after `/langfuse-test`, then use `/langfuse-status` and Pi output for the last runtime error and effective capture policy. |
 | Usage or cost is absent | These fields are conditional on provider events. Some providers do not expose them; inspect raw observations and do not treat their absence as a tracing failure. |
 
 For package installation scope, pins, and trust behavior, see the upstream
 [Pi packages documentation](https://github.com/earendil-works/pi-mono/blob/main/packages/coding-agent/docs/packages.md).
+The repository helper intentionally uses user scope so opting into observability
+does not modify the tracked project package list.
 
 ## Claude Code
 

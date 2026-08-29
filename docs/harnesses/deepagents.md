@@ -18,7 +18,7 @@ mix or non-interactive shell-allow-list model is the right fit for a task.
 - Multi-provider agent (Anthropic, OpenAI, etc.) configurable from a single
   `~/.deepagents/.env` file.
 - Non-interactive mode (`-n "$task"`) with explicit shell-allow-list gating,
-  suitable for Ralph harness loops with a constrained default tool surface.
+  suitable for bounded `/spec execute` worker tasks with a constrained default tool surface.
 - Project-aware: optionally reads memory and skills from a repo-local
   `.deepagents/` directory at the workspace root.
 
@@ -48,7 +48,7 @@ Or set `INSTALL_DEEPAGENTS=true` in `.devcontainer/.env` (legacy).
 Then rebuild/restart the sandbox:
 
 ```bash
-make stop && make sandbox
+oh stop && oh sandbox
 ```
 
 Open Harness installs the upstream CLI during image build via `uv tool
@@ -68,7 +68,7 @@ deepagents -v
 ```
 
 If the command is not found, confirm `INSTALL_DEEPAGENTS=true` is set in
-`.devcontainer/.env`, then rebuild with `make stop && make sandbox`.
+`.devcontainer/.env`, then rebuild with `oh stop && oh sandbox`.
 
 ## Authentication and provider keys
 
@@ -151,35 +151,24 @@ Flags:
 - `-n "$task"` — non-interactive single task.
 - `-q --no-stream` — quiet, buffered output for clean log capture.
 
-### Ralph usage
+### `/spec execute` usage
 
-`scripts/ralph.sh` accepts `deepagents` as an explicit harness:
-
-```bash
-scripts/ralph.sh --harness=deepagents <task-name>
-# or
-RALPH_HARNESS=deepagents scripts/ralph.sh <task-name>
-```
-
-DeepAgents is never auto-selected by Ralph fallback — it must be chosen
-explicitly. The default invocation is:
+`/spec execute` owns implementation in one Advisor session. If DeepAgents is the chosen
+provider for a bounded worker, run it directly with a task prompt; do not add a second
+workflow or a provider-specific executor wrapper:
 
 ```bash
 deepagents -y --shell-allow-list recommended -q --no-stream --max-turns 25 -n "$task"
 ```
 
-Two environment overrides apply:
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `RALPH_DEEPAGENTS_FLAGS` | `-y --shell-allow-list recommended -q --no-stream` | Override the flag string before the task. **Do not include `--max-turns` here** — the cap is appended separately. |
-| `RALPH_DEEPAGENTS_MAX_TURNS` | `25` | Per-call turn cap, always appended as `--max-turns "$RALPH_DEEPAGENTS_MAX_TURNS"` so a single DeepAgents call cannot hang the iteration. |
+DeepAgents is never auto-selected. Keep its shell allow-list explicit and let the Advisor
+validate the worker's result against the story acceptance criteria.
 
 > **`--shell-allow-list all` warning.** Choosing `--shell-allow-list all`
-> via `RALPH_DEEPAGENTS_FLAGS` grants unrestricted non-interactive shell
-> execution. If the optional host Docker socket is enabled (off by
-> default — `DOCKER_SOCKET=true`), this can additionally affect
-> sibling containers or the host Docker daemon. Only use `all` for trusted tasks where
+> grants unrestricted non-interactive shell
+> execution. Combined with the mounted Docker socket (enabled by default
+> in the base compose file), this can affect sibling containers or the
+> host Docker daemon. Only use `all` for trusted tasks where
 > you have accepted that risk explicitly.
 
 ## Tips
@@ -188,7 +177,7 @@ Two environment overrides apply:
   `.deepagents/.env`.
 - Pair DeepAgents with a git worktree so its branch is isolated.
 - Inspect non-interactive runs with `tmux attach -t agent-deepagents` (or
-  the Ralph-launched session) to see live progress.
+  the Advisor-owned task session) to see live progress.
 
 ## Upstream documentation
 

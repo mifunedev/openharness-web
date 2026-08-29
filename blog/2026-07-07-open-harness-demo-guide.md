@@ -8,6 +8,16 @@ slug: open-harness-demo-guide
 image: /img/blog/2026-07-07-open-harness-demo-guide/social-promo-card.jpg
 ---
 
+:::note[Written before the one-door migration]
+
+This post dates from 2026-07-07 and is kept as a record of how Open Harness worked then. It
+predates the v0.5.x migration that removed the `Makefile` and made the `oh` CLI the only
+lifecycle door, so the `make ...` commands, the `.oh/worktrees/` path, and the screenshots below no longer exist. The steps still
+describe the right *shape* of the workflow; for commands that run today, see the
+[Quickstart](/docs/quickstart) and the [lifecycle command reference](/docs/lifecycle-commands).
+
+:::
+
 The fastest way to understand Open Harness is to watch a clean machine become an agent-ready development environment: install the sandbox, attach an editor, verify the agents, connect GitHub, then let an agent create its first issue and pull request.
 
 That is what the [full Loom walkthrough](https://www.loom.com/share/875737ef981f4b378a005be62d1e435b) shows. This post turns the demo into a written runbook, with the important corrections called out: safe defaults, when *not* to mount Docker, what lives in `.oh/`, and how worktrees keep agent work isolated.

@@ -24,8 +24,8 @@ underneath it is healthy.
 
 **Scope matters.** The daemon lives on the machine holding the `oh` binary, not
 inside the sandbox. A check run inside the container would answer about the
-wrong kernel, so this one is host-scoped, while MicroSandbox's glibc and
-`/dev/kvm` checks are target-scoped.
+wrong kernel, so this one is `scope: "host"` while MicroSandbox's glibc and
+`/dev/kvm` checks are `scope: "target"`.
 
 A consequence worth knowing: the daemon check still runs when the container is
 stopped or absent. That is deliberate — "the sandbox will not start" and "the
@@ -41,12 +41,12 @@ docker   container  active  yes        yes
 
 docker — requirements:
   docker     29.7.2     requires exit 0   [host] OK
-  see .oh/docs/runtimes/docker.md
+  see docs/runtimes/docker.md
 ```
 
 `IN USE` is `yes` when the sandbox container is actually running. It is a fact
 about the running sandbox, not a config read — there is no runtime selector to
-read (see [Runtimes overview](overview.md#why-the-cli-stops-short-of-selecting-one)).
+read (see [#806 § B1](https://github.com/mifunedev/openharness/issues/806)).
 
 ## Daemon down
 
@@ -67,20 +67,20 @@ docker — requirements:
 A shared kernel is the trade. Namespaces and cgroups separate processes,
 filesystems, and networks; they do **not** put a kernel boundary between the
 workload and the host. The
-[runtime-support RFC](https://github.com/mifunedev/openharness/blob/main/.oh/docs/rfcs/rfc-runtime-support.md)
-covers the tiers above this one, and [MicroSandbox](microsandbox.md) is the
-microVM candidate Open Harness is working toward.
+[isolation landscape](https://github.com/mifunedev/openharness/blob/main/docs/rfcs/rfc-runtime-support.md) covers the tiers above
+this one, and [MicroSandbox](microsandbox.md) is the microVM candidate this
+harness is working toward.
 
-Two things worth knowing:
+Two harness-specific notes:
 
-- **The host Docker socket is off by default.** Mounting the host
+- **`docker_socket` is off by default.** Mounting the host
   `/var/run/docker.sock` into the sandbox is effectively host root, so it is
-  opt-in via the `DOCKER_SOCKET` key in `.devcontainer/.env`.
-- **The container is the unit of disposal.** `make destroy` removes containers
-  and volumes; provider auth persists in named volumes across a rebuild. See
-  [Lifecycle commands](../lifecycle-commands.md).
+  opt-in via `DOCKER_SOCKET` in `.devcontainer/.env`. See
+  [security considerations](https://github.com/mifunedev/openharness/blob/main/docs/security-considerations.md).
+- **The container is the unit of disposal.** `oh destroy` removes containers
+  and volumes; provider auth persists in named volumes across a rebuild.
 
 ## Related
 
 - [Runtimes overview](overview.md) — why the CLI selects no runtime
-- [MicroSandbox](microsandbox.md) — the microVM candidate, and its two blockers
+- [MicroSandbox](microsandbox.md) — the microVM candidate, and its two measured requirements

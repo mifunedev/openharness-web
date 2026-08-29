@@ -7,52 +7,62 @@ title: "Contributing"
 
 This guide covers the workflow for contributing to Open Harness: creating branches, writing commits, updating the changelog, and shipping releases.
 
+For the inbound license terms and the Developer Certificate of Origin (DCO), see the root [`CONTRIBUTING.md`](https://github.com/mifunedev/openharness/blob/main/CONTRIBUTING.md).
+
 ## Setup
 
 Clone the repository:
 
 ```bash
-git clone https://github.com/mifunedev/openharness.git
+git clone --recurse-submodules https://github.com/mifunedev/openharness.git
 cd openharness
 ```
 
-Open Harness has no host-side build step. The orchestrator runs at the project root (Docker + `make`), and all application work happens inside the sandbox container. You only need:
+Open Harness has no host-side build step. The orchestrator runs at the project root, and all application work happens inside the sandbox container. You only need:
 
 - Docker (with `docker compose`)
-- `make`
+- Node.js ≥ 20, to run the `oh` CLI. To install both:
+
+  ```bash
+  curl -fsSL -o get-oh.sh https://oh.mifune.dev/get-oh.sh   # review it first
+  bash get-oh.sh
+  ```
+
+  Or, if you would rather not review it, `curl -fsSL https://oh.mifune.dev/get-oh.sh | bash`.
 - `git` and the GitHub CLI (`gh`)
 
 ### Provision the sandbox
 
-On the host, in a source checkout, the lifecycle is driven by the root `Makefile`:
+The lifecycle is driven entirely by `oh`:
 
 ```bash
-make sandbox    # provision and start the sandbox (docker compose up -d --build)   → oh sandbox
-make shell      # enter the sandbox as the `sandbox` user                          → oh shell
-make ps         # show service status                                              → oh ps
-make logs       # tail compose logs                                                → oh logs
-make stop       # stop the sandbox, preserving volumes                             → oh stop
-make destroy    # stop and remove the sandbox (volumes wiped)                      → host only
-make restart    # restart the service                                              → oh restart
-make help       # list all targets (it prints the `oh` equivalents too)
+oh sandbox    # provision and start the sandbox (docker compose up -d --build)
+oh shell      # enter the sandbox as the `sandbox` user
+oh ps         # show service status
+oh logs       # tail compose logs
+oh stop       # stop the sandbox, preserving volumes
+oh destroy    # stop and remove the sandbox (volumes wiped)
+oh restart    # restart the service
+oh --help     # list every verb
 ```
 
-The right-hand column is the `oh` verb for the same job, which is what you use
-inside the sandbox and in a repo equipped by `oh init` (it has no Makefile).
-[Lifecycle commands](./lifecycle-commands.md) is the full mapping and explains
-why `make destroy` has no `oh` counterpart.
-
-A first-run helper is available at `.oh/scripts/install.sh` — it prompts for the values written to `.devcontainer/.env` (GitHub token autodetect, idempotent re-runs) before you call `make sandbox`.
+A first-run helper is available at `.oh/scripts/install.sh` — it prompts for the non-secret values written to `oh.json` and the secrets written to the gitignored root `.env` (GitHub token autodetect, idempotent re-runs) before it calls `oh sandbox`.
 
 ### Onboard inside the sandbox
 
-After `make shell`, complete one-time GitHub auth so `git push` and `gh` work from within the container:
+After `oh shell`, start Herdr before any other inside-sandbox setup:
+
+```bash
+herdr
+```
+
+From the initial Herdr pane, complete one-time GitHub auth so `git push` and `gh` work from within the container:
 
 ```bash
 gh auth login && gh auth setup-git
 ```
 
-Then start an agent. The default is the `pi` CLI; `claude` and `codex` are also installed:
+Then start agents from Herdr panes. The default is the `pi` CLI; `claude` and `codex` are also installed:
 
 ```bash
 pi          # default agent CLI
@@ -70,13 +80,7 @@ pnpm run test:scripts   # root script + .pi extension tests
 bash .claude/skills/eval/run.sh
 ```
 
-Docs builds are intentionally excluded from fast local, PR, Harness CI, and release validation. Run them only when you explicitly need to validate the Docusaurus site:
-
-```bash
-pnpm docs:build
-```
-
-The automatic docs build/deploy gate runs only from `.github/workflows/docs.yml` on pushes to `main` or `master` that touch docs-site paths.
+The rendered docs site is maintained in [`mifunedev/openharness-web`](https://github.com/mifunedev/openharness-web). In this core repo, validate docs by checking the Markdown links and the GitHub-readable index at `docs/README.md`; no Docusaurus build runs here.
 
 ### Multi-agent messaging (Slack)
 
@@ -146,11 +150,21 @@ Example:
 FROM feat/42-slack-thread-replies TO development
 ```
 
-Link the issue in the body:
+Link the issue in the title or the body with a closing keyword:
 
 ```
 Closes #42
 ```
+
+`Closes`, `Fixes` and `Resolves` all work, and each grammatical variant works
+(`Closed`, `Fixed`, `Resolved`). List every issue the pull request completes —
+one keyword per issue. A bare `#42` links the issue but does not close it.
+
+When the pull request merges into `development`, the workflow
+[`.github/workflows/close-issues-on-development.yml`](https://github.com/mifunedev/openharness/blob/main/.github/workflows/close-issues-on-development.yml)
+closes each referenced issue as `completed`. Closing the pull request without
+merging it closes no issue. A pull request opened from a fork gets a read-only
+token, so close its issue by hand.
 
 Create the PR:
 
@@ -162,24 +176,40 @@ gh pr create --base development \
 
 ## Releases
 
-Open Harness uses CalVer versioning: `YYYY.M.D` for the first release of the day, then `YYYY.M.D-N` (N ≥ 2) for subsequent releases.
+Open Harness uses SemVer versioning: `MAJOR.MINOR.PATCH`, tagged
+`vMAJOR.MINOR.PATCH`. Root `package.json` holds the version. No other file
+records it.
 
-Releases are automated via the `/release` skill, which:
+A release is a deliberate bump, not a side effect of a push. Every push to
+`main` or `master` runs `.github/workflows/release.yml`, which validates the
+commit, then publishes the version `package.json` names:
 
-1. Computes the next version
-2. Creates a release branch
-3. Promotes `[Unreleased]` to the new version in CHANGELOG.md
-4. Tags and pushes to trigger CI
-5. Verifies the GitHub Release and GHCR image
+1. Validation, boot-path lint, and the eval probe suite must pass first
+2. The workflow reads the version from root `package.json`
+3. Creating `refs/tags/v<version>` reserves the version — this act is atomic
+4. Build and smoke-test the image
+5. Push the GHCR image tags `:<version>` and `:sha-<SHA>`, both bare — the `v`
+   prefix belongs to the git tag, not to the registry
+6. Promote `latest` by immutable digest from the canonical branch
+7. Publish the CLI
+8. Publish the GitHub Release
 
-Run the skill from inside the orchestrator sandbox:
+To cut a release, bump the version in `package.json` and add the matching
+`## [<version>]` section to `CHANGELOG.md` in the same PR, then promote
+`development` to `main`. If you push to `main` without bumping the version, the
+run is a clean, **green** no-op: the reserve step reports the version as already
+released and every publication job skips.
+
+Do **not** manually pre-create a release tag or a `release/<version>` branch.
+
+Run the release skill from inside the orchestrator sandbox:
 
 ```bash
 /release
 ```
 
-For details on the full workflow and manual procedure, see `/git`
-(`.claude/skills/git/SKILL.md`) in the repo.
+For details on the full workflow, see `/git` (`.claude/skills/git/SKILL.md`) in
+the repo.
 
 ---
 
