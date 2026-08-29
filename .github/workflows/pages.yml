@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+  # The mirror steps can now fail the build, so run it before merge rather than
+  # discovering a broken mirror only after it has been deployed. The deploy job's
+  # gates require github.ref == refs/heads/main, which a pull_request run never is,
+  # so this builds and publishes nothing.
+  pull_request:
+    branches:
+      - main
   # A release in mifunedev/openharness refreshes the mirrored get-oh.sh and oh.js
   # without anyone having to remember to push to this repo. Sending the dispatch is
   # a follow-up on the harness side and is not part of this repo's diff.
