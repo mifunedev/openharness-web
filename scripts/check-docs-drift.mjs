@@ -1,9 +1,13 @@
-// Fails when a page under docs/ describes behaviour the harness has retired.
+// Fails when authored content describes behaviour the harness has retired.
 //
 // The site keeps a hand-copied duplicate of the harness repo's docs/ and there is
 // no sync for prose, so the one-door migration sat undetected here for weeks while
 // oh.mifune.dev told new readers to run `make`. Closing that once without a
 // detector guarantees it reopens.
+//
+// promos/ is scanned for the same reason and was missed the first time: its banner
+// recipes are the source the social cards are rendered from, so a retired command
+// left there reappears the next time a card is generated.
 //
 // blog/ is deliberately not scanned. Those posts are dated records of how the
 // harness worked at the time; they carry an admonition instead of an edit.
@@ -19,7 +23,7 @@ import { dirname } from "node:path";
 import process from "node:process";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const DOCS = join(ROOT, "docs");
+const SCANNED = ["docs", "promos"];
 
 const RETIRED = [
   {
@@ -69,32 +73,39 @@ const ALLOW = [
   },
 ];
 
+const SCANNED_EXTENSIONS = [".md", ".json"];
+
 function walk(dir) {
   return readdirSync(dir).flatMap((entry) => {
     const full = join(dir, entry);
-    return statSync(full).isDirectory() ? walk(full) : full.endsWith(".md") ? [full] : [];
+    if (statSync(full).isDirectory()) return walk(full);
+    return SCANNED_EXTENSIONS.some((ext) => full.endsWith(ext)) ? [full] : [];
   });
+}
+
+function scanned() {
+  return SCANNED.flatMap((name) => walk(join(ROOT, name)).map((path) => ({ path, rel: relative(ROOT, path) })));
 }
 
 const allowed = (file, token) =>
   ALLOW.some((a) => (file === a.file || file.endsWith("/" + a.file)) && a.token === token);
 
+const pages = scanned();
 const violations = [];
-for (const path of walk(DOCS)) {
-  const rel = relative(DOCS, path);
+for (const { path, rel } of pages) {
   const lines = readFileSync(path, "utf8").split("\n");
   for (const { pattern, name, instead } of RETIRED) {
     if (allowed(rel, name)) continue;
     lines.forEach((line, i) => {
       pattern.lastIndex = 0;
       const hit = pattern.exec(line);
-      if (hit) violations.push({ file: `docs/${rel}`, line: i + 1, name, match: hit[0], instead, text: line.trim() });
+      if (hit) violations.push({ file: rel, line: i + 1, name, match: hit[0], instead, text: line.trim() });
     });
   }
 }
 
 if (violations.length > 0) {
-  console.error(`[docs-drift] ${violations.length} retired reference(s) in docs/:\n`);
+  console.error(`[docs-drift] ${violations.length} retired reference(s) in ${SCANNED.map((d) => `${d}/`).join(", ")}:\n`);
   for (const v of violations) {
     console.error(`  ${v.file}:${v.line} — ${v.name}: "${v.match}"`);
     console.error(`    ${v.text.length > 100 ? v.text.slice(0, 100) + "…" : v.text}`);
@@ -107,4 +118,4 @@ if (violations.length > 0) {
   process.exit(1);
 }
 
-console.log(`[docs-drift] PASS — ${walk(DOCS).length} pages, no retired references`);
+console.log(`[docs-drift] PASS — ${pages.length} file(s) under ${SCANNED.map((d) => `${d}/`).join(", ")}, no retired references`);

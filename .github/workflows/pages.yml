@@ -65,7 +65,7 @@ jobs:
       # Drift is caught before it lands, not after. This deliberately does NOT gate
       # the deploy: a stale doc line is worth less than a stale oh.js, and blocking
       # the scheduled rebuild would leave the mirror behind to punish a prose typo.
-      - name: Check docs for retired references
+      - name: Check docs and promos for retired references
         if: github.event_name == 'pull_request'
         run: pnpm run check:docs-drift
 

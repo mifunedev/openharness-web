@@ -38,7 +38,7 @@
       },
       {
         "prompt": "$ ",
-        "text": "make shell"
+        "text": "cd ~/.openharness && oh sandbox && oh shell"
       },
       {
         "prompt": "$ ",
