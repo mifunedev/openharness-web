@@ -18,6 +18,29 @@ pnpm build
 
 The Open Harness core repo now keeps concise GitHub-readable markdown and points readers here/DeepWiki for the rendered site experience.
 
+## Docs drift detection
+
+`docs/` is a hand-copied duplicate of the harness repo's `docs/`, and nothing syncs
+prose. That gap once let the site keep recommending `make` for weeks after the
+harness deleted its Makefile, so `scripts/check-docs-drift.mjs` fails when a page
+under `docs/` names something the harness has retired:
+
+```bash
+pnpm run check:docs-drift
+```
+
+`RETIRED` in that file is the token list. **Adding to it is how the next migration
+protects itself** — when you remove a command, file, or knob from the harness, add
+its name there in the same change. A page that names a retired thing *in order to
+say it is retired* gets a per-file, per-token entry in `ALLOW` with its reason.
+
+`blog/` is deliberately not scanned. Those posts are dated records; they carry an
+admonition rather than an edit.
+
+The check runs on pull requests only. It does **not** gate the deploy: a stale doc
+line is worth less than a stale `oh.js`, and blocking the scheduled rebuild would
+hold the mirror back to punish a prose typo.
+
 ## The script mirror
 
 Three paths under the site root serve executable content that users pipe into a
