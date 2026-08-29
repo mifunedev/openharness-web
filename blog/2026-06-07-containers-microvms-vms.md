@@ -7,6 +7,16 @@ tags: [agents, docker, firecracker, security]
 slug: containers-microvms-vms
 ---
 
+:::note[Written before the one-door migration]
+
+This post dates from 2026-06-07 and is kept as a record of how Open Harness worked then. It
+predates the v0.5.x migration that removed the `Makefile` and made the `oh` CLI the only
+lifecycle door, so the `make ...` commands below no longer exist. The steps still
+describe the right *shape* of the workflow; for commands that run today, see the
+[Quickstart](/docs/quickstart) and the [lifecycle command reference](/docs/lifecycle-commands).
+
+:::
+
 Open Harness runs every coding agent inside a Docker container — one sandbox per repo, your workspace bind-mounted in, the agent free to thrash around without ever touching your laptop. That a container beats a full VM for this was already settled. What I spent last week researching was the next contender: whether a Firecracker **microVM** should *replace* the container underneath it.
 
 The honest answer was no — not because the microVM is weak, but because it's built for a job Open Harness doesn't do yet (running untrusted agents for many tenants on shared hardware) and is a worse fit for the one it does. Chasing that down only reinforced the container as the right default: the instant, live-editable sandbox you get the moment you point the harness at a repo is exactly what a microVM would take away. Getting there forced me to lay out the three ways you can put a box around an AI agent — a full VM, a container, and the microVM in between — so here's the whole mental model.

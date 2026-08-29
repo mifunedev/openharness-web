@@ -39,7 +39,7 @@ INSTALL_GROK_BUILD=true
 Then rebuild/restart the sandbox:
 
 ```bash
-make stop && make sandbox
+oh stop && oh sandbox
 ```
 
 Open Harness uses the upstream installer during image build, pinned to the version verified when this support was added:
@@ -56,7 +56,7 @@ curl -fsSL -o grok-install.sh https://x.ai/cli/install.sh
 bash grok-install.sh 0.2.39
 ```
 
-If you already use [`vet`](https://github.com/vet-run/vet), `vet https://x.ai/cli/install.sh 0.2.39` gives the same third-party installer a fetch/review/approve gate. `vet` is optional and is not required by Open Harness.
+If you already use [`vet`](https://github.com/vet-run/vet), `vet https://x.ai/cli/install.sh 0.2.39` gives the same third-party installer a fetch, review, and approve gate. `vet` is optional and is not required by Open Harness.
 
 Verify the install inside the sandbox:
 
@@ -120,7 +120,7 @@ Open Harness mounts the `grok-auth` named volume at `/home/sandbox/.grok` (`~/.g
 - logs
 
 :::warning Volume removal deletes Grok state
-`make destroy` and `docker compose down -v` remove named volumes, including `grok-auth`. Use `make stop` when you want Grok Build state under `~/.grok` to survive.
+`oh destroy` and `docker compose down -v` remove named volumes, including `grok-auth`. Use `oh stop` when you want Grok Build state under `~/.grok` to survive.
 :::
 
 ## Dangerous flags

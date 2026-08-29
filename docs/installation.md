@@ -5,17 +5,17 @@ title: "Installation"
 
 # Installation
 
-Open Harness is a portable harness — a single repo that boots an isolated Docker sandbox for your project. Installation clones the repo and runs `docker compose` against `.devcontainer/docker-compose.yml` — no host CLI, agent, or Node toolchain is *required* on the host. A standalone `oh` CLI is available if you want it (see [Standalone CLI](#standalone-cli-oh-equip-an-existing-repo) below); it is the only door in a repo equipped by `oh init`, which has no Makefile. [Lifecycle commands](/docs/lifecycle-commands) says which is canonical where. For a no-checkout, no-build alternative, see the [Docker deployment guide](/docs/docker-deployment).
+Open Harness is a portable harness that boots an isolated Docker sandbox for your project. The `oh` CLI is the only front door: it equips a repo (`oh init`), provisions the sandbox (`oh sandbox`), and drives the rest of the lifecycle. Two shapes exist — clone **this** repo and own it, or equip a project repo you already have — and both use the same commands. See [lifecycle commands](lifecycle-commands.md) for the verb reference.
 
 ## Prerequisites
 
 | Dependency | Required for | Install |
 |---|---|---|
 | Docker (with Compose plugin) | Sandbox image | [docs.docker.com/get-docker](https://docs.docker.com/get-docker/) |
-| git | Cloning the repo | [git-scm.com](https://git-scm.com/) |
-| make (build-essential) | The `make sandbox` / `make shell` / `make destroy` wrappers around `docker compose` (see [Lifecycle commands](/docs/lifecycle-commands)) | `sudo apt-get install build-essential` (Debian/Ubuntu) · Xcode Command Line Tools (macOS) |
+| git | Cloning a repo, and `oh init --from-remote` | [git-scm.com](https://git-scm.com/) |
+| Node.js ≥ 20 (22 recommended) | Running the `oh` CLI itself | [nodejs.org](https://nodejs.org/) — or let [`get-oh.sh`](#standalone-cli-oh-equip-an-existing-repo) install nvm + Node 22 for you |
 
-That is the entire host requirement. Node.js, pnpm, and any AI CLI live inside the sandbox.
+That is the entire host requirement. Node runs `oh` and nothing else: pnpm, Python, and every AI CLI live inside the sandbox.
 
 ## Self-hosting: I already have a clone
 
@@ -26,19 +26,23 @@ cd <your-clone>
 bash .oh/scripts/install.sh
 ```
 
-The installer prompts for `SANDBOX_NAME`, writes `.devcontainer/.env`, and starts the sandbox. No `OH_GITHUB_REPO` environment variable required.
+The installer prompts for sandbox name, timezone, git identity and optional installs, writes the non-secrets to the tracked `oh.json` and any secrets to the gitignored root `.env`, and starts the sandbox. No `OH_GITHUB_REPO` environment variable required.
 
 ### Fork-and-clone
 
 1. Fork `mifunedev/openharness` on GitHub.
 2. Clone your fork:
    ```bash
-   git clone https://github.com/<your-org>/<your-fork>.git && cd <your-fork>
+   git clone --recurse-submodules https://github.com/<your-org>/<your-fork>.git && cd <your-fork>
    ```
 3. Run the installer — it detects the local clone automatically:
    ```bash
    bash .oh/scripts/install.sh
    ```
+   The installer requires Node.js ≥ 20 and installs `oh`, bootstrapping Node via
+   nvm if it is missing, so it no longer leaves you with a Node-free host. Your
+   answers are written to `oh.json` (see [Configuration](./configuration.md)); the
+   gitignored `.env` receives only secrets.
 
 ### Clone-and-own: private origin and upstream (recommended)
 
@@ -48,24 +52,35 @@ pull framework updates and open PRs back. Creating the private repo and setting 
 remotes happens **inside the sandbox**, after GitHub auth, so the SSH key generated
 there is the one used for pushes.
 
-1. Clone upstream, edit `.devcontainer/.env`, then bring the sandbox up and open a shell:
+1. Clone upstream, edit `oh.json` and the local `.env`, then bring the sandbox up and open a shell (`oh` from npm or `get-oh.sh` — see [Standalone CLI](#standalone-cli-oh-equip-an-existing-repo)):
    ```bash
    git clone --recurse-submodules https://github.com/mifunedev/openharness.git ~/.openharness
    cd ~/.openharness
-   cp .devcontainer/.example.env .devcontainer/.env   # tracked template -> local gitignored config
-   nano .devcontainer/.env   # set SANDBOX_NAME, TZ, GIT_USER_NAME/GIT_USER_EMAIL,
-                       # optional installs — see Quickstart → Configuration. Do this BEFORE building.
-   make sandbox        # build + start the container (~10 min cold)
-   make shell          # attach as the sandbox user
+   nano oh.json        # non-secrets: name, timezone, git identity, install.* —
+                       # see Configuration. Do this BEFORE building.
+   cp .env.example .env && chmod 600 .env   # secrets only; gitignored
+   nano .env           # GH_TOKEN, SANDBOX_PASSWORD, … (or use `oh secret set`)
+   oh sandbox        # build + start the container (~10 min cold)
+   oh shell          # attach as the sandbox user
+   herdr              # first inside-sandbox command
    ```
-2. **Inside the sandbox**, authenticate GitHub over SSH — choose SSH as the protocol
+2. **Inside the initial Herdr pane**, authenticate GitHub over SSH — choose SSH as the protocol
    and let `gh` generate a key (details: [GitHub auth](./integrations/github.md)):
    ```bash
    gh auth login       # GitHub.com → SSH → generate a new SSH key → paste a token
    gh auth setup-git
    ```
 3. Still inside the sandbox, create your own **private** repo, make it `origin`, and
-   add upstream — all over SSH so the key from step 2 is used:
+   keep the upstream you cloned from — all over SSH so the key from step 2 is used:
+   ```bash
+   oh config repo
+   ```
+   `oh config repo` asks for the owner, name, and visibility (default private), then
+   creates the repo, renames the existing `origin` to `openharness`, points `origin`
+   at yours, and pushes. It never runs unless you answer yes in that run: `oh init
+   --yes`, `--dry-run`, and any non-interactive shell skip it. If `gh` is missing or
+   unauthenticated it prints these commands instead of running them — the manual
+   fallback, which names the preserved upstream remote `upstream`:
    ```bash
    gh repo create <your-user>/openharness --private
    git remote set-url origin git@github.com:<your-user>/openharness.git
@@ -77,7 +92,7 @@ there is the one used for pushes.
 
 > Prefer HTTPS or an installer-driven bring-up? Re-point origin to your repo with
 > `git remote set-url origin https://github.com/<your-org>/<your-repo>.git` and run
-> `bash .oh/scripts/install.sh` instead of `make sandbox` — the installer detects the
+> `bash .oh/scripts/install.sh` instead of `oh sandbox` — the installer detects the
 > local clone automatically.
 
 ## One-line installer (upstream only)
@@ -96,16 +111,16 @@ curl -fsSL -o openharness-install.sh https://oh.mifune.dev/install.sh
 bash openharness-install.sh
 ```
 
-Open Harness requires Docker with Compose, Git, and make (see [Prerequisites](#prerequisites)).
+Open Harness requires Docker with Compose, Git, and Node.js ≥ 20 (see [Prerequisites](#prerequisites)). The installer bootstraps Node itself when it is missing.
 
 The installer:
 
-1. Verifies Docker and git are present (warns if `make`, used by the lifecycle targets, is missing).
+1. Verifies Docker and git are present, and installs Node ≥ 20 and the `oh` CLI when they are missing.
 2. Clones the repo into `~/.openharness` (or pulls latest if the directory already exists).
-3. Prompts for `SANDBOX_NAME`, then writes `.devcontainer/.env`.
-4. Creates `.devcontainer/.env` from `.devcontainer/.example.env` when missing (all keys commented — inert until you edit).
-5. Runs `docker compose -f .devcontainer/docker-compose.yml up -d --build`.
-6. Prints the next-step commands (open a shell, stop, tear down).
+3. Prompts for sandbox name, timezone, git identity and optional installs, then writes the non-secrets to the tracked `oh.json`.
+4. Creates the gitignored, mode-`0600` root `.env` from the tracked `.env.example` when missing (all keys commented — inert until you edit), and links `.devcontainer/.env` to it so VS Code "Reopen in Container" reads the same file. Non-secret settings stay in the tracked `oh.json`.
+5. Provisions the sandbox (`oh sandbox`, i.e. `docker compose … up -d --build`).
+6. Prints the next-step `oh` commands (open a shell, stop, tear down).
 
 ### Environment overrides
 
@@ -137,7 +152,7 @@ curl -fsSL -o openharness-install.sh \
 OH_GITHUB_REPO=<your-org>/<your-fork> bash openharness-install.sh
 ```
 
-If your fork uses a default branch other than `main`, set `OH_GITHUB_REF=<branch>` and replace `main` in the URL. Forks restructuring `.devcontainer/` should also patch the local-run detection in `.oh/scripts/install.sh` (the `-f .devcontainer/docker-compose.yml` check) to match the new layout.
+If your fork uses a default branch other than `main`, set `OH_GITHUB_REF=<branch>` and replace `main` in the URL. Forks restructuring the build assets should also patch the local-run detection in `.oh/scripts/install.sh` (the `-f .devcontainer/docker-compose.yml` check) to match the new layout.
 
 ## Manual installation
 
@@ -147,25 +162,27 @@ Use this path when you want more control or are setting up a CI environment.
 
 ```bash
 # Forkers: substitute your fork URL here.
-git clone https://github.com/mifunedev/openharness.git
+git clone --recurse-submodules https://github.com/mifunedev/openharness.git
 cd openharness
 ```
 
 ### 2. Configure the environment
 
 ```bash
-cp .devcontainer/.example.env .devcontainer/.env
+cp .env.example .env && chmod 600 .env
 ```
 
-Edit `.devcontainer/.env` and set your `SANDBOX_NAME` and any optional tokens. See the comments in `.example.env` for all available variables.
+Edit `oh.json` for non-secret settings — `name`, `timezone`, `git`, `install.*`, `access.*` — and `.env` for secrets such as `GH_TOKEN`. See [Configuration](./configuration.md) for the field reference, and the comments in `.env.example` for every allow-listed secret.
 
 ### 3. Build and start the sandbox
 
 ```bash
-docker compose -f .devcontainer/docker-compose.yml up -d --build
+oh sandbox
 ```
 
-On a cold Docker cache the build takes around ten minutes; subsequent starts are a few seconds. See the [Docker deployment guide](/docs/docker-deployment) for the no-checkout, no-build alternative.
+`oh sandbox` runs `.oh/scripts/docker-compose.sh up -d --build`, which resolves the compose overlays your `oh.json` selects. Running `docker compose -f .devcontainer/docker-compose.yml up -d --build` by hand skips that resolution and applies **no** overlays.
+
+On a cold Docker cache the build takes around ten minutes; subsequent starts are a few seconds. To skip the build entirely and pull the prebuilt release image instead, see [Prebuilt-image deployment](/docs/docker-deployment) (`docker compose … up -d --no-build` with `OH_SANDBOX_IMAGE` set, or `oh sandbox --image`).
 
 Check the sandbox health before attaching:
 
@@ -179,22 +196,14 @@ A healthy sandbox reports the tmux-managed runtime sessions (`cron-watchdog` and
 ### 4. Open a shell
 
 ```bash
-docker exec -it -u sandbox openharness zsh
+oh shell
 ```
 
-Replace `openharness` with whatever you set as `SANDBOX_NAME`.
+Pass a container name to attach to a different one, e.g. `oh shell portfolio-advisor`.
 
 ## Standalone CLI (`oh`): equip an existing repo
 
-Every path above clones the harness repo itself and keeps the host toolchain-free — no Node required. The standalone `oh` CLI path is different: it equips **your existing project repo** with the harness and drives the sandbox without keeping an OpenHarness checkout around. This path — and only this path — requires on the host:
-
-| Dependency | Required for |
-|---|---|
-| Node.js ≥ 20 (22 recommended) | Running the `oh` binary (`get-oh.sh` offers to install nvm + Node 22 if missing) |
-| git | The on-demand scaffold-payload fetch for `oh init` / `oh update` |
-| Docker (with Compose plugin) | `oh sandbox` / `oh shell` |
-
-`make` is **not** needed here — the verbs wrap the vendored `.oh/scripts/` directly.
+Every path above clones the harness repo itself. The standalone `oh` CLI path is different: it equips **your existing project repo** with the harness and drives the sandbox without keeping an OpenHarness checkout around. The host requirements are the same [Prerequisites](#prerequisites) as every other path — Docker, git, and Node ≥ 20.
 
 **Get the `oh` command from npm (recommended if you have Node):** the CLI is published as [`@mifune/openharness`](https://www.npmjs.com/package/@mifune/openharness). If Node.js ≥ 20 is already on your host, install it globally or run it zero-install:
 
@@ -206,82 +215,84 @@ npx @mifune/openharness init
 
 The published package is the same single self-contained bundle — `oh init`/`oh update` fetch their scaffold payload on demand (no repo clone). npm does **not** install Node; Node ≥ 20 must already be on your PATH (that is exactly what `get-oh.sh` bootstraps below).
 
-**No npm, or no Node yet?** Bootstrap with `get-oh.sh` instead. It installs the single self-contained `oh` binary to `~/.local/bin/oh` — **no repo clone**, and it does not touch an existing `~/.openharness` sandbox. It prefers a prebuilt bundle (`oh.mifune.dev/oh.js`) and offers to install nvm + Node 22 if Node ≥ 20 is missing (sourcing it so `oh` works in the same shell):
+**No npm, or no Node yet?** Bootstrap with `get-oh.sh` instead. It installs the single self-contained `oh` binary to `~/.local/bin/oh` — **no repo clone**, and it does not touch an existing `~/.openharness` sandbox. It prefers a prebuilt bundle (`oh.mifune.dev/oh.js`) and falls back to building from source in a temp dir. If Node.js ≥ 20 is missing, it offers to install nvm + Node 22 and sources it so `oh` works in the same shell. `oh init` fetches its scaffold payload on demand.
+
+For a review-first install, download and inspect the script before you run it.
+The review-first alternative appears below.
 
 ```bash
 curl -fsSL https://oh.mifune.dev/get-oh.sh | bash
-# ...or put `oh` on the current shell's PATH immediately:
+```
+
+**Use `oh` immediately in the current shell** — `source` the installer instead of piping to `bash` so it installs *and* puts `oh` on your PATH in the running shell (no new terminal, no re-login):
+
+```bash
 source <(curl -fsSL https://oh.mifune.dev/get-oh.sh)
 ```
 
-Then equip any project:
+If you already used the plain `curl … | bash` form and `oh` isn't found yet, add its install dir to the current shell's PATH: `export PATH="$HOME/.local/bin:$PATH"`.
+
+Review-first alternative (no extra dependency):
+
+```bash
+curl -fsSL -o get-oh.sh https://oh.mifune.dev/get-oh.sh
+# Review get-oh.sh in your editor or pager before running it.
+bash get-oh.sh
+```
+
+Environment overrides: `OH_BIN_DIR=<dir>` (install location, default `~/.local/bin`), `OH_JS_URL=<url>` (prebuilt bundle URL), `OH_GITHUB_REPO=<org>/<fork>` / `OH_GITHUB_REF=<ref>` (source for the build fallback), `OH_NVM_VERSION=<tag>` (nvm version for the Node install), `--yes`/`--no` (auto-accept/decline the Node-install prompt).
+
+**From an existing checkout (no bootstrap script):** `cd .oh/cli && npm install && npm run build`, then put `dist/oh.js` on your PATH as `oh`.
+
+Then, in any project:
 
 ```bash
 cd <your-project>
-oh init            # equip the repo (fetches scaffold payload on demand — no repo clone)
-oh sandbox         # provision + start the sandbox (docker compose up -d --build)
-oh shell           # zsh in the running container (or: oh shell <container>)
-oh stop            # stop the container, keeping volumes
-oh restart         # restart it
-oh logs            # follow the container logs (oh logs -- --tail 50 forwards extra args)
-oh ps              # show container status
-oh gateway status  # manage messaging client sessions (pi|hermes)
+oh init                 # equip the repo — vendors the .oh/ payload from the local
+                        # clone (offline). Use --from-remote to shallow-clone a
+                        # fresh payload instead; pin a version with --ref <tag|branch>
+oh sandbox              # provision + start the sandbox (docker compose up -d --build)
+oh sandbox --image      # ...or pull the prebuilt release image and skip the local build
+oh shell                # zsh in the running container (or: oh shell <container>)
+oh gateway status       # manage messaging client sessions (pi|hermes)
 ```
 
-The four lifecycle verbs are 1:1 with the `make` targets of the same name, and an
-equipped repo has no Makefile — so in that repo they are the only way to reach them.
-[Lifecycle commands](/docs/lifecycle-commands) is the full mapping, including the
-three verbs deliberately left out.
+`oh sandbox --image` (and the `OH_SANDBOX_IMAGE` key in `.devcontainer/.env`) run the
+published `ghcr.io/mifunedev/openharness` image instead of building locally — see
+[Prebuilt-image deployment](/docs/docker-deployment).
 
-Three catalog commands inspect and extend a running sandbox without a rebuild:
-
-```bash
-oh harness list                  # agent CLIs
-oh harness install opencode
-oh tool list                     # tooling that is neither an agent nor a runtime
-oh tool install agent-browser
-oh runtime list                  # the isolation runtime underneath
-oh runtime status docker
-```
-
-See [Harnesses](/docs/harnesses/overview#installing-a-harness) for what `oh harness`
-installs, and [Runtimes](/docs/runtimes/overview) for what `oh runtime` measures — and
-why it selects nothing.
-
-The separate [Docker deployment guide](/docs/docker-deployment) runs the public image without equipping a host repository. Repos equipped this way mount your project at `/home/sandbox/project` inside the sandbox (the clone paths above use `/home/sandbox/harness`). Upgrade the vendored `.oh/` later with `oh update` (offline: `oh init --from <local-checkout>`).
+`--from-remote` fetches over public HTTPS only — private or credential-prompting remotes fail fast (`GIT_TERMINAL_PROMPT=0`); offline, use `oh init --from <local-checkout>` instead. Repos equipped this way mount your project at `/home/sandbox/project` inside the sandbox (the clone paths above use `/home/sandbox/harness`). Upgrade the vendored `.oh/` later with `oh update --from-remote [--ref <ref>]`.
 
 ## Next step
 
-Once installed, proceed to the [Quickstart](./quickstart) to authenticate inside the sandbox and start an agent.
+Once installed, proceed to the [Quickstart](./quickstart.md) to authenticate inside the sandbox and start an agent.
 
 ## What's Installed
 
-The sandbox image ships a complete development environment. The required host dependencies are Docker with the Compose plugin, Git, and make (see [Prerequisites](#prerequisites)).
+The sandbox image ships a complete development environment. The required host dependencies are Docker with the Compose plugin, Git, and Node.js ≥ 20 (see [Prerequisites](#prerequisites)).
 
-Project-local Pi packages are loaded from `.pi/settings.json`; the defaults include `@tintinweb/pi-subagents`, `@tintinweb/pi-tasks`, `@narumitw/pi-goal`, `@narumitw/pi-plan-mode`, `@narumitw/pi-codex-usage@0.6.2` for `/codex-status` plus fixed statusline usage timers, `@tifan/pi-recap` for `/recap` plus automatic idle/resume session summaries, `@trevonistrevon/pi-loop` for Monitor/Loop tools, `@guwidoe/pi-prompt-suggester` for next-prompt suggestions, `pi-autoresearch` for autonomous metric-optimization loops, and `pi-dynamic-workflows` for workflow-script fan-out through isolated Pi subagents.
+Project-local Pi packages are loaded from `.pi/settings.json`; the defaults include `@tintinweb/pi-subagents`, `@tintinweb/pi-tasks`, `@narumitw/pi-goal`, `@narumitw/pi-plan-mode`, `@narumitw/pi-codex-usage@0.6.2` for `/codex-status` plus fixed statusline usage timers, `@tifan/pi-recap` for `/recap` plus automatic idle/resume session summaries, `@trevonistrevon/pi-loop` for Monitor/Loop tools, `@guwidoe/pi-prompt-suggester` for next-prompt suggestions, and `pi-dynamic-workflows` for workflow-script fan-out through isolated Pi subagents.
 
 ### Base image
 
-Debian Bookworm (slim). The `sandbox` user has passwordless sudo.
+Debian Trixie (slim), the current Debian stable. The `sandbox` user has passwordless sudo.
+
+Docker's apt repository tracks the `trixie` suite. Cloudflare's stays on `bookworm`: Cloudflare publishes no Trixie suite (`pkg.cloudflare.com/cloudflared/dists/trixie` returns HTTP 404) and its Bookworm `cloudflared` package runs on Trixie.
 
 ### AI agent CLIs
 
-Default CLIs are always present. Optional CLIs are excluded from the default image and installed at image build time when their `INSTALL_*` key in `.devcontainer/.env` is enabled.
+Default CLIs are always present. Optional CLIs are excluded from the default image; `oh harness install <name>` flips the matching `install.*` field in `oh.json` and installs it.
 
 | Tool | Command | Source | Status |
 |------|---------|--------|--------|
 | Claude Code | `claude` | Anthropic's coding agent (aliased to `claude --dangerously-skip-permissions`) | default |
 | OpenAI Codex | `codex` | OpenAI's coding agent (aliased to `codex --dangerously-bypass-approvals-and-sandbox`) | default |
 | Pi | `pi` | `@earendil-works/pi-coding-agent` — local-first coding agent (was `@mariozechner/pi-coding-agent`, now deprecated) | default |
-| OpenCode | `opencode` | `opencode-ai` — terminal coding agent with OpenAI OAuth support | optional: `oh harness install opencode`, or set `INSTALL_OPENCODE=true` in `.devcontainer/.env` |
-| DeepAgents | `deepagents` | LangChain's multi-provider terminal agent (`deepagents-cli` via `uv tool install`) | optional: `oh harness install deepagents`, or set `INSTALL_DEEPAGENTS=true` in `.devcontainer/.env` |
-| Hermes | `hermes` | Nous Research's self-improving agent CLI | optional: `oh harness install hermes`, or set `INSTALL_HERMES=true` in `.devcontainer/.env` |
-| Grok Build | `grok` | xAI's proprietary Grok Build CLI (`@xai-official/grok@0.2.39`, Node >=20) | optional: `oh harness install grok-build`, or set `INSTALL_GROK_BUILD=true` in `.devcontainer/.env` |
-| agent-browser | `agent-browser` | Headless Chromium for web-capable agents | optional: `oh tool install agent-browser`, or set `INSTALL_AGENT_BROWSER=true` in `.devcontainer/.env` |
-
-**agent-browser is the one opt-in tool.** It is not in the image;
-`oh tool install agent-browser` fetches it (~1 GB with Chromium) into the running
-sandbox and sets the `.devcontainer/.env` flag so it survives the next build.
+| OpenCode | `opencode` | `opencode-ai` — terminal coding agent with OpenAI OAuth support | optional: `oh harness install opencode` |
+| DeepAgents | `deepagents` | LangChain's multi-provider terminal agent (`deepagents-cli` via `uv tool install`) | optional: `oh harness install deepagents` |
+| Hermes | `hermes` | Nous Research's self-improving agent CLI | optional: `oh harness install hermes` |
+| Grok Build | `grok` | xAI's proprietary Grok Build CLI (`@xai-official/grok@0.2.39`, Node >=20) | optional: `oh harness install grok-build` |
+| agent-browser | `agent-browser` | Headless Chromium for web-capable agents | optional: `oh tool install agent-browser` |
 
 ### Runtimes & package managers
 
@@ -294,15 +305,16 @@ sandbox and sets the `.devcontainer/.env` flag so it survives the next build.
 
 ### DevOps & infrastructure
 
-`oh tool list` reports which of these are present, and `oh tool status <name>` adds a
-version where the tool has a verified version flag. They are baked into the image, so
-there is nothing to install.
+`oh tool list` reports which of these are present, and `oh tool status <name>`
+adds a version where the tool has a verified version flag. They are baked into
+the image, so there is nothing to install.
 
 | Tool | Purpose |
 |------|---------|
-| Docker CLI + Compose | Container management from inside the sandbox (host docker socket is opt-in, off by default — enable via `DOCKER_SOCKET=true`) |
+| Herdr (`herdr`) | Default multi-agent terminal workspace; state persists across rebuilds in dedicated volumes |
+| Docker CLI + Compose | Container management from inside the sandbox (host docker socket bind-mounted by the base compose) |
 | GitHub CLI (`gh`) | PRs, issues, releases from the terminal |
-| cloudflared | Cloudflare Tunnel client, for exposing a sandbox port |
+| cloudflared | Cloudflare Tunnel client, for exposing a sandbox port (see the `/cloudflared` skill) |
 | tmux | Detachable terminal sessions for long-running agents |
 | croner | Markdown-frontmatter cron scheduler for autonomous agent tasks |
 
@@ -314,6 +326,9 @@ there is nothing to install.
 | jq | JSON processing |
 | ripgrep (`rg`) | Fast code search |
 | curl, wget | HTTP clients |
+| lsof | Inspect open files and the processes using them inside the sandbox |
+| htop | Interactive process viewer for the sandbox |
+| telnet | Plaintext network diagnostic client supplied by `inetutils-telnet`; not SSH or a secure shell |
 | nano | Text editor |
 | openssh-client | `ssh-keygen` for GitHub auth flows |
 | bash-completion | Tab completion |
@@ -329,20 +344,22 @@ codex   → codex --dangerously-bypass-approvals-and-sandbox
 
 ### Persistent volumes
 
-Auth credentials survive container rebuilds via named Docker volumes:
+Auth credentials and Herdr workspace state survive container rebuilds via named Docker volumes:
 
 - `claude-auth` → `~/.claude` (Claude Code OAuth)
 - `codex-auth` → `~/.codex` (Codex OAuth)
 - `opencode-auth` → `~/.local/share/opencode` (OpenCode OAuth; `auth.json`)
 - `pi-auth` → `~/.pi` (Pi Agent OAuth)
-- `deepagents-auth` → `~/.deepagents` (DeepAgents provider keys, memory, skills, sessions; used when DeepAgents is enabled (`INSTALL_DEEPAGENTS=true` in `.devcontainer/.env`)). Repo-local `.deepagents/` is **project data** and follows normal `.gitignore` and code-review rules — never put secrets there.
-- `hermes-auth` → `~/.hermes` (Hermes auth only; non-auth runtime state defaults to project-local `~/harness/.hermes` when Hermes is enabled (`INSTALL_HERMES=true` in `.devcontainer/.env`))
-- `grok-auth` → `~/.grok` (all Grok Build user state: auth, config, sessions, memory, skills/plugins, logs; mounted alongside the other agent auth volumes and used by Grok Build when `INSTALL_GROK_BUILD=true` in `.devcontainer/.env`). Cached OAuth/session state in `~/.grok/auth.json` takes precedence over `XAI_API_KEY`; if an API key seems ignored, run `grok logout` or reset the volume.
+- `deepagents-auth` → `~/.deepagents` (DeepAgents provider keys, memory, skills, sessions; used when DeepAgents is enabled (`install.deepagents: true` in `oh.json`)). Repo-local `.deepagents/` is **project data** and follows normal `.gitignore` and code-review rules — never put secrets there.
+- `hermes-auth` → `~/.hermes` (Hermes auth only; non-auth runtime state defaults to project-local `~/harness/.hermes` when Hermes is enabled (`install.hermes: true` in `oh.json`))
+- `grok-auth` → `~/.grok` (all Grok Build user state: auth, config, sessions, memory, skills/plugins, logs; mounted alongside the other agent auth volumes and used by Grok Build when `install.grokBuild: true` in `oh.json`). Cached OAuth/session state in `~/.grok/auth.json` takes precedence over `XAI_API_KEY`; if an API key seems ignored, run `grok logout` or reset the volume.
 - `cloudflared-auth` → `~/.cloudflared` (Cloudflare tunnel credentials, when used)
-- `gh-config` → `~/.config/gh` (GitHub CLI tokens)
+- `ssh-config` → `~/.ssh` (user SSH keys / known_hosts; entrypoint enforces `chmod 700`)
+- `config-dir` → `~/.config` (all XDG tool config, including the GitHub CLI tokens under `~/.config/gh` and Herdr settings)
+- `herdr-data` → `~/.herdr` (Herdr-created worktrees and related data; session metadata is under `~/.config/herdr`)
 
-Hermes is split: when Hermes is enabled (`INSTALL_HERMES=true` in `.devcontainer/.env`), `HERMES_HOME` defaults to the project-local bind-mounted `~/harness/.hermes/` directory, while auth remains in the `~/.hermes` named volume and is linked into the project-local home as `auth.json`. The entrypoint links `.hermes/skills/openharness` to the tracked shared skill directory (`.mifune/skills/`) so Hermes sees the same harness skills as Claude, Codex, and Pi without copying them into runtime state. Project-local runtime contents are gitignored except `.hermes/README.md`; `make destroy` removes the auth volume but not the bind-mounted project runtime directory.
+Hermes is split: when Hermes is enabled (`install.hermes: true` in `oh.json`), `HERMES_HOME` defaults to the project-local bind-mounted `~/harness/.hermes/` directory, while auth remains in the `~/.hermes` named volume and is linked into the project-local home as `auth.json`. The entrypoint links `.hermes/skills/openharness` to the tracked shared skill directory (`.oh/skills/`) so Hermes sees the same harness skills as Claude, Codex, and Pi without copying them into runtime state. Project-local runtime contents are gitignored except `.hermes/README.md`; `oh destroy` removes the auth volume but not the bind-mounted project runtime directory.
 
-`make destroy` and `docker compose down -v` remove named volumes, including `grok-auth`; use `make stop` when you want Grok Build credentials and state to survive.
+`oh destroy` and `docker compose down -v` remove named volumes, including Herdr state and provider credentials; use `oh stop` when you want them to survive.
 
-Downstream harness packs and Pi extensions can introduce additional volumes or bind-mount overlays by adding paths to `composeOverrides[]` in `.oh/config.json` (gitignored). That list is the one place overlay paths live — `.env` cannot hold a list, which is why `.oh/config.json` survived the collapse of every other config surface.
+Downstream harness packs and Pi extensions can introduce additional volumes or bind-mount overlays by adding paths to `composeOverrides[]` in the tracked `oh.json`. That list is the one place overlay paths live, and only `oh` applies it: VS Code "Reopen in Container" reads `.devcontainer/docker-compose.yml` alone and applies [no overlays at all](lifecycle-commands.md#vs-code-reopen-in-container-applies-no-overlays).
