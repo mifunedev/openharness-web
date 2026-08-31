@@ -9,8 +9,19 @@
 // recipes are the source the social cards are rendered from, so a retired command
 // left there reappears the next time a card is generated.
 //
-// blog/ is deliberately not scanned. Those posts are dated records of how the
-// harness worked at the time; they carry an admonition instead of an edit.
+// blog/ is not scanned. Those posts are dated records of how the harness worked
+// at the time, and the site's policy is an admonition rather than an edit.
+//
+// That policy has a known limit, hit by the single-home-mount migration: an
+// admonition reading "these commands no longer apply" still leaves a reader
+// copy-pasting a deployment recipe that silently loses their state, and one
+// post's central claim (shared logins, separate workspaces) had become
+// impossible rather than merely dated. Those two posts therefore carry
+// corrected commands as well as their admonition.
+//
+// Turning the scan on for blog/ would make that the site-wide rule. It is a
+// one-word change here, and it currently reports 12 pre-existing hits in the
+// two Makefile-era posts. That is an editorial decision, not a mechanical one.
 //
 // ── Adding to RETIRED is how the next migration protects itself. ──
 // When you remove a command, a file, or a configuration knob from the harness,
