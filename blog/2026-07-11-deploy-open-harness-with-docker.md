@@ -16,7 +16,11 @@ current form and is safe to copy. The narrative is unchanged.
 One claim did change. Two sandboxes sharing auth volumes while keeping separate workspaces
 is no longer possible on this image-only path — the workspace now lives *inside* the home
 mount, so B either has its own home (its own logins) or shares A's entirely. The section on
-sandbox B says so. See [Installation](/docs/installation) and the
+sandbox B says so.
+
+A section on provisioning from the CLI has also been added. Optional harnesses used to be a
+`--build-arg` and a fresh image; `oh harness install` now adds one to a container that is
+already running. See [Installation](/docs/installation) and the
 [Docker deployment guide](/docs/docker-deployment).
 
 :::
@@ -105,6 +109,32 @@ docker exec oh-b test ! -e /home/sandbox/harness/.sandbox-a-only \
 docker exec oh-a rm /home/sandbox/harness/.sandbox-a-only
 ```
 
+## Provision from the CLI once it is running
+
+Both recipes above deliberately run the stock published image. Anything it does not ship —
+another agent CLI, a headless browser, a tunnel client — goes in from inside the container,
+with no rebuild and no recreate:
+
+```bash
+docker exec -it -u sandbox oh-a zsh
+
+oh harness list                 # known agent CLIs, and their installed state
+oh harness install opencode     # into the running sandbox
+oh tool list                    # non-agent tooling
+oh tool install agent-browser   # ~1 GB — it confirms first
+```
+
+`install` does both halves: it writes `install.*` into the tracked `oh.json` so the choice
+survives a recreate, **and** installs into the container you are in. `--persist-only`
+records the choice without touching the container; `--no-persist` does the reverse. The same
+command works from the host against a running sandbox; with the sandbox stopped it records
+the flag, says so, and exits 0 rather than failing.
+
+This is why `SANDBOX_NAME` is set on every recipe on this page and not just for cosmetics:
+`oh` decides it is *inside* a sandbox from `/.dockerenv` plus a non-empty `SANDBOX_NAME`.
+Drop it and `oh` concludes it is on a host and goes looking for the container through Docker
+Compose instead of installing locally.
+
 ## Compose equivalent
 
 Compose is not required, but it records the same run as a file you can commit. This file starts sandbox A on the `openharness` network, and adds a fifth auth volume for Hermes.
@@ -128,7 +158,6 @@ services:
       SANDBOX_NAME: oh-a
       GIT_USER_NAME: ${GIT_USER_NAME:-<your-name>}
       GIT_USER_EMAIL: ${GIT_USER_EMAIL:-<you@example.com>}
-      INSTALL_HERMES: "true"
       HERMES_HOME: /home/sandbox/.hermes
     volumes:
       - oh-a-workspace:/home/sandbox
@@ -154,6 +183,12 @@ docker compose exec -u sandbox oh-a zsh
 Compose creates the network and the named volume on the first `up`, so the `docker network create` step is not needed. Add sandbox B as a second service: copy the `oh-a` block, set the service name, `container_name`, `hostname`, and `SANDBOX_NAME` to `oh-b`, and mount `oh-b-workspace` instead of `oh-a-workspace`. B gets its own home, which means its own logins — sign in again there. Pointing both services at one home volume would share the credentials, but it would share the workspace with them.
 
 `HERMES_HOME` points at `/home/sandbox/.hermes`. As originally written this needed its own volume: Hermes replaces `auth.json` atomically, and an atomic replace across two filesystems fails with `EXDEV`, so `auth.json` and its temporary file had to share a mount. With one mount at `/home/sandbox` that is true by construction, and the extra volume is gone.
+
+The `INSTALL_HERMES: "true"` line that used to sit beside it is gone too, and this is worth
+being precise about: on the published image that variable does **not** install Hermes. It
+was a build argument — it selected whether the binary was baked in — and setting it at
+runtime never added anything. Install Hermes the way you install any optional harness, from
+inside the running sandbox (see below).
 
 To make another container reachable from both sandboxes, attach it to their network with an optional DNS alias:
 

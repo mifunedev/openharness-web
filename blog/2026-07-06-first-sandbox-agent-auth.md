@@ -14,9 +14,12 @@ volumes into a **single mount at `/home/sandbox`**, so the commands below have b
 corrected to the current form and are safe to copy. The narrative is unchanged and still
 reads as it did then.
 
-One conclusion did change, and section 4 has been rewritten to say so: sharing logins
+One conclusion did change, and the second-sandbox section has been rewritten to say so: sharing logins
 between sandboxes while keeping their workspaces separate is no longer something the
-image-only path can do, because the workspace now lives *inside* the home mount. See
+image-only path can do, because the workspace now lives *inside* the home mount.
+
+Step 4 is new. Adding an optional harness used to mean a `--build-arg` and a rebuilt image;
+`oh harness install` now provisions into the sandbox you already have running. See
 [Installation](/docs/installation) and the [Docker deployment guide](/docs/docker-deployment).
 
 :::
@@ -32,19 +35,20 @@ We'll use the image-only path — pull the published image, no checkout, no loca
 ```bash
 docker run -d --name oh-a --init \
   -e OH_IMAGE_ONLY=1 \
+  -e SANDBOX_NAME=oh-a \
   -e GIT_USER_NAME="gituser" \
   -e GIT_USER_EMAIL="gituser@example.com" \
   -v oh_a_workspace:/home/sandbox \
   ghcr.io/mifunedev/openharness:latest sleep infinity
 ```
 
-That single volume (`oh_a_workspace`) holds your work *and* your logins. The first run on a fresh host pulls the image once (public — no `docker login` needed). Confirm it's up:
+That single volume (`oh_a_workspace`) holds your work *and* your logins. `SANDBOX_NAME` is what tells the bundled `oh` CLI it is running *inside* a sandbox rather than on a host, which is what makes `oh harness install` work from the shell in step 4. The first run on a fresh host pulls the image once (public — no `docker login` needed). Confirm it's up:
 
 ```bash
 docker ps --filter name=oh-a --format 'table {{.Names}}\t{{.Status}}'
 ```
 
-> **Driving raw Docker?** Settings you'd put in `harness.yaml` under the `oh` CLI map to Docker flags here: **runtime** knobs are `-e` env vars on `docker run` (Slack tokens, `OH_PULL_POLICY`, …), while **build-time** opt-ins like Hermes are `--build-arg`s on `docker build`. The examples below use both.
+> **Driving raw Docker?** Settings you'd put in `oh.json` under the `oh` CLI map to `-e` env vars on `docker run` (Slack tokens, `OH_PULL_POLICY`, …). Optional harnesses no longer need a `--build-arg`: `oh harness install <name>` adds one to a container that is already running — see step 4.
 
 ## 2. Attach — use VS Code
 
@@ -100,14 +104,18 @@ Then `gateway pi` starts the bridge with the tokens already in place, and you gr
 
 ### Hermes (opt-in)
 
-Hermes — Nous Research's self-improving agent CLI — is an **opt-in** harness, and the opt-in is a **build-time** choice: `hermes` is on `PATH` only if the image was built with it. The default image this post uses — `ghcr.io/mifunedev/openharness:latest` — is built **without** it, and because the binary is baked at build time, a runtime `-e INSTALL_HERMES=true` won't add it. To get Hermes you build your own image once:
+Hermes — Nous Research's self-improving agent CLI — is **opt-in**, and the published
+`ghcr.io/mifunedev/openharness:latest` does not carry it. When this post was written that
+meant building your own image with `--build-arg INSTALL_HERMES=true`. It no longer does:
+install it into the sandbox that is already running.
 
 ```bash
-docker build --build-arg INSTALL_HERMES=true \
-  -f .devcontainer/Dockerfile -t openharness:hermes .
+oh harness install hermes
 ```
 
-(The `harness.yaml` `install.hermes: true` key is just the `oh` CLI's front-end for that same build arg.) Run the `docker run` from step 1 against your `openharness:hermes` tag instead of `:latest`, and `hermes` is on `PATH`. Then set it up from inside the sandbox:
+That does both halves in one command — it installs `hermes` into the running container so it
+is usable immediately, **and** records `install.hermes` in `oh.json` so the choice survives a
+recreate. It never rebuilds or restarts the sandbox. Then set it up:
 
 ```bash
 hermes setup           # interactive wizard (or: hermes setup --portal for Nous Portal OAuth)
@@ -121,13 +129,55 @@ One thing to know for later: Hermes writes its auth to `~/harness/.hermes/auth.j
 
 That's it — `oh-a` is a fully signed-in sandbox. Start any agent (`claude`, `codex`, `pi`, `hermes`) and go.
 
-## 4. Optional follow-up: a second sandbox on the same host
+## 4. Add anything else from the CLI — no rebuild
+
+Everything above was about signing in what the image already ships. The other half of a
+useful sandbox is adding what it does not, and that is a one-liner from inside the running
+container. When this post was written it meant a `docker build --build-arg` and a fresh
+container; today `oh` provisions in place.
+
+```bash
+oh harness list                 # what is known, enabled, and installed
+oh harness install opencode     # an agent CLI, into the running sandbox
+oh tool list                    # the non-agent tooling
+oh tool install agent-browser   # ~1 GB — it asks first
+```
+
+`install` does **both halves**: it writes the `install.*` key into the tracked `oh.json` so
+the choice survives a recreate, *and* installs into the container you are sitting in so it
+is usable now. It never rebuilds or restarts the sandbox. The same command works from the
+**host**, where it reaches into the running container; run it there with the sandbox stopped
+and it records the flag, says so, and exits 0 rather than failing.
+
+Two flags for when you want only one of the halves:
+
+```bash
+oh harness install grok-build --persist-only   # record the choice, touch nothing now
+oh harness install grok-build --no-persist     # install now, leave oh.json alone
+```
+
+`oh harness status` and `oh tool status <name>` report what is actually present, with a
+version where the tool has a version flag — worth running after an install rather than
+trusting the success line.
+
+:::note[Raw `docker run` needs `SANDBOX_NAME`]
+
+`oh` decides whether it is inside a sandbox or on a host by looking for `/.dockerenv`
+**and** a non-empty `SANDBOX_NAME`. The Compose path sets it for you; a hand-written
+`docker run` must pass `-e SANDBOX_NAME=<name>`, as step 1 does. Without it, `oh` assumes it
+is on the host and tries to reach the container through Docker Compose instead of just
+installing locally.
+
+:::
+
+## 5. Optional follow-up: a second sandbox on the same host
 
 Run the same command again with a new name and a new volume:
 
 ```bash
 docker run -d --name oh-b --init \
   -e OH_IMAGE_ONLY=1 \
+  -e SANDBOX_NAME=oh-b \
   -e GIT_USER_NAME="gituser" \
   -e GIT_USER_EMAIL="gituser@example.com" \
   -v oh_b_workspace:/home/sandbox \
@@ -152,7 +202,7 @@ apart. You could have both.
 With one mount at `/home/sandbox`, you cannot — on this image-only path. The workspace now
 lives *inside* the home mount, so a second sandbox either gets its own home (separate
 workspaces, **separate logins** — you sign in again in `oh-b`) or shares yours (shared
-logins, **shared workspace**). Section 4's "zero extra steps" is gone; the instant-start
+logins, **shared workspace**). This section's original "zero extra steps" is gone; the instant-start
 half above is real and unchanged.
 
 If you want the old combination, use the checkout-based path instead of image-only: there
