@@ -192,31 +192,42 @@ bash get-microsandbox.sh
 `msb run alpine` does not print `ok`, the problem is msb on your host and no
 amount of Open Harness configuration will fix it.
 
-### Step 2 — Create the directories the sandbox will bind (host)
+### Step 2 — Create the directory the sandbox will bind (host)
 
-msb binds **host paths**, where compose used named volumes. Use dedicated
-directories — the entrypoint runs `chown -R sandbox:sandbox` and `chmod 700`
-against these, so never point them at your real `~/.ssh` or `~/.config`:
+The sandbox persists everything under one mount at `/home/sandbox`, so msb needs
+exactly one host directory:
 
 ```bash
-mkdir -p ~/.openharness-msb/{workspace,claude,config,herdr,ssh}
+mkdir -p ~/.openharness-msb/home
 ```
 
-**`workspace/` must be empty.** The entrypoint seeds the control plane from the
-image's baked `/opt/oh-seed` on first boot, guarded by `[ ! -d "$dest/.oh" ]`.
-Point it at a directory that already contains a `.oh/` and the seed is skipped
-**with no error message** — every step in that path is `|| true` — leaving a
-harness with no control plane. Confirm it before you boot:
+Use a **dedicated** directory. The entrypoint takes ownership of everything
+under `/home/sandbox` — `chown -R sandbox:sandbox`, plus `chmod 700` on `.ssh` —
+so never point it at your real home directory, `~/.ssh`, or `~/.config`.
+
+**It must be empty.** The entrypoint seeds the control plane at
+`/home/sandbox/harness` from the image's baked `/opt/oh-seed` on first boot,
+guarded by `[ ! -d "$dest/.oh" ]`. Point it at a directory that already contains
+a `harness/.oh/` and the seed is skipped **with no error message** — every step
+in that path is `|| true` — leaving a harness with no control plane. Confirm it
+before you boot:
 
 ```bash
 # Must print nothing. Anything here means the seed will be skipped.
-ls -A ~/.openharness-msb/workspace
+ls -A ~/.openharness-msb/home
 ```
 
-**These directories now hold your secrets.** Under Docker, volume contents sat
-root-owned outside your home directory. Under an msb bind they sit in your own
-filesystem in plaintext. Not new secrets, but a new location — permission and
-back up `~/.openharness-msb/` accordingly.
+**This directory now holds your secrets.** Under a Docker named volume the
+contents sat root-owned outside your home directory. Under an msb bind they sit
+in your own filesystem in plaintext. Not new secrets, but a new location —
+permission and back up `~/.openharness-msb/` accordingly.
+
+**This is no longer an msb-specific mechanism.** Docker offers the same bind:
+set `storage.homePath` in `oh.json` to an absolute host path and the compose
+mount at `/home/sandbox` becomes a host bind with the same dedicated-directory
+rule. The image's `/home/sandbox` is deliberately empty, with the baked home
+staged at `/opt/home-seed` and restored into whatever mount lands there, which is
+what makes a named volume, a Docker bind, and an msb bind behave the same way.
 
 ### Step 3 — Write the config (host)
 
@@ -227,8 +238,8 @@ Container paths are the same on both sides.
 | Compose (`docker-compose.image-only.yml`) | msb config | Notes |
 |---|---|---|
 | `image:` | `image:` | `ghcr.io/mifunedev/openharness:latest`, public |
-| `volumes:` (named) | `mounts:` | msb binds **host paths**, not named volumes — the directories from Step 2 |
-| `environment:` | `env:` | two keys are load-bearing; see below |
+| `volumes:` — one mount, `${OH_HOME_MOUNT:-workspace}:/home/sandbox` | `mounts:` | msb binds **host paths** only, so the named-volume default has no msb equivalent; use the directory from Step 2 |
+| `environment:` | `env:` | `OH_IMAGE_ONLY` is load-bearing; see below |
 | `ports:` (overlays only) | `network.ports:` | the base stack declares none — it is exec-based |
 | *(implicit)* | `network.policy: public` | first boot needs broad egress |
 | `entrypoint:` | `entrypoint:` | compose sets this explicitly too — so does the config below. See the note under the file. |
@@ -242,10 +253,9 @@ Container paths are the same on both sides.
 
 Derived from the verified `docker run` recipe in
 [Prebuilt-image deployment](/docs/docker-deployment) (Flavor B), reconciled
-against `docker-compose.image-only.yml`. Two deliberate differences from that
-recipe: the compose mount set (all of `~/.config`, plus `.herdr`) replaces the
-recipe's `.config/gh` and `.pi`, and `SANDBOX_NAME` is dropped because the
-sandbox is named on the `msb run` command line in Step 4.
+against `docker-compose.image-only.yml`. One deliberate difference from that
+recipe: `SANDBOX_NAME` is dropped because the sandbox is named on the `msb run`
+command line in Step 4.
 
 ```yaml
 image: ghcr.io/mifunedev/openharness:latest
@@ -255,16 +265,11 @@ cmd: ["sleep", "infinity"]
 
 env:
   OH_IMAGE_ONLY: "1"                          # load-bearing
-  OH_PROJECT_ROOT: /home/sandbox/harness      # load-bearing — must equal the mount target
   GIT_USER_NAME: "<your-name>"
   GIT_USER_EMAIL: "<your-email>"
 
 mounts:
-  - "~/.openharness-msb/workspace:/home/sandbox/harness"
-  - "~/.openharness-msb/claude:/home/sandbox/.claude"
-  - "~/.openharness-msb/config:/home/sandbox/.config"
-  - "~/.openharness-msb/herdr:/home/sandbox/.herdr"
-  - "~/.openharness-msb/ssh:/home/sandbox/.ssh"
+  - "~/.openharness-msb/home:/home/sandbox"
 
 network:
   policy: public
@@ -289,9 +294,11 @@ the mounted `~/.config` and persists across restarts, so nothing is lost by
 leaving it out. Add `GH_TOKEN` to `env:` only for unattended boots, and confirm
 the substitution first.
 
-Twelve named volumes exist in the compose file; the five above are the set the
-verified `docker run` recipe uses. The other seven are per-harness auth for CLIs
-you may not use — add them as you enable those harnesses.
+One mount is the whole set. The compose file declares a single
+`/home/sandbox` mount, and the workspace at `/home/sandbox/harness`, the
+provider auth under `.claude`, `.config`, `.ssh`, and the Herdr state under
+`.herdr` are all directories inside it. There is nothing further to add as you
+enable more harnesses.
 
 ### Step 4 — Boot the sandbox (host)
 
@@ -319,7 +326,7 @@ again:
 
 ```bash
 msb stop openharness
-rm -rf ~/.openharness-msb/workspace/*
+rm -rf ~/.openharness-msb/home/* ~/.openharness-msb/home/.[!.]*
 # then re-run Step 4
 ```
 
@@ -346,7 +353,7 @@ claude                          # or codex, pi, hermes
 **`msb exec` is your only door** — see
 [What you lose by leaving Docker](#what-you-lose-by-leaving-docker).
 
-Stop and restart without losing state — the bind directories hold everything:
+Stop and restart without losing state — the bind directory holds everything:
 
 ```bash
 msb stop openharness

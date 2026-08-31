@@ -9,8 +9,19 @@
 // recipes are the source the social cards are rendered from, so a retired command
 // left there reappears the next time a card is generated.
 //
-// blog/ is deliberately not scanned. Those posts are dated records of how the
-// harness worked at the time; they carry an admonition instead of an edit.
+// blog/ is not scanned. Those posts are dated records of how the harness worked
+// at the time, and the site's policy is an admonition rather than an edit.
+//
+// That policy has a known limit, hit by the single-home-mount migration: an
+// admonition reading "these commands no longer apply" still leaves a reader
+// copy-pasting a deployment recipe that silently loses their state, and one
+// post's central claim (shared logins, separate workspaces) had become
+// impossible rather than merely dated. Those two posts therefore carry
+// corrected commands as well as their admonition.
+//
+// Turning the scan on for blog/ would make that the site-wide rule. It is a
+// one-word change here, and it currently reports 12 pre-existing hits in the
+// two Makefile-era posts. That is an editorial decision, not a mechanical one.
 //
 // ── Adding to RETIRED is how the next migration protects itself. ──
 // When you remove a command, a file, or a configuration knob from the harness,
@@ -56,6 +67,24 @@ const RETIRED = [
     name: "harness.yaml",
     instead: "`oh.json`",
   },
+  {
+    // The per-tool named volumes collapsed into one mount at /home/sandbox.
+    pattern: /\b(claude-auth|codex-auth|pi-auth|opencode-auth|grok-auth|deepagents-auth|herdr-data|cloudflared-auth)\b/g,
+    name: "a retired per-tool volume",
+    instead: "the single `/home/sandbox` mount — see docs/installation.md",
+  },
+  {
+    // The separate workspace volume is part of the same single home mount.
+    pattern: /\boh_workspace\b/g,
+    name: "oh_workspace",
+    instead: "the single `/home/sandbox` mount, managed as `<sandbox-name>_workspace` unless `storage.homePath` binds it",
+  },
+  {
+    // The checkout is fixed at /home/sandbox/harness; the knob is gone.
+    pattern: /\bprojectRoot\b|\bOH_PROJECT_ROOT\b/g,
+    name: "projectRoot / OH_PROJECT_ROOT",
+    instead: "the fixed checkout path `/home/sandbox/harness`",
+  },
 ];
 
 // A page may name a retired thing in order to say it is retired. Each exemption
@@ -70,6 +99,16 @@ const ALLOW = [
     file: "quickstart.md",
     token: "harness.yaml",
     why: "explains the retired layer and that a leftover file is migrated automatically",
+  },
+  {
+    file: "installation.md",
+    token: "a retired per-tool volume",
+    why: "names the old volumes in the manual migration recipe, to say they are gone and not migrated automatically",
+  },
+  {
+    file: "configuration.md",
+    token: "projectRoot / OH_PROJECT_ROOT",
+    why: "documents that the knob was removed and the checkout path is now fixed",
   },
 ];
 

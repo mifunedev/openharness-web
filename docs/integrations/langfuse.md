@@ -41,7 +41,7 @@ classifies only an `AbortError` caused by pi-langfuse's own shutdown controller
 as an expected bounded timeout; with `PI_LANGFUSE_DEBUG=1` it remains visible as
 a debug message, while other shutdown errors still update runtime status and
 emit the normal warning. Rerun the helper after any package reinstall or `~/.pi`
-volume reset. The OpenTelemetry override remediates the vulnerable tree selected
+directory reset. The OpenTelemetry override remediates the vulnerable tree selected
 by pi-langfuse's declared `^0.218.0` range without npm audit's unsafe
 recommendation to downgrade pi-langfuse to `1.0.0`; unrelated npm overrides are
 preserved.
@@ -188,8 +188,8 @@ Langfuse URL: http://langfuse-web:3000
 
 Do not use `localhost` here: inside the sandbox it refers to the sandbox, not
 the Langfuse container. The saved configuration lives at
-`~/.pi/agent/pi-langfuse/config.json` on Open Harness's persistent `pi-auth`
-volume.
+`~/.pi/agent/pi-langfuse/config.json`, part of Open Harness's persistent
+single home mount.
 
 #### 7. Verify Pi tracing and permissions
 
@@ -225,11 +225,10 @@ Start Pi, then run its package command:
 
 Enter the Langfuse public key (`pk-lf-...`), secret key (`sk-lf-...`), and
 external Langfuse URL. The package persists them in
-`~/.pi/agent/pi-langfuse/config.json`; in the sandbox, `~/.pi` is on the
-`pi-auth` named volume. When the package writes the file it creates a `0700`
+`~/.pi/agent/pi-langfuse/config.json`; in the sandbox, `~/.pi` is part of the
+single home mount. When the package writes the file it creates a `0700`
 directory and a `0600` file where POSIX permissions are available. `oh destroy`
-removes named volumes, including `pi-auth`, so configure again after destroying
-the sandbox.
+removes that mount, so configure again after destroying the sandbox.
 
 #### Environment-only setup
 
@@ -383,7 +382,7 @@ your self-hosted URL. Other optional fields are `LANGFUSE_USER_ID`,
 
 The plugin installs and is enabled at **user scope**. Configuration is stored by
 Claude's plugin configuration and OS-keychain mechanisms according to upstream.
-Open Harness persists `~/.claude` on the `claude-auth` volume, but OS-keychain
+Open Harness persists `~/.claude` as part of the sandbox's single home mount, but OS-keychain
 availability and persistence are platform-dependent; verify the plugin remains
 configured after a sandbox rebuild. You can enter the same Langfuse key pair in
 Pi and Claude Code, but their saved configurations are independent. Do not put

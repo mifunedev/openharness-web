@@ -5,7 +5,9 @@ sidebar_position: 3
 
 # Docker deployment
 
-Run the public Open Harness image directly with Docker—no checkout, local build, CLI wrapper, or Compose required. This walkthrough creates two containers with isolated workspaces and shared GitHub, SSH, Claude, and Pi authentication.
+Run the public Open Harness image directly with Docker—no checkout, local build, CLI wrapper, or Compose required. This walkthrough creates two containers on one private network, each with its own persistent home.
+
+Everything a sandbox persists lives in a **single mount at `/home/sandbox`**: the workspace and control plane at `/home/sandbox/harness`, and the provider authentication under `/home/sandbox/.config`, `/home/sandbox/.ssh`, `/home/sandbox/.claude`, and `/home/sandbox/.pi`. One volume per sandbox, and nothing to keep in sync.
 
 ## 1. Create the network and pull the image
 
@@ -27,20 +29,25 @@ docker run -itd \
   --restart unless-stopped \
   --init \
   -e OH_IMAGE_ONLY=1 \
-  -e OH_PROJECT_ROOT=/home/sandbox/harness \
   -e SANDBOX_NAME=oh-a \
   -e GIT_USER_NAME="<your-name>" \
   -e GIT_USER_EMAIL="<you@example.com>" \
-  -v oh-workspace-a:/home/sandbox/harness \
-  -v oh-gh-config:/home/sandbox/.config/gh \
-  -v oh-ssh:/home/sandbox/.ssh \
-  -v oh-claude-auth:/home/sandbox/.claude \
-  -v oh-pi-auth:/home/sandbox/.pi \
+  -v oh-a_workspace:/home/sandbox \
   ghcr.io/mifunedev/openharness:latest \
   sleep infinity
 ```
 
-The workspace volume is unique to A. Only the auth state used in this walkthrough is shared.
+`oh-a_workspace` is the whole sandbox home, and it is unique to A. The name follows the convention Compose uses—`<sandbox-name>_workspace`—so the same volume can later be adopted by the [image-only Compose file](https://github.com/mifunedev/openharness/blob/development/.devcontainer/docker-compose.image-only.yml) without moving data.
+
+To keep the home on the host filesystem instead, replace the volume name with an absolute host path:
+
+```bash
+  -v /srv/openharness-a:/home/sandbox \
+```
+
+:::warning Use a dedicated directory
+A host path must be a **dedicated, empty directory** that belongs to the sandbox alone. The entrypoint takes ownership of everything under `/home/sandbox` and seeds the baked home into it. Never point it at your real home directory, `~/.ssh`, or `~/.config`.
+:::
 
 ## 3. Verify and attach
 
@@ -100,11 +107,11 @@ pi
 
 Inside Pi, enter `/login`, choose a provider and device authentication, open the displayed browser URL on any device, enter the displayed code, and finish authorization. Then enter `/model` and select the provider and model you want Pi to use. Exit Pi with `Ctrl-D` when setup is complete.
 
-Authentication persists in the named `oh-gh-config`, `oh-ssh`, `oh-claude-auth`, and `oh-pi-auth` volumes. Do not put tokens in the Docker command.
+Authentication persists in the `oh-a_workspace` volume with the rest of the home. Each sandbox owns its home, so authentication is per sandbox and does not cross between them. Do not put tokens in the Docker command.
 
-## 5. Start sandbox B with shared auth
+## 5. Start sandbox B
 
-Use the same image, network, and auth volumes. Change the container identity and give B its own workspace volume:
+Use the same image and network. Change the container identity and give B its own home volume:
 
 ```bash
 docker run -itd \
@@ -113,20 +120,15 @@ docker run -itd \
   --restart unless-stopped \
   --init \
   -e OH_IMAGE_ONLY=1 \
-  -e OH_PROJECT_ROOT=/home/sandbox/harness \
   -e SANDBOX_NAME=oh-b \
   -e GIT_USER_NAME="<your-name>" \
   -e GIT_USER_EMAIL="<you@example.com>" \
-  -v oh-workspace-b:/home/sandbox/harness \
-  -v oh-gh-config:/home/sandbox/.config/gh \
-  -v oh-ssh:/home/sandbox/.ssh \
-  -v oh-claude-auth:/home/sandbox/.claude \
-  -v oh-pi-auth:/home/sandbox/.pi \
+  -v oh-b_workspace:/home/sandbox \
   ghcr.io/mifunedev/openharness:latest \
   sleep infinity
 ```
 
-B starts with the shared GitHub/SSH, Claude, and Pi auth state but an isolated workspace. Re-authentication is normally unnecessary, subject to each provider's session and expiry policies.
+B boots from the same image with an isolated home, so repeat step 4 inside B to authenticate it.
 
 Verify both seeds and prove that workspace content does not cross between them:
 
@@ -151,7 +153,9 @@ docker network connect --alias app openharness my-app
 
 ## First-boot and persistence model
 
-With `OH_IMAGE_ONLY=1`, the entrypoint copies the baked `/opt/oh-seed` control plane into each empty workspace volume and writes `.oh/.image-seeded`. After that, the workspace volume is authoritative and is not overwritten on later boots or image updates. A seeded image-only workspace has no Git history; clone or initialize repositories inside it as needed.
+The image ships with `/home/sandbox` deliberately empty and its baked home staged at `/opt/home-seed`. On first boot the entrypoint copies that home into whatever mount landed at `/home/sandbox`, which is why a named volume and a host bind behave identically.
+
+With `OH_IMAGE_ONLY=1`, the entrypoint also copies the baked `/opt/oh-seed` control plane into `/home/sandbox/harness` and writes `.oh/.image-seeded`. After that, the mount is authoritative and is not overwritten on later boots or image updates. A seeded image-only workspace has no Git history; clone or initialize repositories inside it as needed.
 
 ## Lifecycle and security
 
@@ -162,22 +166,16 @@ docker stop oh-a oh-b
 docker start oh-a oh-b
 ```
 
-Remove the containers while retaining all named volumes:
+Remove the containers while retaining both home volumes:
 
 ```bash
 docker rm -f oh-a oh-b
 ```
 
-Workspace deletion is destructive and permanently removes each sandbox's files:
+Volume deletion is destructive. Because the home is one mount, removing it permanently deletes that sandbox's workspace **and** its authentication, and you must sign in again:
 
 ```bash
-docker volume rm oh-workspace-a oh-workspace-b
-```
-
-Auth deletion is also destructive and requires signing in again:
-
-```bash
-docker volume rm oh-gh-config oh-ssh oh-claude-auth oh-pi-auth
+docker volume rm oh-a_workspace oh-b_workspace
 ```
 
 No ports are published by these commands; the `openharness` network remains private until you deliberately add `-p HOST:CONTAINER`. The Docker socket is not mounted, so sandbox processes cannot control the host daemon. The published image is currently Linux/AMD64 only; hosts on another architecture are outside this happy path until a multi-architecture image is published.

@@ -78,7 +78,8 @@ Two harness-specific notes:
   opt-in via `DOCKER_SOCKET` in `.devcontainer/.env`. See
   [security considerations](https://github.com/mifunedev/openharness/blob/main/docs/security-considerations.md).
 - **The container is the unit of disposal.** `oh destroy` removes containers
-  and volumes; provider auth persists in named volumes across a rebuild.
+  and volumes; the whole sandbox home — provider auth included — persists in the
+  single `/home/sandbox` mount across a rebuild.
 
 ## Related
 

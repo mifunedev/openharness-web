@@ -7,6 +7,24 @@ tags: [open-harness, docker, deployment, self-hosted]
 slug: deploy-open-harness-with-docker
 ---
 
+:::note[Commands updated for the single home mount]
+
+This post dates from 2026-07-11. Open Harness has since collapsed its many per-tool volumes
+into a **single mount at `/home/sandbox`**, so every command below has been corrected to the
+current form and is safe to copy. The narrative is unchanged.
+
+One claim did change. Two sandboxes sharing auth volumes while keeping separate workspaces
+is no longer possible on this image-only path — the workspace now lives *inside* the home
+mount, so B either has its own home (its own logins) or shares A's entirely. The section on
+sandbox B says so.
+
+A section on provisioning from the CLI has also been added. Optional harnesses used to be a
+`--build-arg` and a fresh image; `oh harness install` now adds one to a container that is
+already running. See [Installation](/docs/installation) and the
+[Docker deployment guide](/docs/docker-deployment).
+
+:::
+
 Open Harness publishes a ready-to-run sandbox image at `ghcr.io/mifunedev/openharness`. You can launch it directly with Docker—no checkout, local build, or CLI wrapper required—and keep each workspace isolated while sharing authentication. Compose is optional; a complete file is given below.
 
 <!-- truncate -->
@@ -29,20 +47,15 @@ docker run -itd \
   --restart unless-stopped \
   --init \
   -e OH_IMAGE_ONLY=1 \
-  -e OH_PROJECT_ROOT=/home/sandbox/harness \
   -e SANDBOX_NAME=oh-a \
   -e GIT_USER_NAME="<your-name>" \
   -e GIT_USER_EMAIL="<you@example.com>" \
-  -v oh-workspace-a:/home/sandbox/harness \
-  -v oh-gh-config:/home/sandbox/.config/gh \
-  -v oh-ssh:/home/sandbox/.ssh \
-  -v oh-claude-auth:/home/sandbox/.claude \
-  -v oh-pi-auth:/home/sandbox/.pi \
+  -v oh-a-workspace:/home/sandbox \
   ghcr.io/mifunedev/openharness:latest \
   sleep infinity
 ```
 
-On first boot, `OH_IMAGE_ONLY=1` seeds `/opt/oh-seed` into the workspace volume and writes `/home/sandbox/harness/.oh/.image-seeded`. The volume is authoritative after that and starts without Git history.
+On first boot, `OH_IMAGE_ONLY=1` seeds `/opt/oh-seed` into the home mount and writes `/home/sandbox/harness/.oh/.image-seeded`. The mount is authoritative after that and starts without Git history.
 
 ```bash
 docker ps --filter 'name=^/oh-a$' --format 'table {{.Names}}\t{{.Status}}'
@@ -79,15 +92,10 @@ docker run -itd \
   --restart unless-stopped \
   --init \
   -e OH_IMAGE_ONLY=1 \
-  -e OH_PROJECT_ROOT=/home/sandbox/harness \
   -e SANDBOX_NAME=oh-b \
   -e GIT_USER_NAME="<your-name>" \
   -e GIT_USER_EMAIL="<you@example.com>" \
-  -v oh-workspace-b:/home/sandbox/harness \
-  -v oh-gh-config:/home/sandbox/.config/gh \
-  -v oh-ssh:/home/sandbox/.ssh \
-  -v oh-claude-auth:/home/sandbox/.claude \
-  -v oh-pi-auth:/home/sandbox/.pi \
+  -v oh-b-workspace:/home/sandbox \
   ghcr.io/mifunedev/openharness:latest \
   sleep infinity
 ```
@@ -100,6 +108,32 @@ docker exec oh-b test ! -e /home/sandbox/harness/.sandbox-a-only \
   && echo "workspaces are isolated"
 docker exec oh-a rm /home/sandbox/harness/.sandbox-a-only
 ```
+
+## Provision from the CLI once it is running
+
+Both recipes above deliberately run the stock published image. Anything it does not ship —
+another agent CLI, a headless browser, a tunnel client — goes in from inside the container,
+with no rebuild and no recreate:
+
+```bash
+docker exec -it -u sandbox oh-a zsh
+
+oh harness list                 # known agent CLIs, and their installed state
+oh harness install opencode     # into the running sandbox
+oh tool list                    # non-agent tooling
+oh tool install agent-browser   # ~1 GB — it confirms first
+```
+
+`install` does both halves: it writes `install.*` into the tracked `oh.json` so the choice
+survives a recreate, **and** installs into the container you are in. `--persist-only`
+records the choice without touching the container; `--no-persist` does the reverse. The same
+command works from the host against a running sandbox; with the sandbox stopped it records
+the flag, says so, and exits 0 rather than failing.
+
+This is why `SANDBOX_NAME` is set on every recipe on this page and not just for cosmetics:
+`oh` decides it is *inside* a sandbox from `/.dockerenv` plus a non-empty `SANDBOX_NAME`.
+Drop it and `oh` concludes it is on a host and goes looking for the container through Docker
+Compose instead of installing locally.
 
 ## Compose equivalent
 
@@ -121,19 +155,12 @@ services:
       - openharness
     environment:
       OH_IMAGE_ONLY: "1"
-      OH_PROJECT_ROOT: /home/sandbox/harness
       SANDBOX_NAME: oh-a
       GIT_USER_NAME: ${GIT_USER_NAME:-<your-name>}
       GIT_USER_EMAIL: ${GIT_USER_EMAIL:-<you@example.com>}
-      INSTALL_HERMES: "true"
       HERMES_HOME: /home/sandbox/.hermes
     volumes:
-      - oh-workspace-a:/home/sandbox/harness
-      - oh-gh-config:/home/sandbox/.config/gh
-      - oh-ssh:/home/sandbox/.ssh
-      - oh-claude-auth:/home/sandbox/.claude
-      - oh-pi-auth:/home/sandbox/.pi
-      - oh-hermes-auth:/home/sandbox/.hermes
+      - oh-a-workspace:/home/sandbox
     command: ["sleep", "infinity"]
 
 networks:
@@ -141,18 +168,8 @@ networks:
     name: openharness
 
 volumes:
-  oh-workspace-a:
-    name: oh-workspace-a
-  oh-gh-config:
-    name: oh-gh-config
-  oh-ssh:
-    name: oh-ssh
-  oh-claude-auth:
-    name: oh-claude-auth
-  oh-pi-auth:
-    name: oh-pi-auth
-  oh-hermes-auth:
-    name: oh-hermes-auth
+  oh-a-workspace:
+    name: oh-a-workspace
 ```
 
 Start the sandbox and open a shell:
@@ -163,9 +180,15 @@ GIT_USER_NAME="<your-name>" GIT_USER_EMAIL="<you@example.com>" \
 docker compose exec -u sandbox oh-a zsh
 ```
 
-Compose creates the network and every named volume on the first `up`, so the `docker network create` step is not needed. Add sandbox B as a second service: copy the `oh-a` block, set the service name, `container_name`, `hostname`, and `SANDBOX_NAME` to `oh-b`, and mount `oh-workspace-b` instead of `oh-workspace-a`. Keep the network and the auth volumes the same, and B inherits A's logins without sharing A's files.
+Compose creates the network and the named volume on the first `up`, so the `docker network create` step is not needed. Add sandbox B as a second service: copy the `oh-a` block, set the service name, `container_name`, `hostname`, and `SANDBOX_NAME` to `oh-b`, and mount `oh-b-workspace` instead of `oh-a-workspace`. B gets its own home, which means its own logins — sign in again there. Pointing both services at one home volume would share the credentials, but it would share the workspace with them.
 
-`HERMES_HOME` points at the `oh-hermes-auth` volume. Hermes replaces `auth.json` atomically, and an atomic replace across two filesystems fails with `EXDEV`. This mount keeps `auth.json` and its temporary file on one filesystem. To keep Hermes state in the workspace volume instead, remove the `HERMES_HOME` variable and the `oh-hermes-auth` mount.
+`HERMES_HOME` points at `/home/sandbox/.hermes`. As originally written this needed its own volume: Hermes replaces `auth.json` atomically, and an atomic replace across two filesystems fails with `EXDEV`, so `auth.json` and its temporary file had to share a mount. With one mount at `/home/sandbox` that is true by construction, and the extra volume is gone.
+
+The `INSTALL_HERMES: "true"` line that used to sit beside it is gone too, and this is worth
+being precise about: on the published image that variable does **not** install Hermes. It
+was a build argument — it selected whether the binary was baked in — and setting it at
+runtime never added anything. Install Hermes the way you install any optional harness, from
+inside the running sandbox (see below).
 
 To make another container reachable from both sandboxes, attach it to their network with an optional DNS alias:
 
