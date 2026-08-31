@@ -38,8 +38,9 @@ claude auth status     # confirm you're authenticated
 `claude auth` also has `logout`. Launching a bare `claude` when unauthenticated will start
 the same OAuth flow, but `claude auth login` is the explicit, scriptable path.
 
-Credentials are stored in `~/.claude/.credentials.json` inside the sandbox (persisted via the
-`claude-auth` volume). The sandbox banner at login indicates whether credentials are present.
+Credentials are stored in `~/.claude/.credentials.json` inside the sandbox (persisted as
+part of the sandbox's single home mount). The sandbox banner at login indicates whether
+credentials are present.
 
 ## Optional Langfuse observability
 

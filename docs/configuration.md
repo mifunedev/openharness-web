@@ -48,7 +48,7 @@ to; `—` means the field is consumed by the `oh` CLI itself and never rendered.
 | `version` | number | `1` | — | Schema version. Must be `1`. |
 | `name` | string | directory name | `SANDBOX_NAME` | Container and Compose project name. |
 | `timezone` | string | `America/Los_Angeles` | `TZ` | Timezone for cron schedules and log timestamps. |
-| `projectRoot` | string | `/home/sandbox/harness` | `OH_PROJECT_ROOT` | Container path the repository is mounted at. Leave at the default unless relocating the project root. |
+| `storage.homePath` | string | unset | `OH_HOME_MOUNT` | Absolute **host** path for the single `/home/sandbox` mount. Leave unset and Docker manages it as the named volume `<name>_workspace`. Must start with `/`; use a dedicated empty directory, since the sandbox takes ownership of everything under it. A stale `OH_HOME_MOUNT` in `.devcontainer/.env` outranks this value, because the wrapper passes the dotenv last. |
 
 ### Git identity inside the sandbox
 
@@ -161,6 +161,8 @@ not harness configuration at all, so they appear in neither surface:
 ## Retired keys
 
 The directory layout is fixed convention and is no longer configurable.
-`WORKTREES_DIR`, `PROJECTS_DIR`, and `CRONS_DIR` were removed;
-`config-render.ts` refuses to render them. See
+`WORKTREES_DIR`, `PROJECTS_DIR`, `CRONS_DIR`, and `OH_PROJECT_ROOT` were
+removed; `config-render.ts` refuses to render them. The repository checkout is
+fixed at `/home/sandbox/harness`, nested inside the single `/home/sandbox`
+mount, so the old `projectRoot` field no longer exists. See
 [`.oh/` directory layout](https://github.com/mifunedev/openharness/blob/main/docs/oh-directory-layout.md).

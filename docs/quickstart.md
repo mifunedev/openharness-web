@@ -219,7 +219,7 @@ full field reference, and `oh config set <field> <value>` to edit one field.
 | `install.opencode` | Set `true` to include OpenCode in the sandbox image |
 | `install.deepagents` | Set `true` to include DeepAgents in the sandbox image |
 | `install.hermes` | Set `true` to include Hermes in the sandbox image; state defaults to `~/harness/.hermes`, auth lives in `~/.hermes` |
-| `install.grokBuild` | Set `true` to include Grok Build in the sandbox image; all Grok user state lives in the persisted `~/.grok` volume |
+| `install.grokBuild` | Set `true` to include Grok Build in the sandbox image; all Grok user state lives in the persisted `~/.grok` directory |
 
 Set one field with `oh config set <field> <value>` and one secret with
 `oh secret set <KEY>`, then apply with `oh stop && oh sandbox`.

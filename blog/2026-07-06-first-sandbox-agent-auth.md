@@ -7,6 +7,18 @@ tags: [docker, sandbox, auth, multi-agent]
 slug: first-sandbox-agent-auth
 ---
 
+:::note[Written before the single home mount]
+
+This post dates from 2026-07-06 and is kept as a record of how Open Harness worked then. It
+predates the migration that collapsed the per-tool volumes — `claude-auth`, `codex-auth`,
+`pi-auth`, `gh-config`, `oh_ssh`, and the separate workspace volume — into a **single mount at
+`/home/sandbox`**, so the `-v` flags, the `OH_PROJECT_ROOT` variable, and the `docker volume rm`
+teardown below no longer apply, and a sandbox started this way loses the state they used to hold.
+For the sign-in and second-sandbox recipes that work today, see
+[Installation](/docs/installation) and the [Docker deployment guide](/docs/docker-deployment).
+
+:::
+
 Open Harness is one sandbox per repo — an isolated Docker container with the whole agent toolchain baked in: Claude Code, Codex, Pi, and, when you opt into it, Hermes. Getting a *useful* sandbox is really two moves: boot the container once, then sign each agent in. This post walks the full first run — boot, attach, authenticate `gh`, Claude, Pi, and Hermes — and then shows the payoff: stand up a **second** sandbox on the same host and it comes up instantly *and* already logged in.
 
 <!-- truncate -->

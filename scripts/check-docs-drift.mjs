@@ -56,6 +56,24 @@ const RETIRED = [
     name: "harness.yaml",
     instead: "`oh.json`",
   },
+  {
+    // The per-tool named volumes collapsed into one mount at /home/sandbox.
+    pattern: /\b(claude-auth|codex-auth|pi-auth|opencode-auth|grok-auth|deepagents-auth|herdr-data|cloudflared-auth)\b/g,
+    name: "a retired per-tool volume",
+    instead: "the single `/home/sandbox` mount — see docs/installation.md",
+  },
+  {
+    // The separate workspace volume is part of the same single home mount.
+    pattern: /\boh_workspace\b/g,
+    name: "oh_workspace",
+    instead: "the single `/home/sandbox` mount, managed as `<sandbox-name>_workspace` unless `storage.homePath` binds it",
+  },
+  {
+    // The checkout is fixed at /home/sandbox/harness; the knob is gone.
+    pattern: /\bprojectRoot\b|\bOH_PROJECT_ROOT\b/g,
+    name: "projectRoot / OH_PROJECT_ROOT",
+    instead: "the fixed checkout path `/home/sandbox/harness`",
+  },
 ];
 
 // A page may name a retired thing in order to say it is retired. Each exemption
@@ -70,6 +88,16 @@ const ALLOW = [
     file: "quickstart.md",
     token: "harness.yaml",
     why: "explains the retired layer and that a leftover file is migrated automatically",
+  },
+  {
+    file: "installation.md",
+    token: "a retired per-tool volume",
+    why: "names the old volumes in the manual migration recipe, to say they are gone and not migrated automatically",
+  },
+  {
+    file: "configuration.md",
+    token: "projectRoot / OH_PROJECT_ROOT",
+    why: "documents that the knob was removed and the checkout path is now fixed",
   },
 ];
 

@@ -7,6 +7,18 @@ tags: [open-harness, docker, deployment, self-hosted]
 slug: deploy-open-harness-with-docker
 ---
 
+:::note[Written before the single home mount]
+
+This post dates from 2026-07-11 and is kept as a record of how Open Harness worked then. It
+predates the migration that collapsed the per-tool volumes — `oh-claude-auth`, `oh-pi-auth`,
+`oh-ssh`, `oh-gh-config`, and the separate workspace volume — into a **single mount at
+`/home/sandbox`**, so the `-v` flags and the `OH_PROJECT_ROOT` variable below no longer apply, and
+a sandbox started this way loses the state they used to hold. For the run, Compose, and cleanup
+recipes that work today, see [Installation](/docs/installation) and the
+[Docker deployment guide](/docs/docker-deployment).
+
+:::
+
 Open Harness publishes a ready-to-run sandbox image at `ghcr.io/mifunedev/openharness`. You can launch it directly with Docker—no checkout, local build, or CLI wrapper required—and keep each workspace isolated while sharing authentication. Compose is optional; a complete file is given below.
 
 <!-- truncate -->
