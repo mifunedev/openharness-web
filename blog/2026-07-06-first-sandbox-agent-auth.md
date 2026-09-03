@@ -1,30 +1,33 @@
 ---
 title: "Your first sandbox: signing in gh, Claude, Pi, and Hermes"
-description: "The image ships Claude, Codex, Pi, and (opt-in) Hermes. Standing up a useful sandbox is one docker run plus a round of logins — here's the full first run, and what a second sandbox on the same host does and does not inherit."
+description: "Nothing is baked into the image — you install Claude, Codex, Pi, or Hermes yourself. Standing up a useful sandbox is one docker run, one round of installs, and a round of logins — here's the full first run, and what a second sandbox on the same host does and does not inherit."
 date: 2026-07-06
 authors: [ryan]
 tags: [docker, sandbox, auth, multi-agent]
 slug: first-sandbox-agent-auth
 ---
 
-:::note[Commands updated for the single home mount]
+:::note[Commands updated on 2026-09-02 for the one-door and sandbox-registry changes]
 
-This post dates from 2026-07-06. Open Harness has since collapsed its many per-tool
-volumes into a **single mount at `/home/sandbox`**, so the commands below have been
-corrected to the current form and are safe to copy. The narrative is unchanged and still
-reads as it did then.
+This post dates from 2026-07-06. Since it was written, mifunedev/openharness#948 and #950
+changed the operator flow. Nothing installs at boot: the first commands inside a fresh sandbox
+are `oh tool install herdr` and `oh harness install <id>`. `oh.json` has no `install.*` keys and
+the `--persist-only` / `--no-persist` flags are gone. `oh sandbox install docker` creates a
+sandbox from any directory; raw `docker run` remains the CLI-free path, and `OH_IMAGE_ONLY` is no
+longer needed (the entrypoint detects image-only mode). The command blocks below are rewritten to
+the current vocabulary; the narrative and screenshots are kept as a record.
 
-One conclusion did change, and the second-sandbox section has been rewritten to say so: sharing logins
-between sandboxes while keeping their workspaces separate is no longer something the
-image-only path can do, because the workspace now lives *inside* the home mount.
+Open Harness had already collapsed its many per-tool volumes into a **single mount at
+`/home/sandbox`**, and the commands below reflect that too. One conclusion changed with it, and
+the second-sandbox section has been rewritten to say so: sharing logins between sandboxes while
+keeping their workspaces separate is no longer something the image-only path can do, because the
+workspace now lives *inside* the home mount.
 
-Step 4 is new. Adding an optional harness used to mean a `--build-arg` and a rebuilt image;
-`oh harness install` now provisions into the sandbox you already have running. See
-[Installation](/docs/installation) and the [Docker deployment guide](/docs/docker-deployment).
+See [Installation](/docs/installation) and the [Docker deployment guide](/docs/docker-deployment).
 
 :::
 
-Open Harness is one sandbox per repo — an isolated Docker container with the whole agent toolchain baked in: Claude Code, Codex, Pi, and, when you opt into it, Hermes. Getting a *useful* sandbox is really two moves: boot the container once, then sign each agent in. This post walks the full first run — boot, attach, authenticate `gh`, Claude, Pi, and Hermes — and then stands up a **second** sandbox on the same host to show what it inherits.
+Open Harness is one sandbox per repo — an isolated Docker container with nothing baked in. The image pins Node and `gh`; the agent CLIs you use (Claude Code, Codex, Pi, OpenCode, Hermes, Grok Build) each enter through one command, `oh harness install <id>`. Getting a *useful* sandbox is really three moves: boot the container once, install what you use, then sign each agent in. This post walks the full first run — boot, attach, install, authenticate `gh`, Claude, Pi, and Hermes — and then stands up a **second** sandbox on the same host to show what it inherits.
 
 <!-- truncate -->
 
@@ -34,7 +37,6 @@ We'll use the image-only path — pull the published image, no checkout, no loca
 
 ```bash
 docker run -d --name oh-a --init \
-  -e OH_IMAGE_ONLY=1 \
   -e SANDBOX_NAME=oh-a \
   -e GIT_USER_NAME="gituser" \
   -e GIT_USER_EMAIL="gituser@example.com" \
@@ -48,7 +50,7 @@ That single volume (`oh_a_workspace`) holds your work *and* your logins. `SANDBO
 docker ps --filter name=oh-a --format 'table {{.Names}}\t{{.Status}}'
 ```
 
-> **Driving raw Docker?** Settings you'd put in `oh.json` under the `oh` CLI map to `-e` env vars on `docker run` (Slack tokens, `OH_PULL_POLICY`, …). Optional harnesses no longer need a `--build-arg`: `oh harness install <name>` adds one to a container that is already running — see step 4.
+> **Driving raw Docker?** Settings you'd put in `oh.json` under the `oh` CLI map to `-e` env vars on `docker run` (Slack tokens, `OH_PULL_POLICY`, …). Harnesses never needed a `--build-arg`: `oh harness install <id>` adds one to a container that is already running — see step 3.
 
 ## 2. Attach — use VS Code
 
@@ -61,6 +63,19 @@ docker exec -it -u sandbox oh-a zsh
 Either way you land as the `sandbox` user, ready to sign in.
 
 ## 3. Sign in each agent
+
+### Install what you use first — nothing installs at boot
+
+Nothing is baked into the image. A fresh sandbox has Node and `gh` and little else; every agent
+CLI enters through `oh harness install <id>` and every tool through `oh tool install <id>`.
+Installs land in `~/.local` inside the home mount, so they survive a container recreate.
+
+```bash
+oh tool install herdr && herdr   # persistent terminal workspace — run your agents in its panes
+oh harness install claude-code
+oh harness install pi
+oh harness install hermes        # optional
+```
 
 ### GitHub CLI (`gh`)
 
@@ -100,22 +115,22 @@ Two more things Pi does out of the box: it can run on **OpenAI Codex** (your Cha
   -e PI_SLACK_BOT_TOKEN=xoxb-…
 ```
 
-Then `gateway pi` starts the bridge with the tokens already in place, and you grant trust from inside it with `/msg-bridge` ([Slack integration](/docs/integrations/slack)). (Under the `oh` CLI these same tokens live in `.devcontainer/.env`.)
+Then `gateway pi` starts the bridge with the tokens already in place, and you grant trust from inside it with `/msg-bridge` ([Slack integration](/docs/integrations/slack)). (Under the `oh` CLI these same tokens are set with `oh secret set --sandbox <name> PI_SLACK_BOT_TOKEN <value>`, which writes them to the sandbox's registry entry.)
 
-### Hermes (opt-in)
+### Hermes
 
-Hermes — Nous Research's self-improving agent CLI — is **opt-in**, and the published
-`ghcr.io/mifunedev/openharness:latest` does not carry it. When this post was written that
-meant building your own image with `--build-arg INSTALL_HERMES=true`. It no longer does:
-install it into the sandbox that is already running.
+Hermes — Nous Research's self-improving agent CLI — is a harness like any other, and the
+published `ghcr.io/mifunedev/openharness:latest` does not carry it (or any other agent CLI).
+When this post was written, adding it meant building your own image with a `--build-arg`. Today
+it is the same one door as everything else, which the install block above already used:
 
 ```bash
 oh harness install hermes
 ```
 
-That does both halves in one command — it installs `hermes` into the running container so it
-is usable immediately, **and** records `install.hermes` in `oh.json` so the choice survives a
-recreate. It never rebuilds or restarts the sandbox. Then set it up:
+That installs `hermes` into the running container so it is usable immediately. There is no
+recorded choice anywhere — `oh` never rebuilds or restarts the sandbox, and if you recreate onto
+a fresh home volume you run the command again. Then set it up:
 
 ```bash
 hermes setup           # interactive wizard (or: hermes setup --portal for Nous Portal OAuth)
@@ -143,18 +158,13 @@ oh tool list                    # the non-agent tooling
 oh tool install agent-browser   # ~1 GB — it asks first
 ```
 
-`install` does **both halves**: it writes the `install.*` key into the tracked `oh.json` so
-the choice survives a recreate, *and* installs into the container you are sitting in so it
-is usable now. It never rebuilds or restarts the sandbox. The same command works from the
-**host**, where it reaches into the running container; run it there with the sandbox stopped
-and it records the flag, says so, and exits 0 rather than failing.
-
-Two flags for when you want only one of the halves:
-
-```bash
-oh harness install grok-build --persist-only   # record the choice, touch nothing now
-oh harness install grok-build --no-persist     # install now, leave oh.json alone
-```
+`oh harness install <id>` and `oh tool install <id>` are the only door, and they do one thing:
+install into the running sandbox, so the tool is usable now. There is no second half — no
+recorded choice, no install field in `oh.json`, and no flags for picking between halves. Nothing
+rebuilds and nothing restarts. What makes an install stick is the home mount: it lands in
+`~/.local`, so it survives a container recreate, and after a recreate onto a *fresh* home volume
+you simply run the install again. The same command works from the **host** against a running
+sandbox.
 
 `oh harness status` and `oh tool status <name>` report what is actually present, with a
 version where the tool has a version flag — worth running after an install rather than
@@ -176,7 +186,6 @@ Run the same command again with a new name and a new volume:
 
 ```bash
 docker run -d --name oh-b --init \
-  -e OH_IMAGE_ONLY=1 \
   -e SANDBOX_NAME=oh-b \
   -e GIT_USER_NAME="gituser" \
   -e GIT_USER_EMAIL="gituser@example.com" \
@@ -222,7 +231,7 @@ docker volume rm oh_a_workspace oh_b_workspace
 
 ## Scenario: a whole team on one daily pull
 
-This is the shape of a shared company harness. Everyone runs the same `ghcr.io/mifunedev/openharness:<tag>`, so the whole team has identical tooling — same Node, `gh`, and agent CLIs, down to the layer hash. To stay in lockstep, each dev pulls the current image each morning and recreates on it:
+This is the shape of a shared company harness. Everyone runs the same `ghcr.io/mifunedev/openharness:<tag>`, so the whole team has an identical base — the image pins Node and `gh` down to the layer hash. The agent CLIs are not in the image: each sandbox installs the ones it uses with `oh harness install <id>`, and those installs live in that sandbox's home mount. To stay in lockstep, each dev pulls the current image each morning and recreates on it:
 
 ```bash
 docker pull ghcr.io/mifunedev/openharness:latest

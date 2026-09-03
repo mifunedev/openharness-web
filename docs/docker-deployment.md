@@ -1,11 +1,13 @@
 ---
 title: Docker deployment
-sidebar_position: 3
+sidebar_position: 8
 ---
 
 # Docker deployment
 
 Run the public Open Harness image directly with Docker—no checkout, local build, CLI wrapper, or Compose required. This walkthrough creates two containers on one private network, each with its own persistent home.
+
+This is the CLI-free path. The default path is the `oh` CLI: [`oh sandbox install docker`](/docs/deployment-prebuilt-image) creates a registry-backed sandbox from any directory and owns its lifecycle (`oh shell`, `oh stop`, `oh destroy`). Use the recipe below when you want plain `docker run` and nothing else on the host.
 
 Everything a sandbox persists lives in a **single mount at `/home/sandbox`**: the workspace and control plane at `/home/sandbox/harness`, and the provider authentication under `/home/sandbox/.config`, `/home/sandbox/.ssh`, `/home/sandbox/.claude`, and `/home/sandbox/.pi`. One volume per sandbox, and nothing to keep in sync.
 
@@ -28,7 +30,6 @@ docker run -itd \
   --network openharness \
   --restart unless-stopped \
   --init \
-  -e OH_IMAGE_ONLY=1 \
   -e SANDBOX_NAME=oh-a \
   -e GIT_USER_NAME="<your-name>" \
   -e GIT_USER_EMAIL="<you@example.com>" \
@@ -37,7 +38,7 @@ docker run -itd \
   sleep infinity
 ```
 
-`oh-a_workspace` is the whole sandbox home, and it is unique to A. The name follows the convention Compose uses—`<sandbox-name>_workspace`—so the same volume can later be adopted by the [image-only Compose file](https://github.com/mifunedev/openharness/blob/development/.devcontainer/docker-compose.image-only.yml) without moving data.
+`oh-a_workspace` is the whole sandbox home, and it is unique to A. The name follows the convention Compose uses—`<sandbox-name>_workspace`—so the same volume can later be adopted by the [image-only Compose file](https://github.com/mifunedev/openharness/blob/main/.devcontainer/docker-compose.image-only.yml) without moving data.
 
 To keep the home on the host filesystem instead, replace the volume name with an absolute host path:
 
@@ -79,6 +80,16 @@ This is **Attach to Running Container**, not **Reopen in Container**.
 
 Run these commands in A's shell.
 
+### Install the tools first
+
+Nothing installs at boot. Add the terminal workspace and the harnesses you will sign in to; `oh harness install <id>` is the one door for every harness in the catalog:
+
+```bash
+oh tool install herdr && herdr
+oh harness install claude-code
+oh harness install pi
+```
+
 ### GitHub and SSH
 
 ```bash
@@ -119,7 +130,6 @@ docker run -itd \
   --network openharness \
   --restart unless-stopped \
   --init \
-  -e OH_IMAGE_ONLY=1 \
   -e SANDBOX_NAME=oh-b \
   -e GIT_USER_NAME="<your-name>" \
   -e GIT_USER_EMAIL="<you@example.com>" \
@@ -155,7 +165,7 @@ docker network connect --alias app openharness my-app
 
 The image ships with `/home/sandbox` deliberately empty and its baked home staged at `/opt/home-seed`. On first boot the entrypoint copies that home into whatever mount landed at `/home/sandbox`, which is why a named volume and a host bind behave identically.
 
-With `OH_IMAGE_ONLY=1`, the entrypoint also copies the baked `/opt/oh-seed` control plane into `/home/sandbox/harness` and writes `.oh/.image-seeded`. After that, the mount is authoritative and is not overwritten on later boots or image updates. A seeded image-only workspace has no Git history; clone or initialize repositories inside it as needed.
+When no checkout is bound at `/home/sandbox/harness`, the entrypoint also copies the baked `/opt/oh-seed` control plane into `/home/sandbox/harness` and writes `.oh/.image-seeded`. After that, the mount is authoritative and is not overwritten on later boots or image updates. A seeded image-only workspace has no Git history; clone or initialize repositories inside it as needed.
 
 ## Lifecycle and security
 
@@ -182,7 +192,7 @@ No ports are published by these commands; the `openharness` network remains priv
 
 ## Full-option references
 
-The `docker run` path above is the recommended walkthrough. For the complete image/boot model and advanced settings, see the [detailed prebuilt-image documentation](https://github.com/mifunedev/openharness/blob/development/.oh/docs/deployment-prebuilt-image.md). The [canonical image-only Compose file](https://github.com/mifunedev/openharness/blob/development/.devcontainer/docker-compose.image-only.yml) is available as a reference for operators who specifically need Compose-managed options.
+The `docker run` path above is the recommended walkthrough. For the complete image/boot model and advanced settings, see [Creating a sandbox](/docs/deployment-prebuilt-image). The [canonical image-only Compose file](https://github.com/mifunedev/openharness/blob/main/.devcontainer/docker-compose.image-only.yml) is available as a reference for operators who specifically need Compose-managed options.
 
 ## The same image runs under MicroSandbox
 

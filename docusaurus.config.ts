@@ -87,12 +87,14 @@ const config: Config = {
         // Redirects for the renamed engine pages: docs/agents/ was renamed
         // to docs/harnesses/. A new "Agents" section now lives at
         // docs/agents/, so /docs/agents and /docs/agents/overview are real
-        // pages again and cannot be redirected. The 6 engine-name redirects
-        // below preserve old deep-links into the harness pages.
+        // pages again and cannot be redirected. The engine-name redirects
+        // below preserve old deep-links into the harness pages; deepagents
+        // left the catalog, so both of its old paths land on the overview.
         redirects: [
           { from: "/docs/agents/claude-code", to: "/docs/harnesses/claude-code" },
           { from: "/docs/agents/codex", to: "/docs/harnesses/codex" },
-          { from: "/docs/agents/deepagents", to: "/docs/harnesses/deepagents" },
+          { from: "/docs/agents/deepagents", to: "/docs/harnesses/overview" },
+          { from: "/docs/harnesses/deepagents", to: "/docs/harnesses/overview" },
           { from: "/docs/agents/grok-build", to: "/docs/harnesses/grok-build" },
           { from: "/docs/agents/opencode", to: "/docs/harnesses/opencode" },
           { from: "/docs/agents/pi", to: "/docs/harnesses/pi" },

@@ -5,41 +5,27 @@ title: "OpenCode"
 
 # OpenCode
 
-OpenCode is a terminal coding agent that can run interactively or execute one-shot tasks. It is an optional image-level runtime in Open Harness; the default sandbox image ships Claude Code, Codex, and Pi only.
+OpenCode is a terminal coding agent that can run interactively or execute one-shot tasks. Like every other harness it installs into `~/.local` rather than the image, and only when you run `oh harness install opencode`.
 
-## Install (optional)
+## Install
 
-The shortest path is the CLI, which sets the `.devcontainer/.env` flag **and**
-installs into the already-running sandbox without a rebuild:
+`oh harness install <id>` is the only door. It installs OpenCode into the
+already-running sandbox without a rebuild:
 
 ```bash
 oh harness install opencode
 ```
 
-See [Harnesses Overview](./overview.md#installing-a-harness) for `--persist-only`,
-`--no-persist`, and what happens when the sandbox is not running.
+Nothing installs OpenCode at boot, and no configuration key selects it. See
+[Harnesses Overview](./overview.md#installing-a-harness) for what the verb does
+and what happens when the sandbox is not running.
 
-### Manual path
+### What the door runs
 
-Enable OpenCode in `.devcontainer/.env`:
-
-```yaml
-install:
-  opencode: true
-```
-
-Or set `INSTALL_OPENCODE=true` in `.devcontainer/.env` (legacy).
-
-Then rebuild/restart the sandbox:
+Open Harness installs the upstream npm package into the home mount as the `sandbox` user:
 
 ```bash
-oh stop && oh sandbox
-```
-
-Open Harness installs the upstream npm package globally during image build:
-
-```bash
-npm install -g opencode-ai
+npm --prefix /home/sandbox/.local install -g opencode-ai
 ```
 
 Verify the install inside the sandbox:
