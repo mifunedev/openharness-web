@@ -9,6 +9,9 @@
 // recipes are the source the social cards are rendered from, so a retired command
 // left there reappears the next time a card is generated.
 //
+// src/pages/ is scanned because the homepage hero is a copy-pasteable quickstart
+// that no docs page owns, and it kept teaching a flow the CLI had already dropped.
+//
 // blog/ is not scanned. Those posts are dated records of how the harness worked
 // at the time, and the site's policy is an admonition rather than an edit.
 //
@@ -34,7 +37,7 @@ import { dirname } from "node:path";
 import process from "node:process";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SCANNED = ["docs", "promos"];
+const SCANNED = ["docs", "promos", "src/pages"];
 
 const RETIRED = [
   {
@@ -85,6 +88,72 @@ const RETIRED = [
     name: "projectRoot / OH_PROJECT_ROOT",
     instead: "the fixed checkout path `/home/sandbox/harness`",
   },
+  {
+    // `oh init` is gone; a checkout is equipped by `oh update`, a sandbox by the wizard.
+    pattern: /\boh init\b|\bopenharness init\b/g,
+    name: "oh init",
+    instead: "`oh update` to equip a checkout with .oh/ + crons/, or `oh sandbox install docker` to create a sandbox",
+  },
+  {
+    // The `oh runtime` namespace collapsed into `oh sandbox` and `oh tool install`.
+    pattern: /\boh runtime\b/g,
+    name: "oh runtime",
+    instead: "`oh sandbox --help` (catalog), `oh sandbox install docker` (provision), `oh tool install microsandbox` (msb)",
+  },
+  {
+    // A bare `oh sandbox` no longer provisions anything; it prints help and exits non-zero.
+    pattern: /\boh sandbox\b(?!\s+(?:install|list)\b|\s+--help\b|\s+<)/g,
+    name: "bare `oh sandbox`",
+    instead: "`oh sandbox install docker [--name <name>] [--repo <dir>]`, or `oh sandbox list`",
+  },
+  {
+    // Installs are no longer persisted or skipped by flag; there is one door.
+    pattern: /--persist-only\b|--no-persist\b/g,
+    name: "--persist-only / --no-persist",
+    instead: "plain `oh harness install <id>` / `oh tool install <id>` — oh.json carries no install field",
+  },
+  {
+    // oh.json lost its install block when nothing installs at boot.
+    pattern: /\binstall\.(?:\*|(?:opencode|grokBuild|grok_build|deepagents|hermes|agentBrowser)\b)|"install"\s*:/g,
+    name: "an install.* key",
+    instead: "`oh harness install <id>` or `oh tool install <id>`; oh.json holds no install field",
+  },
+  {
+    // The image no longer bakes harnesses in, so the build flags that selected them are gone.
+    pattern: /\bINSTALL_(?:OPENCODE|GROK_BUILD|DEEPAGENTS|HERMES|AGENT_BROWSER)\b/g,
+    name: "an INSTALL_* build flag",
+    instead: "`oh harness install <id>` / `oh tool install <id>` into the running sandbox",
+  },
+  {
+    // The Hermes dashboard moved from env flags to oh.json keys.
+    pattern: /\bHERMES_DASHBOARD(?:_PORT)?=/g,
+    name: "a HERMES_DASHBOARD env flag",
+    instead: "`oh config set hermesDashboard.enabled true` and `hermesDashboard.port` — see docs/harnesses/hermes.md",
+  },
+  {
+    // gvisor was never in the runtime catalog that shipped.
+    pattern: /\bgvisor\b|\brunsc\b/gi,
+    name: "gvisor",
+    instead: "the catalog is docker (provisionable) and microsandbox (planned) — see docs/runtimes/overview.md",
+  },
+  {
+    // The two install flavours became one wizard with an optional --repo.
+    pattern: /\bFlavor [AB]\b/g,
+    name: "Flavor A/B",
+    instead: "`oh sandbox install docker` (published image) versus `--repo <dir>` (bind-mounted checkout)",
+  },
+  {
+    // Nothing ships in the image any more, so nothing is preinstalled.
+    pattern: /\bpre-?installed\b|\binstalled by default\b/gi,
+    name: '"preinstalled"',
+    instead: "nothing installs at boot; `oh harness install <id>` / `oh tool install <id>` are the only door",
+  },
+  {
+    // The checkout path is fixed at /home/sandbox/harness.
+    pattern: /\/home\/sandbox\/project\b/g,
+    name: "/home/sandbox/project",
+    instead: "the fixed checkout path `/home/sandbox/harness`",
+  },
 ];
 
 // A page may name a retired thing in order to say it is retired. Each exemption
@@ -106,13 +175,18 @@ const ALLOW = [
     why: "names the old volumes in the manual migration recipe, to say they are gone and not migrated automatically",
   },
   {
-    file: "configuration.md",
-    token: "projectRoot / OH_PROJECT_ROOT",
-    why: "documents that the knob was removed and the checkout path is now fixed",
+    file: "lifecycle-commands.md",
+    token: "bare `oh sandbox`",
+    why: "documents that a bare `oh sandbox` prints help and exits non-zero",
+  },
+  {
+    file: "runtimes/overview.md",
+    token: "bare `oh sandbox`",
+    why: "names the namespace the runtime catalog lives under",
   },
 ];
 
-const SCANNED_EXTENSIONS = [".md", ".json"];
+const SCANNED_EXTENSIONS = [".md", ".json", ".tsx"];
 
 function walk(dir) {
   return readdirSync(dir).flatMap((entry) => {

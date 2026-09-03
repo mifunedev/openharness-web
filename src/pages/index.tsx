@@ -9,19 +9,20 @@ const GITHUB_URL = `https://github.com/${GITHUB_REPO}`;
 const FALLBACK_STARS = 18;
 
 const QUICKSTART = `# 1 · install the oh CLI  (host: Docker + git + Node.js ≥ 20)
-curl -fsSL https://oh.mifune.dev/install.sh | bash
-# ...or run the public image directly, with no checkout/build:
-# https://oh.mifune.dev/docs/docker-deployment
+curl -fsSL https://oh.mifune.dev/get-oh.sh | bash
+# ...or: npm install -g @mifune/openharness
 
-# 2 · start the sandbox and open a shell in it
-cd ~/.openharness && oh sandbox && oh shell
-# VS Code alternative: "Dev Containers: Attach to Running Container"
-# (Reopen in Container skips oh, so no overlays apply — see the docs)
+# 2 · create a sandbox from any directory, then open a shell in it
+oh sandbox install docker   # wizard: name, timezone, git identity, SSH, Docker socket
+oh shell <name>             # default name oh-sbx-1; omit it when it is your only sandbox
 
-# 3 · run your agent inside the sandbox
-claude          # or codex · pi · hermes · openclaw (coming soon) · opencode
+# 3 · nothing installs at boot — add tools through the one door, inside the sandbox
+oh tool install herdr && herdr     # persistent terminal workspace
+oh harness install claude-code     # or codex · pi · opencode · hermes · grok-build
+claude
 
 # 4 · optional — Hermes + Slack messaging (in order)
+oh harness install hermes
 hermes setup            # 1. model/provider auth
 hermes gateway setup    # 2. configure the Slack gateway
 gateway hermes          # 3. start the Slack session`;
@@ -56,19 +57,6 @@ const AGENTS: Array<{
     description: "A lightweight, customizable agent.",
     href: "/docs/harnesses/pi",
     icon: <PiIcon />,
-  },
-  {
-    name: "DeepAgents",
-    description: "LangChain's multi-provider terminal agent.",
-    href: "/docs/harnesses/deepagents",
-    icon: (
-      <img
-        src="https://avatars.githubusercontent.com/u/126733545?s=200&v=4"
-        alt=""
-        width={28}
-        height={28}
-      />
-    ),
   },
   {
     name: "Hermes",
@@ -177,7 +165,7 @@ export default function Home(): React.ReactElement {
                   className={styles.terminalFooterLink}
                   to="/docs/docker-deployment"
                 >
-                  Docker deployment →
+                  Raw Docker, no CLI →
                 </Link>
               </div>
             </aside>
@@ -215,7 +203,7 @@ export default function Home(): React.ReactElement {
           <div className={styles.container}>
             <h2 className={styles.sectionTitle}>Pick your agent.</h2>
             <p className={styles.sectionLede}>
-              Claude Code, Codex, and Pi ship preinstalled. OpenCode, DeepAgents, Hermes, and Grok Build are opt-in image installs. Switch between them inside the sandbox — or add your own by editing the Dockerfile.
+              Nothing installs at boot. Add Claude Code, Codex, Pi, OpenCode, Hermes, or Grok Build with one <code>oh harness install &lt;id&gt;</code> inside the sandbox; T3 Code runs on demand. Switch between them inside the sandbox — or add your own as a harness pack.
             </p>
             <div className={styles.agentGrid}>
               {AGENTS.map((agent) => {
@@ -281,7 +269,7 @@ export default function Home(): React.ReactElement {
                 Open Harness keeps the agent environment with the project instead of scattering it across a laptop. Git versions the portable control plane: identity, task procedures, schedules, and checks. Docker provides the isolated runtime. Herdr preserves interactive terminals, and git worktrees keep parallel agent sessions from colliding. The agent owns its workspace while the host stays clean.
               </p>
               <p>
-                A markdown cron runtime reads <code>crons/*.md</code> and wakes the agent on a schedule — issue triage, PR review, background grooming, anything you want running while you sleep. Configure the sandbox via <code>.devcontainer/.env</code>; Postgres ships as an opt-in compose overlay, and additional infra (tunnels, reverse proxies) is registered via harness-pack overlays in <code>config.json</code>.
+                A markdown cron runtime reads <code>crons/*.md</code> and wakes the agent on a schedule — issue triage, PR review, background grooming, anything you want running while you sleep. Each sandbox is a registry entry at <code>~/.oh/sandboxes/&lt;name&gt;/oh.json</code>, written by the <code>oh sandbox install docker</code> wizard and edited with <code>oh config set --sandbox &lt;name&gt;</code>; Postgres and other overlays are opt-in, and extra infra (tunnels, reverse proxies) is registered through <code>composeOverrides[]</code>.
               </p>
               <p>
                 Multi-agent setups — like a Pi+Mom Slack bot — ship as separate harness packs you <code>git clone</code> into the workspace.

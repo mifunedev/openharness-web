@@ -38,7 +38,7 @@
       },
       {
         "prompt": "$ ",
-        "text": "cd ~/.openharness && oh sandbox && oh shell"
+        "text": "oh sandbox install docker && oh shell"
       },
       {
         "prompt": "$ ",
@@ -46,14 +46,14 @@
       },
       {
         "prompt": "$ ",
-        "text": "claude   # or codex · pi"
+        "text": "oh harness install claude-code && claude"
       },
       {
         "text": "# safe default: Docker socket off",
         "muted": true
       },
       {
-        "text": "# isolate agent work in .oh/worktrees/",
+        "text": "# isolate agent work in .worktrees/",
         "muted": true
       }
     ],
