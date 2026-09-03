@@ -9,14 +9,20 @@ Claude Code is Anthropic's terminal-based AI coding agent. It reads your codebas
 
 ## Purpose
 
-Claude Code is the default general-purpose agent in Open Harness. It handles everything from one-off file edits to multi-file refactors, test generation, and debugging. It works best for tasks that benefit from a persistent conversational loop where you can steer the agent mid-task.
+Claude Code is the general-purpose agent most Open Harness operators install first. It handles everything from one-off file edits to multi-file refactors, test generation, and debugging. It works best for tasks that benefit from a persistent conversational loop where you can steer the agent mid-task.
 
 ## Install
 
-Claude Code is installed by default during sandbox provisioning. The package is `@anthropic-ai/claude-code`, installed globally via pnpm:
+Claude Code enters the sandbox only through the door:
 
 ```bash
-pnpm add -g @anthropic-ai/claude-code
+oh harness install claude-code
+```
+
+The verb installs the `@anthropic-ai/claude-code` package into the persistent home volume as the `sandbox` user:
+
+```bash
+npm --prefix /home/sandbox/.local install -g @anthropic-ai/claude-code
 ```
 
 Verify the install:
@@ -38,18 +44,17 @@ claude auth status     # confirm you're authenticated
 `claude auth` also has `logout`. Launching a bare `claude` when unauthenticated will start
 the same OAuth flow, but `claude auth login` is the explicit, scriptable path.
 
-Credentials are stored in `~/.claude/.credentials.json` inside the sandbox (persisted as
-part of the sandbox's single home mount). The sandbox banner at login indicates whether
-credentials are present.
+Credentials are stored in `~/.claude/.credentials.json` inside the sandbox (persisted via the
+`/home/sandbox` mount). The sandbox banner at login indicates whether credentials are present.
 
 ## Optional Langfuse observability
 
 For optional Claude Code end-to-end traces, use Langfuse's official marketplace
-plugin and configure it at the Claude prompt; it is not a native OTEL or `.env`
-setup. The plugin is user-scoped and captures conversation and tool data, so
-disable it before sensitive sessions. See [Langfuse](../integrations/langfuse.md#claude-code)
+plugin and configure it at the Claude prompt; it is not a native OTEL or
+`.env` setup. The plugin is user-scoped and captures conversation and tool data,
+so disable it before sensitive sessions. See [Langfuse](../integrations/langfuse.md#claude-code)
 for the exact install/configure commands, endpoint choices, privacy boundary,
-disable/enable/uninstall steps, diagnostics, and source links.
+and disable/uninstall steps.
 
 ## Common usage
 
@@ -63,7 +68,7 @@ claude
 claude -p "Explain the structure of the packages/ directory"
 
 # Point at a specific working directory
-claude --cwd /home/sandbox/harness/workspace
+claude --cwd /home/sandbox/harness
 ```
 
 Run inside a dedicated tmux session to keep the agent alive across disconnects:

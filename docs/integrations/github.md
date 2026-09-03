@@ -82,4 +82,4 @@ gh issue view 42
 
 ## Persisting credentials across restarts
 
-The `gh` token is stored inside the container at `~/.config/gh/`, part of the sandbox's single home mount. The token survives `docker compose down` and `docker compose up` cycles. `docker compose down -v` removes that mount — re-run `gh auth login` after a `down -v`, or register your own compose overlay in `config.json` `composeOverrides[]` to bind-mount a host directory to `~/.config/gh/`.
+The `gh` token is stored inside the container at `~/.config/gh/`, which persists in the single `/home/sandbox` mount. The token survives `docker compose down` and `docker compose up` cycles. `docker compose down -v` deletes the volume — re-run `gh auth login` after a `down -v`, or set `storage.homePath` in `oh.json` to keep the sandbox home on a host path that `down -v` cannot touch.

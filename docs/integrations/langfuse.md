@@ -41,7 +41,7 @@ classifies only an `AbortError` caused by pi-langfuse's own shutdown controller
 as an expected bounded timeout; with `PI_LANGFUSE_DEBUG=1` it remains visible as
 a debug message, while other shutdown errors still update runtime status and
 emit the normal warning. Rerun the helper after any package reinstall or `~/.pi`
-directory reset. The OpenTelemetry override remediates the vulnerable tree selected
+volume reset. The OpenTelemetry override remediates the vulnerable tree selected
 by pi-langfuse's declared `^0.218.0` range without npm audit's unsafe
 recommendation to downgrade pi-langfuse to `1.0.0`; unrelated npm overrides are
 preserved.
@@ -150,7 +150,7 @@ name remains `langfuse-web`. Repeat the network attachment whenever the
 
 #### 5. Create the local user, project, and keys
 
-Open [http://localhost:3000](http://localhost:3000) on the host and:
+Open <http://localhost:3000> on the host and:
 
 1. Select **Sign up** and create the initial local user.
 2. Sign in and create an organization when prompted.
@@ -245,10 +245,10 @@ pi
 `LANGFUSE_HOST` is supported as a fallback name. For an environment-only
 configuration, `LANGFUSE_BASE_URL` wins over `LANGFUSE_HOST`.
 
-Set the host and the privacy preset in `oh.json` instead of exporting them by
-hand. `oh` renders `langfuse.baseUrl` and `langfuse.privacyPreset` into the
-Compose environment, and both compose files put them in the sandbox process
-environment, so Pi reads them on every launch:
+`langfuse.baseUrl` and `langfuse.privacyPreset` in `oh.json` record the intended
+values in one tracked place, but the harness does **not** project them into the
+container — Pi reads them from its own process environment, so export them in the
+shell that launches Pi (see the block above):
 
 ```json
 {
@@ -259,7 +259,7 @@ environment, so Pi reads them on every launch:
 }
 ```
 
-Apply the change with `oh stop && oh sandbox`. The two credentials stay secrets:
+The two credentials stay secrets:
 keep `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` in the root dotenv (`oh
 secret set`) or in the saved `~/.pi/agent/pi-langfuse/config.json`, and export
 them in the shell that launches Pi if you use the environment-only path.
@@ -382,7 +382,7 @@ your self-hosted URL. Other optional fields are `LANGFUSE_USER_ID`,
 
 The plugin installs and is enabled at **user scope**. Configuration is stored by
 Claude's plugin configuration and OS-keychain mechanisms according to upstream.
-Open Harness persists `~/.claude` as part of the sandbox's single home mount, but OS-keychain
+Open Harness persists `~/.claude` in the `/home/sandbox` mount, but OS-keychain
 availability and persistence are platform-dependent; verify the plugin remains
 configured after a sandbox rebuild. You can enter the same Langfuse key pair in
 Pi and Claude Code, but their saved configurations are independent. Do not put

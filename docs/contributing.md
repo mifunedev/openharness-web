@@ -36,7 +36,8 @@ Open Harness has no host-side build step. The orchestrator runs at the project r
 The lifecycle is driven entirely by `oh`:
 
 ```bash
-oh sandbox    # provision and start the sandbox (docker compose up -d --build)
+oh sandbox install docker   # create and start a sandbox (wizard); runs from any directory
+oh sandbox list             # every registered sandbox
 oh shell      # enter the sandbox as the `sandbox` user
 oh ps         # show service status
 oh logs       # tail compose logs
@@ -46,13 +47,15 @@ oh restart    # restart the service
 oh --help     # list every verb
 ```
 
-A first-run helper is available at `.oh/scripts/install.sh` — it prompts for the non-secret values written to `oh.json` and the secrets written to the gitignored root `.env` (GitHub token autodetect, idempotent re-runs) before it calls `oh sandbox`.
+A first-run helper is available at `.oh/scripts/install.sh` — it prompts for the non-secret values written to `oh.json` and the secrets written to the gitignored root `.env` (GitHub token autodetect, idempotent re-runs) before it calls `oh sandbox install docker`.
 
 ### Onboard inside the sandbox
 
-After `oh shell`, start Herdr before any other inside-sandbox setup:
+After `oh shell`, install and start Herdr before any other inside-sandbox setup.
+A fresh sandbox has none, because nothing installs at boot:
 
 ```bash
+oh tool install herdr
 herdr
 ```
 

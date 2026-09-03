@@ -7,45 +7,27 @@ title: "Grok Build"
 
 Grok Build is xAI's proprietary terminal coding agent, shipped as the `grok` CLI. Open Harness installs it with xAI's official installer from `https://x.ai/cli/install.sh`.
 
-Grok Build is **optional** in Open Harness and is **excluded from the default image**. Enable it only when you want the xAI Grok Build CLI available in the sandbox.
+Grok Build is never baked into the sandbox image. Install it only when you want the xAI Grok Build CLI available in the sandbox.
 
-## Install (optional)
+## Install
 
-The shortest path is the CLI, which sets the `.devcontainer/.env` flag **and**
-installs into the already-running sandbox without a rebuild:
+`oh harness install <id>` is the only door. It installs Grok Build into the
+already-running sandbox without a rebuild:
 
 ```bash
 oh harness install grok-build
 ```
 
-See [Harnesses Overview](./overview.md#installing-a-harness) for `--persist-only`,
-`--no-persist`, and what happens when the sandbox is not running.
+Nothing installs Grok Build at boot, and no configuration key selects it. See
+[Harnesses Overview](./overview.md#installing-a-harness) for what the verb does
+and what happens when the sandbox is not running.
 
-### Manual path
+### What the door runs
 
-Enable Grok Build in `.devcontainer/.env`:
-
-```yaml
-install:
-  grok_build: true
-```
-
-Or set the legacy build flag in `.devcontainer/.env`:
+Open Harness uses the upstream installer as the `sandbox` user, pinned to the version verified when this support was added, with the binary directed into the home mount:
 
 ```bash
-INSTALL_GROK_BUILD=true
-```
-
-Then rebuild/restart the sandbox:
-
-```bash
-oh stop && oh sandbox
-```
-
-Open Harness uses the upstream installer during image build, pinned to the version verified when this support was added:
-
-```bash
-curl -fsSL https://x.ai/cli/install.sh | bash -s 0.2.39
+curl -fsSL https://x.ai/cli/install.sh | GROK_BIN_DIR="$HOME/.local/bin" bash -s 0.2.39
 ```
 
 Review-first equivalent for manual inspection:
@@ -64,7 +46,7 @@ Verify the install inside the sandbox:
 grok --version
 ```
 
-If `grok` is not found, confirm `INSTALL_GROK_BUILD=true` is set in `.devcontainer/.env` and rebuild.
+If `grok` is not found, run `oh harness install grok-build`. It installs into `~/.local/bin` in the persistent home volume. A fresh home volume has no `grok` until you run the verb again.
 
 ## Authentication
 
@@ -85,7 +67,7 @@ environment variables as convenience secret storage only; users and processes
 with Docker/container access may be able to inspect them.
 
 :::warning Auth precedence
-Cached OAuth/session state in `~/.grok/auth.json` takes precedence over `XAI_API_KEY`. If Grok Build appears to ignore a new API key, run `grok logout` or remove `~/.grok` from the sandbox's home mount, then try again.
+Cached OAuth/session state in `~/.grok/auth.json` takes precedence over `XAI_API_KEY`. If Grok Build appears to ignore a new API key, run `grok logout` or delete `~/.grok`, then try again.
 :::
 
 ## Common usage
@@ -110,7 +92,7 @@ tmux attach -t agent-grok
 
 ## State persistence
 
-Open Harness keeps `/home/sandbox/.grok` (`~/.grok`) inside the sandbox's single home mount, alongside the other tools' state. This persists **Grok user state written under `~/.grok`** across container rebuilds, such as:
+Open Harness persists `~/.grok` in the single `/home/sandbox` mount, alongside every other agent's state. That keeps **Grok user state written under `~/.grok`** across container rebuilds, such as:
 
 - auth and cached sessions (`auth.json`)
 - config
@@ -120,7 +102,7 @@ Open Harness keeps `/home/sandbox/.grok` (`~/.grok`) inside the sandbox's single
 - logs
 
 :::warning Volume removal deletes Grok state
-`oh destroy` and `docker compose down -v` remove the sandbox's home mount, taking `~/.grok` with it. Use `oh stop` when you want Grok Build state under `~/.grok` to survive.
+`oh destroy` and `docker compose down -v` delete the sandbox home volume, `~/.grok` included. Use `oh stop` when you want Grok Build state under `~/.grok` to survive.
 :::
 
 ## Dangerous flags

@@ -5,13 +5,28 @@ title: "Pi"
 
 # Pi
 
-Pi is a lightweight, customizable harness — a hackable agent framework you can shape to your project. It ships in the default sandbox image alongside Claude Code and Codex.
+Pi is a lightweight, customizable harness — a hackable agent framework you can shape to your project. Install it with `oh harness install pi`.
 
 ## Verify installation
 
 ```bash
 pi --version
 ```
+
+## Authentication
+
+Pi's subscription login runs its own OAuth flow with a local callback server on `http://localhost:1455`. For the login to complete, the browser on your laptop has to reach port 1455 inside the container.
+
+The base `.devcontainer/docker-compose.yml` publishes `127.0.0.1:1455:1455` so the callback port lands on the host loopback:
+
+- **VS Code Remote SSH (works out of the box):** VS Code automatically forwards the loopback port to your laptop — just run the Pi login, the redirect completes with no extra step.
+- **Direct terminal (plain `ssh`):** plain SSH does not auto-forward ports. Open the tunnel yourself before logging in:
+
+  ```bash
+  ssh -L 1455:localhost:1455 user@your-host
+  ```
+
+This is Pi-specific. The Codex CLI has its own headless path (`codex login --device-auth`) and does not need port 1455 — see [Codex § Authentication](./codex.md#authentication).
 
 ## Upstream
 
@@ -31,7 +46,7 @@ Before choosing, follow [Choosing a Model](../model-selection.md) to compare pub
 
 Open Harness loads these project-local Pi packages from `.pi/settings.json`:
 
-- [`@tintinweb/pi-subagents`](https://pi.dev/packages/@tintinweb/pi-subagents) — Claude Code-style sub-agent commands for Pi.
+- [`@tintinweb/pi-subagents`](https://pi.dev/packages/@tintinweb/pi-subagents) — Claude Code-style sub-agent commands for Pi, including FleetView (enabled by default). With an empty prompt, press `↓` (or `←`) to focus the agent list, then `↑`/`↓` to select and `Enter` to open an agent; toggle it via `/agents` → Settings → Fleet view.
 - [`@tintinweb/pi-tasks`](https://github.com/tintinweb/pi-tasks) — task tracking for Pi with `TaskCreate`, `TaskList`, `TaskGet`, `TaskUpdate`, `TaskOutput`, `TaskStop`, and `TaskExecute` tools; a `/tasks` menu; and a persistent task widget. `TaskExecute` integrates with `@tintinweb/pi-subagents` so tracked tasks can run through configured subagents.
 - [`@narumitw/pi-goal`](https://pi.dev/packages/@narumitw/pi-goal?name=goal) — `/goal <task>` mode that keeps Pi working until it verifies completion and calls the `goal_complete` tool. Use `/goal pause`, `/goal resume`, or `/goal clear` to manage the active goal.
 - [`@narumitw/pi-plan-mode`](https://pi.dev/packages/@narumitw/pi-plan-mode) — Codex-like `/plan` mode for read-only exploration, structured clarification through `plan_mode_question`, and approval-gated implementation. Open Harness uses this upstream package instead of maintaining a local `.pi/extensions/plan-mode/` implementation.
@@ -114,7 +129,7 @@ Use `/recap` when re-entering a long Pi session without rereading the transcript
 
 `pi-recap` waits five idle minutes after each agent response and generates one automatic recap if you stay away. On resume, it shows the saved recap when current or regenerates it when stale/missing. The visible recap clears when you send a normal non-`/recap` message.
 
-Recap model selection is user-level state, not repository state. `/recap config` writes the user's selected model outside LLM context; the same setting can be edited manually at `~/.config/pi/extensions/pi-recap.json`. The upstream default is `openai-codex/gpt-5.4-mini`.
+Recap model selection is user-level state, not repository state. `/recap config` writes the user's selected model outside LLM context; the same setting can be edited manually at `~/.config/pi/extensions/pi-recap.json`. The upstream default is `openai-codex/gpt-5.6-luna`.
 
 ## Codex usage status
 
@@ -146,6 +161,6 @@ See [Pi dynamic workflows](../integrations/pi-dynamic-workflows.md) for the work
 
 ## Slack integration
 
-The harness ships Slack via the **pi-messenger-bridge** npm package, loaded only in the dedicated `client-slack-pi` tmux session via `--extension` (not pinned in `.pi/settings.json`). Set `PI_SLACK_APP_TOKEN` and `PI_SLACK_BOT_TOKEN` in `.devcontainer/.env`, manage the session with `gateway pi` (`gateway status` to check, `gateway pi --restart` after token edits), and configure the messenger from inside it with the bridge's `/msg-bridge` command — access control is challenge-based (deny-by-default, no static allowlist), and inbound Slack messages route into the agent via the package using Pi's native `sendUserMessage()` / `turn_end`.
+The harness ships Slack via the **pi-messenger-bridge** npm package, loaded only in the dedicated `client-slack-pi` tmux session via `--extension` (not pinned in `.pi/settings.json`). Create/update the Slack app from `.pi/install/slack-manifest.json`, set `PI_SLACK_APP_TOKEN` and `PI_SLACK_BOT_TOKEN` in `.devcontainer/.env`, manage the session with `gateway pi` (`gateway status` to check, `gateway pi --restart` after token edits), and use the Pi-side `/msg-bridge` command for bridge status/configuration. Access control is challenge-based (deny-by-default, no static allowlist); trusted-user/channel admin is handled by manifest-backed Slack admin commands or `.pi/msg-bridge.json` pre-seeding, and inbound Slack messages route into the agent via the package using Pi's native `sendUserMessage()` / `turn_end`.
 
 See [Slack integration](../integrations/slack.md) for setup steps.
