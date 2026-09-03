@@ -1,0 +1,3 @@
+# progress
+
+2026-09-03T03:46:10Z plan: base openharness-web main@78d6ad1e, harness docs source task/950-sandbox-registry@cd10d78e; queries "docs site mirror cli sandbox registry", "docs guards vocabulary --patterns"; read oh-cli-portable-lifecycle, fresh-machine-setup, compose-env-boundary, pattern-docs-prohibition-by-example, pattern-evals-prose-literal-pinning; issue #38 opened; approved plan copied to plan.md.

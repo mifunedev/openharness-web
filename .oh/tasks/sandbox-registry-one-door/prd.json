@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "project": "Open Harness — openharness-web",
+  "branchName": "docs/38-sandbox-registry-one-door",
+  "description": "Mirror #948 (one door) and #950 (sandbox registry) into mifunedev/openharness-web: re-copy the affected docs pages from the harness at cd10d78e with the site transform, extend the drift checker, rewrite the hero and affected blog posts, verify the build, and open a draft PR that stays draft until the upstream release reaches main.",
+  "artifact_contract": {
+    "required_artifacts": [
+      ".oh/tasks/sandbox-registry-one-door/prd.md",
+      ".oh/tasks/sandbox-registry-one-door/plan.md",
+      ".oh/tasks/sandbox-registry-one-door/evidence.md",
+      "docs/deployment-prebuilt-image.md",
+      "docs/oh-directory-layout.md",
+      "scripts/check-docs-drift.mjs"
+    ]
+  },
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Mirror the affected docs pages from the harness at cd10d78e",
+      "description": "As a reader of oh.mifune.dev, I want every mirrored page to match the harness docs so that the site teaches the flow the CLI actually implements.",
+      "acceptanceCriteria": [
+        "A throwaway mirror-docs.mjs (scratchpad, not committed) implements the plan's PAGES map, FIXUPS map (each must match exactly once, else throw), frontmatter merge order id, slug, sidebar_position, title, and the five link rules with GH=https://github.com/mifunedev/openharness/blob/main",
+        "MIRROR pages written: installation, quickstart, lifecycle-commands, configuration (title Configuration), harnesses/{overview,claude-code,codex,opencode,t3code,grok-build}, integrations/{slack,github,debugmcp,langfuse}, runtimes/{overview,docker,microsandbox}",
+        "MIRROR+RECONCILE pages written with their preserved frontmatter: intro (slug /), connecting (id/slug /connecting), harnesses/pi, integrations/pi-fff, resources",
+        "MIRROR+FIXUP applied: contributing.md bare oh sandbox line -> oh sandbox install docker + oh sandbox list lines; harnesses/hermes.md oh stop && oh sandbox -> oh stop <name> && oh sandbox install docker --name <name>; deployment-prebuilt-image.md git identity -> placeholders",
+        "ADD docs/deployment-prebuilt-image.md (title Creating a sandbox, position 4) and docs/oh-directory-layout.md (title .oh/ directory layout, position 11)",
+        "DELETE docs/harnesses/deepagents.md",
+        "Top-level sidebar_position: intro 1, installation 2, quickstart 3, deployment-prebuilt-image 4, connecting 5, lifecycle-commands 6, configuration 7, docker-deployment 8, harnesses 9, runtimes 10, oh-directory-layout 11, model-selection 12, integrations 13, resources 14, contributing 999",
+        "diff of each mirrored page against its harness source shows only frontmatter, link rewrites, and the listed FIXUPS; the rewrite log is kept in the commit body",
+        "Commit 'docs: mirror docs/ from openharness cd10d78e (#948, #950)' on the branch"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Reconcile site-only content",
+      "description": "As a reader, I want the site-only pages and carried-over sections to keep working after the mirror so that no link or recipe on the site points at something that no longer exists.",
+      "acceptanceCriteria": [
+        "harnesses/pi.md carries the site's '## Choose a model' section, the pi-autoresearch bullet, and the pi -e npm:pi-autoresearch@1.6.0 mention on top of the harness copy",
+        "integrations/pi-fff.md keeps the pi-autoresearch mention; intro.md links /blog/compound-engineering; resources.md keeps the /blog/compound-engineering bullet; connecting.md points /docs/integrations/sshd at the GitHub URL",
+        "docker-deployment.md: second paragraph points at /docs/deployment-prebuilt-image as the default CLI path; both '-e OH_IMAGE_ONLY=1 \\' lines deleted; the seeding sentence says the entrypoint seeds /opt/oh-seed when no checkout is bound at /home/sandbox/harness; '### Install the tools first' (oh tool install herdr && herdr, oh harness install claude-code, oh harness install pi) precedes '### GitHub and SSH'; the two upstream links fixed (/docs/deployment-prebuilt-image, blob/main/.devcontainer/docker-compose.image-only.yml); sidebar_position 8",
+        "model-selection.md position 12; resources.md position 14",
+        "property-testing.md, integrations/pi-dynamic-workflows.md, integrations/pi-autoresearch.md unchanged"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Extend the drift checker and prove it fires",
+      "description": "As a maintainer, I want check:docs-drift to fail on every retired spelling so that the vocabulary cannot come back through a later hand edit.",
+      "acceptanceCriteria": [
+        "The eleven RETIRED entries from the plan are appended verbatim (oh init, oh runtime, bare oh sandbox, persist flags, install.* key, INSTALL_* flag, HERMES_DASHBOARD env, gvisor, Flavor A/B, preinstalled, /home/sandbox/project)",
+        "ALLOW: the projectRoot / OH_PROJECT_ROOT entry removed; lifecycle-commands.md / bare oh sandbox and runtimes/overview.md / bare oh sandbox entries added with the plan's reasons; layout-knob, harness.yaml, and per-tool-volume entries kept",
+        "SCANNED = [docs, promos, src/pages]; SCANNED_EXTENSIONS includes .tsx",
+        "Negative test transcript: appending 'Run `oh init` then `oh sandbox`.' to docs/resources.md makes the checker exit 1 naming the file, line, and both tokens; appending '`oh sandbox install docker`, `oh sandbox list`, `oh sandbox --help`' exits 0; the file is restored with git checkout",
+        "The work-list run (checker extended, pages not yet fixed) is captured; the green run prints PASS",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Rewrite the hero, promo recipe, and redirects",
+      "description": "As a first-time visitor, I want the homepage to show the real four-step flow so that the most-read code block on the site is not wrong.",
+      "acceptanceCriteria": [
+        "src/pages/index.tsx QUICKSTART equals the plan's block verbatim",
+        "The DeepAgents AGENTS card is removed; the lede reads 'Nothing installs at boot. Add Claude Code, Codex, Pi, OpenCode, Hermes, or Grok Build with one `oh harness install <id>` inside the sandbox; T3 Code runs on demand…'; the architecture card sentence describes the registry entry ~/.oh/sandboxes/<name>/oh.json (wizard-written, oh config set --sandbox <name>, opt-in overlays, composeOverrides[]); the terminal footer link text is 'Raw Docker, no CLI →' with its target unchanged",
+        "docusaurus.config.ts: /docs/agents/deepagents -> /docs/harnesses/overview; /docs/harnesses/deepagents -> /docs/harnesses/overview added",
+        "promos/banner-recipes/2026-07-07-open-harness-demo-guide.json: terminalLines[1].text -> 'oh sandbox install docker && oh shell', terminalLines[3].text -> 'oh harness install claude-code && claude', .oh/worktrees/ -> .worktrees/; banner re-rendered with pnpm run render:blog-banner when sharp works, else the recipe alone is committed and the PR says so",
+        "pnpm run typecheck passes",
+        "Verify in browser using agent-browser skill (or pnpm run serve spot-check when agent-browser is unavailable, recorded as such)"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Rewrite the affected blog posts under dated admonitions",
+      "description": "As a reader of a dated post, I want the commands to work today and a note explaining what changed so that copy-pasting a recipe does not run a deleted verb.",
+      "acceptanceCriteria": [
+        "Shared admonition (dated 2026-09-02, citing #948 and #950) added or replaced in 2026-07-06-first-sandbox-agent-auth.md, 2026-07-11-deploy-open-harness-with-docker.md, 2026-07-07-open-harness-demo-guide.md per the plan's per-post list",
+        "-e OH_IMAGE_ONLY=1 removed from every docker run block and the compose environment: in the two deployment posts; install-first blocks inserted; install.* / persist-flag paragraphs replaced with one-door text",
+        "Demo post: prerequisites Node >= 20; install block -> get-oh.sh + oh sandbox install docker; clone-and-own -> oh sandbox install docker --repo \"$PWD\" --name openharness; bullets -> ~/.oh/sandboxes/oh-sbx-1/oh.json, secrets via oh secret set --sandbox, oh shell oh-sbx-1, oh destroy oh-sbx-1; make shell x3 -> oh shell oh-sbx-1; .oh/ list per oh-directory-layout.md; .oh/worktrees/ -> .worktrees/",
+        "archive/2026-04-28-byoh.md Archived note extended; commands -> oh sandbox install docker --name my-agent, oh shell my-agent, oh destroy my-agent",
+        "2026-06-07-containers-microvms-vms.md unchanged",
+        "Residual grep over blog/ for OH_IMAGE_ONLY, oh init, oh runtime, persist flags, install.*, make shell finds only admonition text"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Verify the whole branch",
+      "description": "As the reviewer, I want the build, link, and residual checks run on the merged branch so that the PR's claims are observed, not predicted.",
+      "acceptanceCriteria": [
+        "pnpm install --frozen-lockfile succeeds",
+        "pnpm run check:docs-drift prints PASS",
+        "pnpm run typecheck exits 0",
+        "OH_SCRIPTS_REF=task/950-sandbox-registry pnpm run build exits 0 and its log has no 'broken' hit",
+        "Residual grep over docs promos src blog docusaurus.config.ts for every retired term finds only the blog admonitions and the two deepagents redirect from: paths; the bare-oh-sandbox PCRE finds only lifecycle-commands.md:74 and runtimes/overview.md:9",
+        "Every blob/main/... URL in docs/ returns 200 200 on main and on task/950-sandbox-registry",
+        "pnpm run serve spot-check of /, /docs, /docs/deployment-prebuilt-image, /docs/harnesses/deepagents (redirect) recorded"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Deliver the draft PR, evidence, and follow-ups",
+      "description": "As the operator, I want a draft PR whose body carries the disposition, the checker diff, the verification output, and the undraft procedure so that merging after the upstream release is a two-command act.",
+      "acceptanceCriteria": [
+        "Issue #38 on mifunedev/openharness-web; branch docs/38-sandbox-registry-one-door off main",
+        "PR 'FROM docs/38-sandbox-registry-one-door TO main', draft, body sections: Summary, Upstream, Disposition, Drift checker (+ negative test), Hero/promo, Blog, Verification, Why draft, Follow-ups, Undraft procedure",
+        ".oh/tasks/sandbox-registry-one-door/evidence.md written per the reviewer evidence contract and committed on the branch",
+        "Follow-ups filed as a comment on mifunedev/openharness#950 with the resolvable URL recorded in evidence.md",
+        "The PR stays draft; terminal state reported as DRAFT-BLOCKED(upstream-release) with the PR URL"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
