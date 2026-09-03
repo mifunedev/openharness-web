@@ -30,8 +30,8 @@
         "Commit 'docs: mirror docs/ from openharness cd10d78e (#948, #950)' on the branch"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "commit a248940; mirror log in the commit body; D1 diff transcript in evidence.md"
     },
     {
       "id": "US-002",
@@ -45,8 +45,8 @@
         "property-testing.md, integrations/pi-dynamic-workflows.md, integrations/pi-autoresearch.md unchanged"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "commit a248940 (pi.md, pi-fff.md, docker-deployment.md, model-selection.md, intro/resources/connecting via FIXUP + link rule); microsandbox.md and langfuse.md hand-reconciled beyond the plan (see evidence)"
     },
     {
       "id": "US-003",
@@ -61,8 +61,8 @@
         "Typecheck passes"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "commit 4a55126; work-list 158 hits, green PASS over 38 files; negative test transcript drift-negative-test.txt (exit 1 naming docs/resources.md:13 for oh init and bare oh sandbox); typecheck rc=0"
     },
     {
       "id": "US-004",
@@ -77,8 +77,8 @@
         "Verify in browser using agent-browser skill (or pnpm run serve spot-check when agent-browser is unavailable, recorded as such)"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "commit 4a55126; typecheck rc=0; banner re-rendered; agent-browser not used - docusaurus serve spot-check recorded in evidence (serve-spotcheck.txt)"
     },
     {
       "id": "US-005",
@@ -93,8 +93,8 @@
         "Residual grep over blog/ for OH_IMAGE_ONLY, oh init, oh runtime, persist flags, install.*, make shell finds only admonition text"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "commit b7a7c41; residual grep: nine hits, all inside the shared admonition"
     },
     {
       "id": "US-006",
@@ -110,8 +110,8 @@
         "pnpm run serve spot-check of /, /docs, /docs/deployment-prebuilt-image, /docs/harnesses/deepagents (redirect) recorded"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "install ok; checker PASS (38 files); typecheck rc=0; build rc=0 with OH_SCRIPTS_REF=task/950-sandbox-registry after the MDX fix 167a40a; residual grep = admonitions + redirect from paths + bare oh sandbox at lifecycle-commands.md:75 and runtimes/overview.md:10; 11/11 blob/main URLs 200 200; serve spot-check 7 routes 200 with both deepagents redirects"
     },
     {
       "id": "US-007",
@@ -125,8 +125,8 @@
         "The PR stays draft; terminal state reported as DRAFT-BLOCKED(upstream-release) with the PR URL"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "issue #38, PR #39 draft, evidence.md committed with the task folder, follow-ups filed on openharness#950 (issuecomment-5520094689); terminal state DRAFT-BLOCKED(upstream-release)"
     }
   ]
 }
