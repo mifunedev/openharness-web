@@ -82,7 +82,8 @@ are yours to author. With `--repo` and `image.mode` set to `build`, the sandbox
 builds from that checkout's `.devcontainer/Dockerfile` instead of pulling
 (~10 min cold, ~30s warm).
 
-<details><summary>Other install methods (from source · one-line harness installer · fork)</summary>
+<details>
+<summary>Other install methods (from source · one-line harness installer · fork)</summary>
 
 **From source.** Build the CLI out of a checkout — the audit-first path:
 

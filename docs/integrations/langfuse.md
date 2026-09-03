@@ -150,7 +150,7 @@ name remains `langfuse-web`. Repeat the network attachment whenever the
 
 #### 5. Create the local user, project, and keys
 
-Open <http://localhost:3000> on the host and:
+Open [http://localhost:3000](http://localhost:3000) on the host and:
 
 1. Select **Sign up** and create the initial local user.
 2. Sign in and create an organization when prompted.
