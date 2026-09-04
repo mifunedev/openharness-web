@@ -110,9 +110,10 @@ a lifecycle verb resolve this sandbox whenever you stand inside that checkout, s
 
 ## What still happens at boot
 
-`entrypoint.sh` runs the same either way: host UID/GID sync when a checkout is
-bound, provider symlink repair, cron tmux sessions, and the
-**fingerprint-gated `pnpm install`** at the repo root. That install covers the
+`systemd` is PID 1 and runs `entrypoint.sh` once as `openharness-bootstrap.service`,
+the same either way: host UID/GID sync when a checkout is bound, provider symlink
+repair, and the **fingerprint-gated `pnpm install`** at the repo root. The cron
+runtime then starts as `openharness-cron.service`. That install covers the
 repo's root dependencies only (not the image toolchain), so it stays fast and
 does not defeat the point of skipping the build.
 
@@ -198,7 +199,8 @@ and reads the answer from the kernel and the filesystem:
   directory at the project root) — skip the UID/GID sync, since there is no host
   directory to read ownership from; `chown` the workspace to the sandbox user;
   and run the first-boot seed (below) before `link-providers`, the root
-  `pnpm install`, and cron tmux setup, so those steps see a populated `.oh/`.
+  `pnpm install`, so those steps see a populated `.oh/` before
+  `openharness-cron.service` starts.
 
 The detected mode is logged on both paths, so a wrong detection is visible in
 `oh logs` rather than silent:
@@ -257,12 +259,16 @@ docker rm -f "$NAME" 2>/dev/null || true
 docker volume rm "${NAME}_workspace" 2>/dev/null || true   # the whole sandbox home
 
 # ── 2. Fresh run (no bind mount, no build) ─────────────────────────
-docker run -d --name "$NAME" --restart unless-stopped --init \
+docker run -d --name "$NAME" --restart unless-stopped \
+  --cgroupns private \
+  --cap-add SYS_ADMIN \
+  --security-opt apparmor=unconfined \
+  --tmpfs /run --tmpfs /run/lock --tmpfs /sys/fs \
   -e GIT_USER_NAME="<your-name>" \
   -e GIT_USER_EMAIL="<you@example.com>" \
   -e GH_TOKEN="${GH_TOKEN:-}" \
   -v "${NAME}_workspace":/home/sandbox \
-  "$IMAGE" sleep infinity
+  "$IMAGE"
 
 # ── 3. Verify the seed + provider wiring ───────────────────────────
 sleep 8

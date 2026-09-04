@@ -151,8 +151,9 @@ Herdr creates or reattaches the persistent interactive workspace for this reposi
 Complete GitHub and provider authentication, launch agents, and run tests and servers
 inside its panes. Detach with `Ctrl-b q`; run `herdr` again to return while the container
 keeps running. A container stop/rebuild restores metadata and layout, not terminated
-agent or server processes. Raw shells and direct agent commands remain recovery paths. Cron, Slack, and gateway infrastructure
-continue to run independently under tmux.
+agent or server processes. Raw shells and direct agent commands remain recovery paths. Slack and gateway
+infrastructure continue to run independently under tmux, and the cron runtime runs
+independently under `systemd` as `openharness-cron.service`.
 
 ## Set up agents inside Herdr
 

@@ -7,7 +7,7 @@ tags: [open-harness, docker, deployment, self-hosted]
 slug: deploy-open-harness-with-docker
 ---
 
-:::note[Commands updated on 2026-09-02 for the one-door and sandbox-registry changes]
+:::note[Commands updated on 2026-09-04 — the sandbox now boots systemd as PID 1]
 
 This post dates from 2026-07-11. Since it was written, mifunedev/openharness#948 and #950
 changed the operator flow. Nothing installs at boot: the first commands inside a fresh sandbox
@@ -48,13 +48,15 @@ docker run -itd \
   --name oh-a \
   --network openharness \
   --restart unless-stopped \
-  --init \
+  --cgroupns private \
+  --cap-add SYS_ADMIN \
+  --security-opt apparmor=unconfined \
+  --tmpfs /run --tmpfs /run/lock --tmpfs /sys/fs \
   -e SANDBOX_NAME=oh-a \
   -e GIT_USER_NAME="<your-name>" \
   -e GIT_USER_EMAIL="<you@example.com>" \
   -v oh-a-workspace:/home/sandbox \
-  ghcr.io/mifunedev/openharness:latest \
-  sleep infinity
+  ghcr.io/mifunedev/openharness:latest
 ```
 
 There is no flag for the image-only mode: the entrypoint detects it. Finding no checkout bound at `/home/sandbox/harness`, it seeds the image's baked `/opt/oh-seed` into the home mount on first boot and writes `/home/sandbox/harness/.oh/.image-seeded`. The mount is authoritative after that and starts without Git history.
@@ -107,13 +109,15 @@ docker run -itd \
   --name oh-b \
   --network openharness \
   --restart unless-stopped \
-  --init \
+  --cgroupns private \
+  --cap-add SYS_ADMIN \
+  --security-opt apparmor=unconfined \
+  --tmpfs /run --tmpfs /run/lock --tmpfs /sys/fs \
   -e SANDBOX_NAME=oh-b \
   -e GIT_USER_NAME="<your-name>" \
   -e GIT_USER_EMAIL="<you@example.com>" \
   -v oh-b-workspace:/home/sandbox \
-  ghcr.io/mifunedev/openharness:latest \
-  sleep infinity
+  ghcr.io/mifunedev/openharness:latest
 ```
 
 B gets its own home volume, so it does not see A's files — and, on this path, does not inherit A's logins either. Install and sign in again inside B. Pointing both containers at one home volume would share the credentials, but it would share the workspace with them.

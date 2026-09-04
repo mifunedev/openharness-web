@@ -124,6 +124,19 @@ boot. The install lands in `~/.local` inside the persistent home volume, and
 | --- | --- | --- | --- | --- |
 | `cron.agentBin` | string | `claude` | — | Binary that fires scheduled tasks. |
 
+The runtime itself is not configured here — `systemd` supervises it as
+`openharness-cron.service`. From inside the sandbox:
+
+| Action | Command |
+| --- | --- |
+| Liveness | `systemctl is-active openharness-cron.service` |
+| Reschedule after editing `crons/*.md` frontmatter | `systemctl reload openharness-cron.service` |
+| Restart | `systemctl restart openharness-cron.service` |
+| Logs | `journalctl -u openharness-cron.service` |
+
+`reload` sends `SIGHUP`, which re-reads every `crons/*.md` and re-arms the schedules
+without restarting the process or interrupting an in-flight job.
+
 ### Build behaviour
 
 | Field | Type | Default | Compose variable | What it does |

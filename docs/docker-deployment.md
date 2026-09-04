@@ -29,14 +29,23 @@ docker run -itd \
   --name oh-a \
   --network openharness \
   --restart unless-stopped \
-  --init \
+  --cgroupns private \
+  --cap-add SYS_ADMIN \
+  --security-opt apparmor=unconfined \
+  --tmpfs /run --tmpfs /run/lock --tmpfs /sys/fs \
   -e SANDBOX_NAME=oh-a \
   -e GIT_USER_NAME="<your-name>" \
   -e GIT_USER_EMAIL="<you@example.com>" \
   -v oh-a_workspace:/home/sandbox \
-  ghcr.io/mifunedev/openharness:latest \
-  sleep infinity
+  ghcr.io/mifunedev/openharness:latest
 ```
+
+The image runs `systemd` as PID 1, so there is no `--init` and no trailing command: the
+image's own `CMD ["/sbin/init"]` is the container lifecycle. The four flags above are what
+systemd needs to mount its own cgroup2 hierarchy — Docker mounts `/sys/fs/cgroup`
+read-only, and its default AppArmor profile denies the mount even with `SYS_ADMIN`. They
+are the minimum proven necessary; the sandbox is not `privileged` and the host cgroup tree
+is never exposed.
 
 `oh-a_workspace` is the whole sandbox home, and it is unique to A. The name follows the convention Compose uses—`<sandbox-name>_workspace`—so the same volume can later be adopted by the [image-only Compose file](https://github.com/mifunedev/openharness/blob/main/.devcontainer/docker-compose.image-only.yml) without moving data.
 
@@ -129,13 +138,15 @@ docker run -itd \
   --name oh-b \
   --network openharness \
   --restart unless-stopped \
-  --init \
+  --cgroupns private \
+  --cap-add SYS_ADMIN \
+  --security-opt apparmor=unconfined \
+  --tmpfs /run --tmpfs /run/lock --tmpfs /sys/fs \
   -e SANDBOX_NAME=oh-b \
   -e GIT_USER_NAME="<your-name>" \
   -e GIT_USER_EMAIL="<you@example.com>" \
   -v oh-b_workspace:/home/sandbox \
-  ghcr.io/mifunedev/openharness:latest \
-  sleep infinity
+  ghcr.io/mifunedev/openharness:latest
 ```
 
 B boots from the same image with an isolated home, so repeat step 4 inside B to authenticate it.

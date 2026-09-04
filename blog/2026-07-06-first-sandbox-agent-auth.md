@@ -7,7 +7,7 @@ tags: [docker, sandbox, auth, multi-agent]
 slug: first-sandbox-agent-auth
 ---
 
-:::note[Commands updated on 2026-09-02 for the one-door and sandbox-registry changes]
+:::note[Commands updated on 2026-09-04 — the sandbox now boots systemd as PID 1]
 
 This post dates from 2026-07-06. Since it was written, mifunedev/openharness#948 and #950
 changed the operator flow. Nothing installs at boot: the first commands inside a fresh sandbox
@@ -36,12 +36,16 @@ Open Harness is one sandbox per repo — an isolated Docker container with nothi
 We'll use the image-only path — pull the published image, no checkout, no local build. One mount at `/home/sandbox` carries everything the sandbox keeps: its `.oh/` control plane and repo, every agent login, the `gh` token, and your SSH key.
 
 ```bash
-docker run -d --name oh-a --init \
+docker run -d --name oh-a \
+  --cgroupns private \
+  --cap-add SYS_ADMIN \
+  --security-opt apparmor=unconfined \
+  --tmpfs /run --tmpfs /run/lock --tmpfs /sys/fs \
   -e SANDBOX_NAME=oh-a \
   -e GIT_USER_NAME="gituser" \
   -e GIT_USER_EMAIL="gituser@example.com" \
   -v oh_a_workspace:/home/sandbox \
-  ghcr.io/mifunedev/openharness:latest sleep infinity
+  ghcr.io/mifunedev/openharness:latest
 ```
 
 That single volume (`oh_a_workspace`) holds your work *and* your logins. `SANDBOX_NAME` is what tells the bundled `oh` CLI it is running *inside* a sandbox rather than on a host, which is what makes `oh harness install` work from the shell in step 4. The first run on a fresh host pulls the image once (public — no `docker login` needed). Confirm it's up:
@@ -185,12 +189,16 @@ installing locally.
 Run the same command again with a new name and a new volume:
 
 ```bash
-docker run -d --name oh-b --init \
+docker run -d --name oh-b \
+  --cgroupns private \
+  --cap-add SYS_ADMIN \
+  --security-opt apparmor=unconfined \
+  --tmpfs /run --tmpfs /run/lock --tmpfs /sys/fs \
   -e SANDBOX_NAME=oh-b \
   -e GIT_USER_NAME="gituser" \
   -e GIT_USER_EMAIL="gituser@example.com" \
   -v oh_b_workspace:/home/sandbox \
-  ghcr.io/mifunedev/openharness:latest sleep infinity
+  ghcr.io/mifunedev/openharness:latest
 ```
 
 **It's instant.** No pull, no build — `oh-b` reuses the image `oh-a` already fetched. The
