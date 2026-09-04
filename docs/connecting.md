@@ -119,7 +119,7 @@ This is the supported path for reaching T3 Code from a phone, and the supported 
 
 `tailscaled` runs **inside the sandbox container**, in userspace-networking mode, as the unprivileged `sandbox` user. The container is the tailnet node.
 
-- No `NET_ADMIN`, no `/dev/net/tun`, no `privileged: true`, no host socket mount. Userspace networking needs none of them, and Tailscale Serve is fully supported in that mode.
+- No `NET_ADMIN`, no `/dev/net/tun`, no `privileged: true`, no host socket mount. Userspace networking needs none of them, and Tailscale Serve is fully supported in that mode. The sandbox does carry `cap_add: SYS_ADMIN` and `security_opt: apparmor=unconfined` — that grant exists so `systemd` can mount its own cgroup2 hierarchy as PID 1, is unrelated to Tailscale, and gives it no networking capability. The reviewed trade-off is in [security considerations](https://github.com/mifunedev/openharness/blob/main/docs/security-considerations.md) §4 Caveat 3.
 - **No host port is published.** T3 Code stays on container loopback `127.0.0.1:3773`. Tailscale Serve inside the container proxies tailnet HTTPS to that loopback address. A device outside the tailnet has nothing to reach.
 - **There is no compose change at all.** `oh tool install tailscale` is the only door, and nothing installs Tailscale at boot. Node identity and daemon state live in `/home/sandbox/.tailscale`, inside the single `/home/sandbox` mount, so the node does not re-authenticate on every container recreate without any per-tool volume.
 - Because the container is the node, the MagicDNS name your phone saved does not change when you move the workspace to another VM.
@@ -280,7 +280,7 @@ Cloudflared remains the right tool for public preview sharing. It is not the mob
 
 ## tmux session naming
 
-All long-running processes inside the sandbox run in named tmux sessions. The naming convention is `<category>-<identifier>`:
+Every long-running process above container init runs in a named tmux session. The exception is the container's own supervision: `systemd` is PID 1 and owns `openharness-bootstrap.service` and `openharness-cron.service`. The cron *runtime* is a systemd service; the jobs it fires with `tmux: true` are still tmux sessions. The naming convention is `<category>-<identifier>`:
 
 | Category | Example | Purpose |
 |----------|---------|---------|

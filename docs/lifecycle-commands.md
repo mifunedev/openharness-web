@@ -144,6 +144,28 @@ yourself if you want it gone.
 Non-interactive use is gated on an explicit flag. When stdin is not a terminal
 and `--yes` is absent, `oh destroy` refuses outright rather than assume consent.
 
+## The cron scheduler is a systemd service, not an `oh` verb
+
+`oh` owns the container's lifecycle; `systemd` owns the processes inside it. The
+scheduler has no `oh` verb — reach it from inside the sandbox:
+
+```bash
+systemctl status openharness-cron.service     # is the scheduler running?
+systemctl reload openharness-cron.service     # re-read crons/*.md and re-arm schedules
+systemctl restart openharness-cron.service    # replace the process
+journalctl -u openharness-cron.service        # its output
+```
+
+Or from the host, without attaching:
+
+```bash
+docker exec <sandbox-name> systemctl reload openharness-cron.service
+```
+
+`openharness-bootstrap.service` is the other unit: a `Type=oneshot` that runs the
+container's `entrypoint.sh` and stays `active (exited)` once boot completes. Both are
+what `oh ps` reports on through the container healthcheck.
+
 ## `oh compose config`, not `oh config`
 
 `oh config` already means *"read, write, or configure configuration"*

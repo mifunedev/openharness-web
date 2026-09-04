@@ -131,6 +131,22 @@ const RETIRED = [
     instead: "`oh config set hermesDashboard.enabled true` and `hermesDashboard.port` — see docs/harnesses/hermes.md",
   },
   {
+    // systemd is PID 1; the tmux supervisor and the tmux-wrapped scheduler are gone.
+    // Anchored so the per-fire session convention cron-<id>-<MMDD>-<HHMM> — which is
+    // unchanged and still tmux — is not caught by a naive /cron-/ match.
+    pattern: /\bcron-watchdog\b|\bcron-system\b(?!-)|\bsystem-cron\b|\bCRON_WATCHDOG_INTERVAL\b|\/tmp\/cron-watchdog[.\w]*|\brestart-openharness-tmux\.sh\b/g,
+    name: "the retired tmux cron supervision",
+    instead:
+      "`openharness-cron.service` under systemd — `systemctl reload|restart|status openharness-cron.service`; per-fire `tmux: true` sessions are unchanged",
+  },
+  {
+    // The container lifecycle is systemd, not a sleeping process under Tini.
+    pattern: /\bsleep infinity\b|^\s*init:\s*true\b|--init\b|\bentrypoint:\s*\/usr\/local\/bin\/entrypoint\.sh/gm,
+    name: "the pre-systemd container lifecycle",
+    instead:
+      "the image's own `CMD [\"/sbin/init\"]` plus `--cgroupns private --cap-add SYS_ADMIN --security-opt apparmor=unconfined --tmpfs /run --tmpfs /run/lock --tmpfs /sys/fs` — see docs/docker-deployment.md",
+  },
+  {
     // gvisor was never in the runtime catalog that shipped.
     pattern: /\bgvisor\b|\brunsc\b/gi,
     name: "gvisor",
@@ -173,6 +189,16 @@ const ALLOW = [
     file: "installation.md",
     token: "a retired per-tool volume",
     why: "names the old volumes in the manual migration recipe, to say they are gone and not migrated automatically",
+  },
+  {
+    file: "runtimes/microsandbox.md",
+    token: "the pre-systemd container lifecycle",
+    why: "names the retired keys in the compose-to-msb translation table, to say they are gone",
+  },
+  {
+    file: "docker-deployment.md",
+    token: "the pre-systemd container lifecycle",
+    why: "names --init to explain why the systemd recipe no longer carries it",
   },
   {
     file: "lifecycle-commands.md",
