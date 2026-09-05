@@ -151,7 +151,7 @@ export default function Home(): React.ReactElement {
               <div className={styles.heroMeta}>
                 <span>{starLabel} GitHub stars</span>
                 <span aria-hidden="true">·</span>
-                <span>MIT licensed</span>
+                <span>Apache 2.0 licensed</span>
                 <span aria-hidden="true">·</span>
                 <span>Self-hosted</span>
                 <span aria-hidden="true">·</span>
@@ -305,7 +305,7 @@ export default function Home(): React.ReactElement {
                 href="https://github.com/mifunedev/openharness/blob/main/LICENSE"
               >
                 <span className={styles.linkCardLabel}>License</span>
-                <span className={styles.linkCardSub}>MIT — use freely</span>
+                <span className={styles.linkCardSub}>Apache 2.0</span>
               </Link>
               <Link className={styles.linkCard} to="/docs">
                 <span className={styles.linkCardLabel}>Documentation</span>

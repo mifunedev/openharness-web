@@ -2,6 +2,7 @@
   "name": "openharness-web",
   "version": "0.1.0",
   "private": true,
+  "license": "Apache-2.0",
   "scripts": {
     "start": "docusaurus start",
     "prebuild": "node scripts/sync-external-scripts.mjs && node scripts/build-oh-cli.mjs",
