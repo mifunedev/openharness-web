@@ -176,6 +176,11 @@ const RETIRED = [
 // is per file AND per token, and carries the reason it is allowed to stay.
 const ALLOW = [
   {
+    file: "harnesses/muse-code.md",
+    token: "the pre-systemd container lifecycle",
+    why: "--init is the supported provider-link repair flag, not the retired Docker init flag",
+  },
+  {
     file: "configuration.md",
     token: "a retired layout knob",
     why: "documents that these knobs were removed and the layout is now fixed",
