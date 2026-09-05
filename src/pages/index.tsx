@@ -18,7 +18,7 @@ oh shell <name>             # default name oh-sbx-1; omit it when it is your onl
 
 # 3 · nothing installs at boot — add tools through the one door, inside the sandbox
 oh tool install herdr && herdr     # persistent terminal workspace
-oh harness install claude-code     # or codex · pi · opencode · hermes · grok-build
+oh harness install claude-code     # or codex · pi · opencode · hermes · grok-build · muse-code
 claude
 
 # 4 · optional — Hermes + Slack messaging (in order)
@@ -69,6 +69,12 @@ const AGENTS: Array<{
     description: "xAI's terminal coding agent and CLI.",
     href: "/docs/harnesses/grok-build",
     icon: <img src="https://x.ai/favicon.ico" alt="" width={28} height={28} />,
+  },
+  {
+    name: "Muse Code",
+    description: "Meta's terminal coding agent.",
+    href: "/docs/harnesses/muse-code",
+    icon: <img src="/img/agents/muse-code.ico" alt="" width={28} height={28} />,
   },
   {
     name: "T3 Code",
@@ -203,7 +209,7 @@ export default function Home(): React.ReactElement {
           <div className={styles.container}>
             <h2 className={styles.sectionTitle}>Pick your agent.</h2>
             <p className={styles.sectionLede}>
-              Nothing installs at boot. Add Claude Code, Codex, Pi, OpenCode, Hermes, or Grok Build with one <code>oh harness install &lt;id&gt;</code> inside the sandbox; T3 Code runs on demand. Switch between them inside the sandbox — or add your own as a harness pack.
+              Nothing installs at boot. Add Claude Code, Codex, Pi, OpenCode, Hermes, Grok Build, or Muse Code with one <code>oh harness install &lt;id&gt;</code> inside the sandbox; T3 Code runs on demand. Switch between them inside the sandbox — or add your own as a harness pack.
             </p>
             <div className={styles.agentGrid}>
               {AGENTS.map((agent) => {
